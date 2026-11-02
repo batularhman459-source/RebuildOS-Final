@@ -53,15 +53,24 @@ Implications:
 
 ## 4. Systems
 
+### 4.0 App structure
+- **Three tabs:** `Today` · `Plan` · `Progress`.
+  - **Today** — what to do now.
+  - **Plan** — Missions (each showing its next Action) and Later Actions that don't belong to a Mission.
+  - **Progress** — this week, the all-time record, and per-Mission investment.
+- **Full-screen moments, not tabs:** Focus, Rebuild, Close the day, Welcome back.
+- **A day starts at 04:00 local time**, not midnight, so late-night work belongs to the day it was part of.
+- **Where you add decides where it goes:** adding from Today puts it on Today; adding from Plan or a Mission puts it in Later.
+
 ### 4.1 Actions — execution
 The central unit of the app.
 
 - **Required:** name only. Creating an Action takes seconds.
 - **Optional:** Mission, estimated duration, target day.
 - **States:** `Later` · `Today` · `Done`. **There is no Overdue state.**
-- One Today Action can be the **Main Action**.
+- One Today Action can be the **Main Action**. The first Action added to an empty Today becomes the Main Action automatically; it can be changed in one tap.
 
-**Overnight rule (at the start of a new day):**
+**Overnight rule (at the start of a new day, 04:00):**
 - The Main Action stays on Today.
 - Other unfinished Today Actions quietly return to Later.
 - Next morning Today shows one quiet line: _"3 Actions moved to Later"_ with one-tap undo.
@@ -82,12 +91,17 @@ Answers one question: **What should I do right now?**
 
 - Main Action (prominent), other Today Actions, quick add.
 - Entry point to Focus and to "Make today smaller" (Rebuild).
+- **Completed Actions stay visible**, struck through, at the bottom of Today until the day ends. This is the day's evidence, without a stats card.
+- **Empty Today** suggests the next Action of each active Mission; one tap puts it on Today.
+- **Close the day** appears as a quiet row at the bottom of Today after 18:00, or once every Today Action is done. Never a pop-up or notification.
 - **No** stats, cards, motivational text, or progress dashboards on Today.
 
 ### 4.4 Focus — attention
 A dedicated, distraction-free timer bound to an Action.
 
+- **Always tied to an Action.** Starting Focus with nothing selected asks for a name first, so every minute counts towards something.
 - Start, pause, resume, finish.
+- **Counts up**, with an optional target (25 / 50 / 90 min, or the Action's estimate). The target fills a ring; going past it is fine. No countdown that "runs out".
 - Records **actual** focused time against the Action (separate from estimated duration).
 - At the end: **"Done, or more to do?"** — Done completes the Action; More keeps it on Today with time logged.
 - Timer must be **timestamp-based** (store start/pause times, derive elapsed) so a locked phone, backgrounded tab, or reload never corrupts time.
@@ -97,12 +111,13 @@ A dedicated, distraction-free timer bound to an Action.
 **Rebuild is a kind of day, not a mode.** It ends on its own; the next morning the app asks once: _"Normal day, or another small one?"_
 
 - **Up to three slots, pre-filled:**
-  1. **One thing that matters** — the Main Action, or the next Action of the most recently active Mission.
-  2. **One thing for your body** — default e.g. "10-minute walk".
-  3. **One thing for your space** — default e.g. "Clear your desk".
+  1. **One step forward** — the Main Action, or the next Action of the most recently active Mission.
+  2. **Move your body** — default e.g. "10-minute walk".
+  3. **Reset your space** — default e.g. "Clear your desk".
 - Any slot can be swapped in one tap (own Action, suggestion, or new) or removed. A Rebuild day can be one thing.
 - **Offered automatically** when the user returns after 3+ days away, or when most of yesterday's Today went untouched. Always available manually via "Make today smaller".
-- The normal Today is hidden for the day, never deleted.
+- The normal Today is hidden for the day, never deleted, and is one tap away.
+- **A small day has no score.** Items are ticked off, but nothing says "2 of 3".
 - No Rebuild settings screen in V1.
 
 ### 4.6 Close the day — reflection (optional)
@@ -197,7 +212,7 @@ Today feels like too much → "Make today smaller" → three pre-filled slots �
 
 ## 9. Next steps
 
-1. Low-fidelity flows for the five journeys, checking Today stays simple under real cases.
+1. ~~Low-fidelity flows for the five journeys~~ — done: `docs/wireframes/journeys.html`.
 2. Visual direction and a small design system (light neutral surfaces, charcoal primary, restrained warm-orange accent; Sora headings, Roboto Flex UI, Fraunces sparingly; mobile-first).
 3. Technical architecture for the MVP (PWA, local storage, timestamp-based timer).
 4. Build the MVP.
