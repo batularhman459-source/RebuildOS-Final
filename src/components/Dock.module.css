@@ -1,0 +1,64 @@
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(26px + var(--safe-bottom));
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  z-index: 20;
+}
+
+.frosted {
+  background: var(--surface-frosted);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--hairline-frosted);
+}
+
+.tabs {
+  composes: frosted;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 5px;
+  border-radius: var(--radius-pill);
+}
+
+.tab {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  transition:
+    background-color var(--dur-standard) var(--ease),
+    color var(--dur-standard) var(--ease),
+    transform var(--dur-press) ease;
+}
+
+.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.add {
+  composes: frosted;
+  width: 58px;
+  height: 58px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+
+.add:disabled {
+  color: var(--control-outline);
+  cursor: default;
+}

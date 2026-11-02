@@ -214,5 +214,5 @@ Today feels like too much → "Make today smaller" → three pre-filled slots �
 
 1. ~~Low-fidelity flows for the five journeys~~ — done: `docs/wireframes/journeys.html`.
 2. ~~Visual direction and a small design system~~ — done: `DESIGN.md` ("light for planning, dark for doing").
-3. Technical architecture for the MVP (PWA, local storage, timestamp-based timer).
-4. Build the MVP.
+3. ~~Technical architecture for the MVP~~ — done: `docs/architecture.md`.
+4. Build the MVP — in progress (see the build plan in `docs/architecture.md`).

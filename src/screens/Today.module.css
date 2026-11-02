@@ -1,0 +1,21 @@
+.date {
+  font-size: 15px;
+  color: var(--on-stage-muted);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.question {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  max-width: 320px;
+}
+
+.list {
+  padding: var(--space-3) var(--gutter) 0;
+}

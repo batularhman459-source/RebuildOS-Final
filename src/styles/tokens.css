@@ -1,0 +1,77 @@
+/* Design tokens — mirror of DESIGN.md. Change DESIGN.md first, then this file. */
+:root {
+  /* Light (planning) surfaces */
+  --canvas: #f7f6f4;
+  --surface: #ffffff;
+  --surface-muted: #efedea;
+  --surface-frosted: rgba(255, 255, 255, 0.75);
+  --hairline: #e9e7e3;
+  --hairline-frosted: rgba(29, 28, 27, 0.07);
+  --control-outline: #b5b0a9;
+
+  /* Text on light */
+  --ink: #1d1c1b;
+  --ink-secondary: #4f4b46;
+  --ink-muted: #6e6a64;
+  --ink-done: #8f8a83;
+
+  /* Dark (doing) stages */
+  --stage: #121110;
+  --on-stage: #ffffff;
+  --on-stage-secondary: rgba(255, 255, 255, 0.72);
+  --on-stage-muted: rgba(255, 255, 255, 0.6);
+  --on-stage-control: rgba(255, 255, 255, 0.12);
+
+  /* Apricot */
+  --apricot-light: #ffe3cc;
+  --apricot-mid: #f49a70;
+  --apricot: #ee7d52;
+  --apricot-text: #b4471a;
+
+  --error: #c2361f;
+
+  /* Type families */
+  --font-display: 'Sora Variable', 'Sora', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Roboto Flex Variable', 'Roboto Flex', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-moment: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --gutter: 24px;
+  --row: 56px;
+  --touch-min: 44px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-sheet: 28px;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-press: 120ms;
+  --dur-standard: 240ms;
+  --dur-stage: 420ms;
+
+  /* Effects */
+  --apricot-glow: radial-gradient(
+    closest-side,
+    rgba(238, 125, 82, 0.9) 0%,
+    rgba(238, 125, 82, 0.5) 30%,
+    rgba(255, 227, 204, 0.1) 64%,
+    rgba(18, 17, 16, 0) 100%
+  );
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
