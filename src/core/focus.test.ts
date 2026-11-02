@@ -57,3 +57,28 @@ describe('formatEstimate', () => {
     expect(formatEstimate(90)).toBe('About 1h 30m');
   });
 });
+
+describe('session helpers', () => {
+  it('trims a forgotten timer to the minutes the user enters', async () => {
+    const { trimTo, elapsedMs } = await import('./focus');
+    const segs = trimTo(40, 10_000_000);
+    expect(elapsedMs(segs, 99_999_999)).toBe(40 * MIN);
+  });
+
+  it('grows the glow towards the target and then holds', async () => {
+    const { glowScale } = await import('./focus');
+    expect(glowScale(0, 50)).toBeCloseTo(0.85);
+    expect(glowScale(25 * MIN, 50)).toBeCloseTo(1.025);
+    expect(glowScale(500 * MIN, 50)).toBeCloseTo(1.2);
+    expect(glowScale(30 * MIN)).toBeCloseTo(1.025);
+  });
+});
+
+describe('formatSpent', () => {
+  it('shows seconds under a minute and never zero', async () => {
+    const { formatSpent } = await import('./focus');
+    expect(formatSpent(42_000)).toBe('42 sec');
+    expect(formatSpent(200)).toBe('1 sec');
+    expect(formatSpent(25 * MIN)).toBe('25 min');
+  });
+});

@@ -7,6 +7,8 @@ interface StageProps {
   height?: CSSProperties['height'];
   /** Where the Apricot glow sits, as a percentage from the top of the stage. */
   glowTop?: string;
+  /** Size of the glow (1 = default). Grows gently during Focus; never pulses. */
+  glowScale?: number;
   className?: string;
   'aria-label'?: string;
 }
@@ -15,7 +17,7 @@ interface StageProps {
  * A dark "doing" stage: full-bleed charcoal, lit from within by the Apricot glow,
  * always with grain. See DESIGN.md §6 Stage.
  */
-export function Stage({ children, height, glowTop = '62%', className, ...rest }: StageProps) {
+export function Stage({ children, height, glowTop = '62%', glowScale = 1, className, ...rest }: StageProps) {
   const grainId = useId();
   return (
     <section
@@ -23,7 +25,11 @@ export function Stage({ children, height, glowTop = '62%', className, ...rest }:
       style={{ height, minHeight: height ? undefined : '100%' }}
       aria-label={rest['aria-label']}
     >
-      <div className={styles.glow} style={{ top: glowTop }} aria-hidden="true" />
+      <div
+        className={styles.glow}
+        style={{ top: glowTop, transform: `translate(-50%, -50%) scale(${glowScale})` }}
+        aria-hidden="true"
+      />
       <svg className={styles.grain} aria-hidden="true">
         <filter id={grainId}>
           <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves={2} stitchTiles="stitch" />

@@ -142,3 +142,11 @@
   transform: none;
   opacity: 0.6;
 }
+
+.stageText {
+  min-height: var(--touch-min);
+  padding: 0 var(--space-4);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-stage-secondary);
+}

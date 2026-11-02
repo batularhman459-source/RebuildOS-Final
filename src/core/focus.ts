@@ -67,3 +67,31 @@ export function formatEstimate(minutes: number): string {
 
 /** Quick-pick estimates offered when adding or editing an Action. */
 export const ESTIMATE_PRESETS = [15, 25, 45, 60, 90] as const;
+
+/** Focus target presets (minutes). The Action's own estimate is offered too. */
+export const TARGET_PRESETS = [25, 50, 90] as const;
+
+/**
+ * Replace a session's time with exactly `minutes`, ending at `end`.
+ * Used when the user corrects a forgotten timer.
+ */
+export function trimTo(minutes: number, end: Timestamp): FocusSegment[] {
+  const ms = Math.max(0, Math.round(minutes)) * 60_000;
+  return [{ start: end - ms, end }];
+}
+
+/**
+ * How large the Apricot glow is while focusing: it grows gently with progress
+ * towards the target (or over an hour when there's no target), then holds.
+ */
+export function glowScale(elapsed: number, targetMinutes?: number): number {
+  const span = (targetMinutes ?? 60) * 60_000;
+  const progress = Math.min(1, Math.max(0, elapsed / span));
+  return 0.85 + 0.35 * progress;
+}
+
+/** Time spent in a single session: seconds under a minute ("42 sec"), otherwise like formatDuration. */
+export function formatSpent(ms: number): string {
+  if (ms < 60_000) return `${Math.max(1, Math.floor(ms / 1000))} sec`;
+  return formatDuration(ms);
+}

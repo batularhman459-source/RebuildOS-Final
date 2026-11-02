@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { deleteAction, makeMain, moveToLater, moveToToday, reopenAction, updateAction } from '../data/actions';
 import { db } from '../data/db';
+import { startFocus } from '../data/focus';
 import { EstimateChips } from './EstimateChips';
 import { Sheet } from './Sheet';
 import forms from './forms.module.css';
@@ -16,6 +18,7 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
   const action = useLiveQuery(() => (actionId ? db.actions.get(actionId) : undefined), [actionId]);
   const [title, setTitle] = useState('');
   const inputId = useId();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (action) setTitle(action.title);
@@ -64,6 +67,20 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
             />
           )}
           <div className={forms.list}>
+            {action.state !== 'done' && (
+              <button
+                type="button"
+                className={forms.listButton}
+                onClick={() =>
+                  run(async () => {
+                    await startFocus(action.id);
+                    navigate('/focus');
+                  })
+                }
+              >
+                Start focus
+              </button>
+            )}
             {action.state === 'today' && !action.isMain && (
               <button type="button" className={forms.listButton} onClick={() => run(() => makeMain(action.id))}>
                 Make it the main action

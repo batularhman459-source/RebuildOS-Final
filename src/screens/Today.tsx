@@ -1,18 +1,20 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDay } from '../app/day';
 import { useSheets } from '../app/sheets';
 import { ActionRow } from '../components/ActionRow';
 import { QuietNotice } from '../components/QuietNotice';
 import { Stage } from '../components/Stage';
 import { dayKey } from '../core/day';
-import { formatEstimate } from '../core/focus';
+import { elapsedMs, formatEstimate, formatSpent } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
 import { todayView } from '../core/today';
 import type { Action } from '../core/types';
 import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, undoRollover } from '../data/actions';
 import { db } from '../data/db';
+import { getActiveSession, startFocus } from '../data/focus';
 import styles from './Today.module.css';
 
 const dateFormat = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -79,17 +81,33 @@ export function Today() {
 
 function MainAction({ action }: { action: Action }) {
   const { openAction } = useSheets();
+  const navigate = useNavigate();
+  const active = useLiveQuery(() => getActiveSession(), []);
+  const pausedHere = active && active.actionId === action.id ? active : undefined;
+
+  async function focus() {
+    await startFocus(action.id);
+    navigate('/focus');
+  }
+
   return (
     <motion.div className={styles.main} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
       <button type="button" className={styles.mainTitle} onClick={() => openAction(action.id)}>
         <h1>{action.title}</h1>
       </button>
-      {action.estimateMinutes && <p className={styles.support}>{formatEstimate(action.estimateMinutes)}</p>}
+      {pausedHere ? (
+        <p className={styles.support}>{formatSpent(elapsedMs(pausedHere.segments, Date.now()))} so far</p>
+      ) : (
+        action.estimateMinutes && <p className={styles.support}>{formatEstimate(action.estimateMinutes)}</p>
+      )}
       <div className={styles.stageButtons}>
-        <button type="button" className={styles.stagePrimary} onClick={() => void completeAction(action.id)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12.5l4.5 4.5L19 7.5" />
+        <button type="button" className={styles.stagePrimary} onClick={() => void focus()}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M6 3.5v17l14-8.5z" />
           </svg>
+          {pausedHere ? 'Resume focus' : 'Start focus'}
+        </button>
+        <button type="button" className={styles.stageText} onClick={() => void completeAction(action.id)}>
           Mark as done
         </button>
       </div>
