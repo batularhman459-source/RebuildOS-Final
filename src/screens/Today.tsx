@@ -11,8 +11,9 @@ import { dayKey } from '../core/day';
 import { elapsedMs, formatEstimate, formatSpent } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
 import { todayView } from '../core/today';
-import type { Action } from '../core/types';
-import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, undoRollover } from '../data/actions';
+import { activeMissions, nextAction } from '../core/missions';
+import type { Action, Mission } from '../core/types';
+import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, moveToToday, undoRollover } from '../data/actions';
 import { db } from '../data/db';
 import { getActiveSession, startFocus } from '../data/focus';
 import styles from './Today.module.css';
@@ -25,10 +26,20 @@ export function Today() {
   const day = useDay();
   const { openAdd } = useSheets();
   const actions = useLiveQuery(() => db.actions.toArray(), []);
+  const missions = useLiveQuery(() => db.missions.toArray(), []);
   const notice = useLiveQuery(() => getRolloverNotice(day), [day]);
 
   const view = actions ? todayView(actions, day, dayOf) : undefined;
   const hasList = view && (view.open.length > 0 || view.doneToday.length > 0);
+  const missionOf = (a: Action) => (a.missionId ? missions?.find((m) => m.id === a.missionId && !m.deletedAt) : undefined);
+  // When Today has no Main Action, offer each active Mission's next step from Later.
+  const suggestions =
+    actions && missions
+      ? activeMissions(missions).flatMap((m) => {
+          const next = nextAction(m.id, actions);
+          return next && next.state === 'later' ? [{ mission: m, action: next }] : [];
+        })
+      : [];
 
   return (
     <>
@@ -38,9 +49,13 @@ export function Today() {
         {view && (
           <AnimatePresence mode="wait" initial={false}>
             {view.main ? (
-              <MainAction key={view.main.id} action={view.main} />
+              <MainAction key={view.main.id} action={view.main} missionTitle={missionOf(view.main)?.title} />
             ) : (
-              <AskForAction key={view.doneToday.length > 0 ? 'again' : 'first'} again={view.doneToday.length > 0} />
+              <AskForAction
+                key={view.doneToday.length > 0 ? 'again' : 'first'}
+                again={view.doneToday.length > 0}
+                suggestions={suggestions}
+              />
             )}
           </AnimatePresence>
         )}
@@ -79,7 +94,7 @@ export function Today() {
   );
 }
 
-function MainAction({ action }: { action: Action }) {
+function MainAction({ action, missionTitle }: { action: Action; missionTitle?: string }) {
   const { openAction } = useSheets();
   const navigate = useNavigate();
   const active = useLiveQuery(() => getActiveSession(), []);
@@ -92,6 +107,7 @@ function MainAction({ action }: { action: Action }) {
 
   return (
     <motion.div className={styles.main} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+      {missionTitle && <p className={styles.context}>{missionTitle}</p>}
       <button type="button" className={styles.mainTitle} onClick={() => openAction(action.id)}>
         <h1>{action.title}</h1>
       </button>
@@ -115,7 +131,12 @@ function MainAction({ action }: { action: Action }) {
   );
 }
 
-function AskForAction({ again }: { again: boolean }) {
+interface Suggestion {
+  mission: Mission;
+  action: Action;
+}
+
+function AskForAction({ again, suggestions }: { again: boolean; suggestions: Suggestion[] }) {
   const [title, setTitle] = useState('');
 
   async function submit(e: FormEvent) {
@@ -153,6 +174,17 @@ function AskForAction({ again }: { again: boolean }) {
       <button type="submit" className={styles.stagePrimary} disabled={!title.trim()}>
         Add to today
       </button>
+      {suggestions.length > 0 && (
+        <div className={styles.suggestions}>
+          <p className={styles.suggestLabel}>Or pick up where you left off</p>
+          {suggestions.slice(0, 3).map(({ mission, action }) => (
+            <button key={action.id} type="button" className={styles.suggestion} onClick={() => void moveToToday(action.id)}>
+              <span className={styles.suggestTitle}>{action.title}</span>
+              <span className={styles.suggestMission}>{mission.title}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </motion.form>
   );
 }

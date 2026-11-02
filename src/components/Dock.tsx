@@ -21,7 +21,9 @@ export function Dock() {
             key={tab.to}
             to={tab.to}
             end={tab.end}
-            className={({ isActive }) => `${styles.tab} ${isActive ? styles.active : ''}`}
+            className={({ isActive }) =>
+              `${styles.tab} ${isActive || (tab.to === '/plan' && pathname.startsWith('/mission/')) ? styles.active : ''}`
+            }
           >
             {tab.label}
           </NavLink>
@@ -31,7 +33,10 @@ export function Dock() {
         type="button"
         className={styles.add}
         aria-label="Add an action"
-        onClick={() => openAdd(pathname.startsWith('/plan') ? 'later' : 'today')}
+        onClick={() => {
+          const missionId = pathname.match(/^\/mission\/([^/]+)/)?.[1];
+          openAdd(pathname.startsWith('/plan') || missionId ? 'later' : 'today', missionId);
+        }}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
           <path d="M12 5v14M5 12h14" />

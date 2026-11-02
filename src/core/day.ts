@@ -37,3 +37,11 @@ export function addDays(key: DayKey, n: number): DayKey {
 export function lastDays(today: DayKey, count: number): DayKey[] {
   return Array.from({ length: count }, (_, i) => addDays(today, i - (count - 1)));
 }
+
+/** "today", "yesterday", "3 days ago" — for "last worked on" lines. */
+export function relativeDay(key: DayKey, today: DayKey): string {
+  const n = daysBetween(key, today);
+  if (n <= 0) return 'today';
+  if (n === 1) return 'yesterday';
+  return `${n} days ago`;
+}

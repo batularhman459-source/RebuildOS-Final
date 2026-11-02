@@ -7,6 +7,7 @@ import { Dock } from './components/Dock';
 import { isRunning } from './core/focus';
 import { getActiveSession } from './data/focus';
 import { Focus } from './screens/Focus';
+import { Mission } from './screens/Mission';
 import { Plan } from './screens/Plan';
 import { Progress } from './screens/Progress';
 import { Today } from './screens/Today';
@@ -30,6 +31,7 @@ export function App() {
                 <Route path="/" element={<Today />} />
                 <Route path="/plan" element={<Plan />} />
                 <Route path="/progress" element={<Progress />} />
+                <Route path="/mission/:id" element={<Mission />} />
                 <Route path="/focus" element={<Focus />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

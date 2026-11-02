@@ -44,3 +44,12 @@ describe('day arithmetic', () => {
     ]);
   });
 });
+
+describe('relativeDay', () => {
+  it('reads naturally', async () => {
+    const { relativeDay } = await import('./day');
+    expect(relativeDay('2026-11-02', '2026-11-02')).toBe('today');
+    expect(relativeDay('2026-11-01', '2026-11-02')).toBe('yesterday');
+    expect(relativeDay('2026-10-30', '2026-11-02')).toBe('3 days ago');
+  });
+});

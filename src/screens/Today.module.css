@@ -1,6 +1,7 @@
 .date {
   font-size: 15px;
   color: var(--on-stage-muted);
+  margin-bottom: var(--space-6);
 }
 
 .spacer {
@@ -149,4 +150,47 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--on-stage-secondary);
+}
+
+.context {
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: var(--on-stage-muted);
+}
+
+/* ── Suggestions from Missions ───────────────────────── */
+
+.suggestions {
+  margin-top: var(--space-6);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.suggestLabel {
+  font-size: 14px;
+  color: var(--on-stage-muted);
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--on-stage-control);
+  color: var(--on-stage);
+}
+
+.suggestTitle {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.suggestMission {
+  font-size: 13px;
+  color: var(--on-stage-muted);
 }

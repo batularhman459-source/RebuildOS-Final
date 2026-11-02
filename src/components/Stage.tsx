@@ -3,7 +3,7 @@ import styles from './Stage.module.css';
 
 interface StageProps {
   children: ReactNode;
-  /** Height of the stage; omit for full screen. */
+  /** Minimum height of the stage (it grows with its content); omit for full screen. */
   height?: CSSProperties['height'];
   /** Where the Apricot glow sits, as a percentage from the top of the stage. */
   glowTop?: string;
@@ -22,7 +22,7 @@ export function Stage({ children, height, glowTop = '62%', glowScale = 1, classN
   return (
     <section
       className={`${styles.stage} on-stage ${className ?? ''}`}
-      style={{ height, minHeight: height ? undefined : '100%' }}
+      style={{ minHeight: height ?? '100%' }}
       aria-label={rest['aria-label']}
     >
       <div

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { addAction } from '../data/actions';
 import { EstimateChips } from './EstimateChips';
+import { MissionPicker } from './MissionPicker';
 import { Sheet } from './Sheet';
 import forms from './forms.module.css';
 
@@ -9,13 +10,15 @@ interface AddSheetProps {
   onClose: () => void;
   /** Where the Action goes by default: adding from Today puts it on Today, from Plan in Later. */
   defaultDestination: 'today' | 'later';
+  defaultMissionId?: string;
 }
 
 /** Quick add: only the name is required. Creating an Action should take seconds. */
-export function AddSheet({ open, onClose, defaultDestination }: AddSheetProps) {
+export function AddSheet({ open, onClose, defaultDestination, defaultMissionId }: AddSheetProps) {
   const [title, setTitle] = useState('');
   const [destination, setDestination] = useState(defaultDestination);
   const [estimate, setEstimate] = useState<number | undefined>();
+  const [missionId, setMissionId] = useState<string | undefined>();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
@@ -24,14 +27,15 @@ export function AddSheet({ open, onClose, defaultDestination }: AddSheetProps) {
     setTitle('');
     setEstimate(undefined);
     setDestination(defaultDestination);
+    setMissionId(defaultMissionId);
     const t = window.setTimeout(() => inputRef.current?.focus(), 60);
     return () => window.clearTimeout(t);
-  }, [open, defaultDestination]);
+  }, [open, defaultDestination, defaultMissionId]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    await addAction({ title, destination, estimateMinutes: estimate });
+    await addAction({ title, destination, estimateMinutes: estimate, missionId });
     onClose();
   }
 
@@ -61,6 +65,7 @@ export function AddSheet({ open, onClose, defaultDestination }: AddSheetProps) {
           </button>
         </div>
         <EstimateChips value={estimate} onChange={setEstimate} />
+        <MissionPicker value={missionId} onChange={setMissionId} />
         <button type="submit" className={forms.primary} disabled={!title.trim()}>
           Add
         </button>

@@ -98,8 +98,8 @@ No `404.html` is shipped, so Pages serves `index.html` for every route (single-p
 | 0 | Foundation: tooling, tokens, fonts, PWA shell, icons, dock with three tabs, core day/focus maths + tests, database schema | Done |
 | 1 | Today and Actions: first run, add, complete, Main Action, Later, overnight rule | Done |
 | 2 | Focus: timer, Done / More to do, Today → Focus transition, wake lock | Done |
-| 3 | Plan and Missions: create with first step, next Action, move to Today | Next |
-| 4 | Rebuild and Welcome back: small day, swap, return detection | |
+| 3 | Plan and Missions: create with first step, next Action, move to Today | Done |
+| 4 | Rebuild and Welcome back: small day, swap, return detection | Next |
 | 5 | Close the day and Progress: evening ritual, week stars, record | |
 | 6 | Polish: install flow, export/import, motion, Playwright journeys, release | |
 

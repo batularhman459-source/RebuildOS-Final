@@ -1,6 +1,8 @@
 .stage {
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--stage);
   color: var(--on-stage);
 }
@@ -29,7 +31,7 @@
 
 .content {
   position: relative;
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;

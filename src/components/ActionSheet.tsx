@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { deleteAction, makeMain, moveToLater, moveToToday, reopenAction, updateAction } from '../data/actions';
 import { db } from '../data/db';
 import { startFocus } from '../data/focus';
+import { setActionMission } from '../data/missions';
 import { EstimateChips } from './EstimateChips';
+import { MissionPicker } from './MissionPicker';
 import { Sheet } from './Sheet';
 import forms from './forms.module.css';
 
@@ -66,6 +68,7 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
               onChange={(m) => void updateAction(action.id, { estimateMinutes: m })}
             />
           )}
+          <MissionPicker value={action.missionId} onChange={(m) => void setActionMission(action.id, m)} />
           <div className={forms.list}>
             {action.state !== 'done' && (
               <button
