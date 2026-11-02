@@ -213,6 +213,6 @@ Today feels like too much → "Make today smaller" → three pre-filled slots �
 ## 9. Next steps
 
 1. ~~Low-fidelity flows for the five journeys~~ — done: `docs/wireframes/journeys.html`.
-2. Visual direction and a small design system (light neutral surfaces, charcoal primary, restrained warm-orange accent; Sora headings, Roboto Flex UI, Fraunces sparingly; mobile-first).
+2. ~~Visual direction and a small design system~~ — done: `DESIGN.md` ("light for planning, dark for doing").
 3. Technical architecture for the MVP (PWA, local storage, timestamp-based timer).
 4. Build the MVP.
