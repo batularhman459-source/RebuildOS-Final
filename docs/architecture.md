@@ -96,8 +96,8 @@ No `404.html` is shipped, so Pages serves `index.html` for every route (single-p
 | Step | Scope | Status |
 |---|---|---|
 | 0 | Foundation: tooling, tokens, fonts, PWA shell, icons, dock with three tabs, core day/focus maths + tests, database schema | Done |
-| 1 | Today and Actions: first run, add, complete, Main Action, Later, overnight rule | Next |
-| 2 | Focus: timer, Done / More to do, Today → Focus transition, wake lock | |
+| 1 | Today and Actions: first run, add, complete, Main Action, Later, overnight rule | Done |
+| 2 | Focus: timer, Done / More to do, Today → Focus transition, wake lock | Next |
 | 3 | Plan and Missions: create with first step, next Action, move to Today | |
 | 4 | Rebuild and Welcome back: small day, swap, return detection | |
 | 5 | Close the day and Progress: evening ritual, week stars, record | |

@@ -56,3 +56,14 @@ export function formatDuration(ms: number): string {
   if (m === 0) return `${h}h`;
   return `${h}h ${m}m`;
 }
+
+/** Estimate shown under an Action: "About 45 minutes", "About 1 hour", "About 1h 30m". */
+export function formatEstimate(minutes: number): string {
+  if (minutes < 60) return `About ${minutes} minutes`;
+  if (minutes === 60) return 'About 1 hour';
+  if (minutes % 60 === 0) return `About ${minutes / 60} hours`;
+  return `About ${formatDuration(minutes * 60_000)}`;
+}
+
+/** Quick-pick estimates offered when adding or editing an Action. */
+export const ESTIMATE_PRESETS = [15, 25, 45, 60, 90] as const;

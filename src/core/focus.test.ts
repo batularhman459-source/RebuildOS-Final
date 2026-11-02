@@ -47,3 +47,13 @@ describe('formatting', () => {
     expect(formatDuration(41 * 60 * MIN + 20 * MIN)).toBe('41h 20m');
   });
 });
+
+describe('formatEstimate', () => {
+  it('reads naturally', async () => {
+    const { formatEstimate } = await import('./focus');
+    expect(formatEstimate(45)).toBe('About 45 minutes');
+    expect(formatEstimate(60)).toBe('About 1 hour');
+    expect(formatEstimate(120)).toBe('About 2 hours');
+    expect(formatEstimate(90)).toBe('About 1h 30m');
+  });
+});

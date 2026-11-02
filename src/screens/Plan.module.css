@@ -1,0 +1,38 @@
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0;
+  padding-bottom: var(--space-1);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.hint {
+  color: var(--ink-muted);
+  padding: var(--space-2) 0;
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--row);
+  font-size: 17px;
+  color: var(--ink-muted);
+  text-align: left;
+}
+
+.addRow:active {
+  transform: none;
+  opacity: 0.6;
+}

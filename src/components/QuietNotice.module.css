@@ -1,0 +1,31 @@
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-1) 0 var(--space-4);
+  min-height: 48px;
+  font-size: 15px;
+  color: var(--ink-secondary);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.action {
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dismiss {
+  width: var(--touch-min);
+  height: var(--touch-min);
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
