@@ -1,3 +1,4 @@
+import { APP_LOCALE } from '../core/locale';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Star } from '../components/Star';
 import { dayKey, lastDays } from '../core/day';
@@ -6,7 +7,7 @@ import { db } from '../data/db';
 import styles from './Screen.module.css';
 import own from './Progress.module.css';
 
-const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'narrow' });
+const weekday = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'narrow' });
 
 export function Progress() {
   const record = useLiveQuery(async () => {

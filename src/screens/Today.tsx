@@ -1,7 +1,8 @@
+import { APP_LOCALE } from '../core/locale';
 import { Stage } from '../components/Stage';
 import styles from './Today.module.css';
 
-const dateFormat = new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+const dateFormat = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
 
 export function Today() {
   return (
