@@ -10,10 +10,11 @@ import { Stage } from '../components/Stage';
 import { dayKey } from '../core/day';
 import { elapsedMs, formatEstimate, formatSpent } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
-import { todayView } from '../core/today';
+import { todayView, type TodayView } from '../core/today';
 import { activeMissions, nextAction } from '../core/missions';
-import type { Action, Mission } from '../core/types';
+import type { Action, DayRecord, Mission } from '../core/types';
 import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, moveToToday, undoRollover } from '../data/actions';
+import { getDayRecord, needsMorningChoice, setDayMode, yesterdayWins } from '../data/days';
 import { db } from '../data/db';
 import { getActiveSession, startFocus } from '../data/focus';
 import styles from './Today.module.css';
@@ -28,8 +29,13 @@ export function Today() {
   const actions = useLiveQuery(() => db.actions.toArray(), []);
   const missions = useLiveQuery(() => db.missions.toArray(), []);
   const notice = useLiveQuery(() => getRolloverNotice(day), [day]);
+  const navigate = useNavigate();
+  const record = useLiveQuery(async () => (await getDayRecord(day)) ?? null, [day]);
+  const morningWins = useLiveQuery(async () => ((await needsMorningChoice(day)) ? await yesterdayWins(day) : null), [day]);
+  const small = record?.mode === 'small';
 
-  const view = actions ? todayView(actions, day, dayOf) : undefined;
+  const normalView = actions ? todayView(actions, day, dayOf) : undefined;
+  const view = actions && normalView ? (small && record ? smallDayView(record, actions) : normalView) : undefined;
   const hasList = view && (view.open.length > 0 || view.doneToday.length > 0);
   const missionOf = (a: Action) => (a.missionId ? missions?.find((m) => m.id === a.missionId && !m.deletedAt) : undefined);
   // When Today has no Main Action, offer each active Mission's next step from Later.
@@ -46,10 +52,23 @@ export function Today() {
       <Stage height="max(420px, 58vh)" aria-label="Main action">
         <span className={styles.date}>{dateFormat.format(new Date())}</span>
         <div className={styles.spacer} />
-        {view && (
+        {view && morningWins !== undefined && (
           <AnimatePresence mode="wait" initial={false}>
-            {view.main ? (
-              <MainAction key={view.main.id} action={view.main} missionTitle={missionOf(view.main)?.title} />
+            {morningWins && !small ? (
+              <MorningChoice
+                key="morning"
+                wins={morningWins}
+                onNormal={() => void setDayMode(day, 'normal')}
+                onSmall={() => navigate('/rebuild')}
+              />
+            ) : view.main ? (
+              <MainAction
+                key={view.main.id}
+                action={view.main}
+                missionTitle={small ? 'A smaller day' : missionOf(view.main)?.title}
+              />
+            ) : small ? (
+              <GoodDay key="good-day" />
             ) : (
               <AskForAction
                 key={view.doneToday.length > 0 ? 'again' : 'first'}
@@ -63,13 +82,22 @@ export function Today() {
       </Stage>
 
       <section className={styles.below} aria-label="Also today">
-        {notice && (
-          <QuietNotice
-            text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'action' : 'actions'} moved to Later`}
-            actionLabel="Undo"
-            onAction={() => void undoRollover(day)}
-            onDismiss={() => void dismissRolloverNotice(day)}
-          />
+        {notice && !small && !morningWins && (
+          notice.offerSmallDay ? (
+            <QuietNotice
+              text="Yesterday was a lot. Want a smaller day?"
+              actionLabel="Make it smaller"
+              onAction={() => navigate('/rebuild')}
+              onDismiss={() => void dismissRolloverNotice(day)}
+            />
+          ) : (
+            <QuietNotice
+              text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'action' : 'actions'} moved to Later`}
+              actionLabel="Undo"
+              onAction={() => void undoRollover(day)}
+              onDismiss={() => void dismissRolloverNotice(day)}
+            />
+          )
         )}
         {hasList && (
           <ul className={styles.list}>
@@ -81,12 +109,21 @@ export function Today() {
             ))}
           </ul>
         )}
-        {view?.main && (
+        {view?.main && !small && (
           <button type="button" className={styles.addRow} onClick={() => openAdd('today')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
             </svg>
             Add an action
+          </button>
+        )}
+        {view && !morningWins && (
+          <button
+            type="button"
+            className={styles.smallerLink}
+            onClick={() => (small ? void setDayMode(day, 'normal') : navigate('/rebuild'))}
+          >
+            {small ? 'Back to full Today' : 'Make today smaller'}
           </button>
         )}
       </section>
@@ -187,4 +224,59 @@ function AskForAction({ again, suggestions }: { again: boolean; suggestions: Sug
       )}
     </motion.form>
   );
+}
+
+/**
+ * A small day shows only its slots: the first unfinished one on the stage
+ * (step forward first), the rest below. No counts, no score.
+ */
+function smallDayView(record: DayRecord, actions: Action[]): TodayView {
+  const byId = new Map(actions.map((a) => [a.id, a]));
+  const slotActions = (record.rebuildSlots ?? [])
+    .map((slot) => (slot.actionId ? byId.get(slot.actionId) : undefined))
+    .filter((a): a is Action => a !== undefined && !a.deletedAt);
+  const main = slotActions.find((a) => a.state !== 'done');
+  return {
+    main,
+    open: slotActions.filter((a) => a !== main && a.state !== 'done'),
+    doneToday: slotActions.filter((a) => a.state === 'done'),
+  };
+}
+
+function MorningChoice({ wins, onNormal, onSmall }: { wins: string[]; onNormal: () => void; onSmall: () => void }) {
+  return (
+    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+      <h1 className={styles.moment}>
+        <i>Morning.</i>
+      </h1>
+      <p className={styles.support}>
+        {wins.length > 0 ? `Yesterday you did ${joinTitles(wins)}.` : 'Yesterday was a small day. That counts.'}
+      </p>
+      <div className={styles.stageButtons}>
+        <button type="button" className={styles.stagePrimary} onClick={onNormal}>
+          Normal day
+        </button>
+        <button type="button" className={styles.stageText} onClick={onSmall}>
+          Another small one
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function GoodDay() {
+  return (
+    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+      <h1 className={styles.moment}>
+        Good <i>day.</i>
+      </h1>
+      <p className={styles.support}>You did what you set out to do.</p>
+    </motion.div>
+  );
+}
+
+function joinTitles(titles: string[]): string {
+  const lower = titles.map((t) => t.charAt(0).toLowerCase() + t.slice(1));
+  if (lower.length === 1) return lower[0]!;
+  return `${lower.slice(0, -1).join(', ')} and ${lower[lower.length - 1]}`;
 }

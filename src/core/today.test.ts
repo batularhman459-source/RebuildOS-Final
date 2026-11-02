@@ -27,12 +27,12 @@ describe('planRollover (overnight rule)', () => {
       action({ id: 'gym', todayDay: '2026-11-01' }),
       action({ id: 'email', todayDay: '2026-11-01' }),
     ];
-    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: ['main'], toLater: ['gym', 'email'] });
+    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: ['main'], toLater: ['gym', 'email'], discard: [] });
   });
 
   it('leaves Actions added today alone', () => {
     const actions = [action({ id: 'new', todayDay: '2026-11-02' })];
-    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: [], toLater: [] });
+    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: [], toLater: [], discard: [] });
   });
 
   it('ignores done, Later and deleted Actions', () => {
@@ -41,12 +41,17 @@ describe('planRollover (overnight rule)', () => {
       action({ state: 'later' }),
       action({ todayDay: '2026-11-01', deletedAt: 5 }),
     ];
-    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: [], toLater: [] });
+    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: [], toLater: [], discard: [] });
+  });
+
+  it('clears unfinished small-day Actions instead of moving them to Later', () => {
+    const actions = [action({ id: 'walk', origin: 'rebuild', todayDay: '2026-11-01' }), action({ id: 'desk', origin: 'rebuild', isMain: true, todayDay: '2026-11-01' })];
+    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: [], toLater: [], discard: ['walk', 'desk'] });
   });
 
   it('works after many days away', () => {
     const actions = [action({ id: 'main', isMain: true, todayDay: '2026-10-01' }), action({ id: 'x', todayDay: '2026-10-01' })];
-    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: ['main'], toLater: ['x'] });
+    expect(planRollover(actions, '2026-11-02')).toEqual({ carry: ['main'], toLater: ['x'], discard: [] });
   });
 });
 

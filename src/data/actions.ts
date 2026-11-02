@@ -1,4 +1,5 @@
-import { dayKey } from '../core/day';
+import { addDays, dayKey } from '../core/day';
+import { shouldOfferSmallDay } from '../core/rebuild';
 import { nextMain, planRollover } from '../core/today';
 import type { Action, DayKey } from '../core/types';
 import { db, newId } from './db';
@@ -115,6 +116,8 @@ export interface RolloverNotice {
   day: DayKey;
   movedIds: string[];
   dismissed?: boolean;
+  /** Yesterday clearly didn't go to plan: offer a smaller day instead of just Undo. */
+  offerSmallDay?: boolean;
 }
 
 /**
@@ -123,9 +126,11 @@ export interface RolloverNotice {
  */
 export async function runRollover(day: DayKey): Promise<void> {
   await db.transaction('rw', db.actions, db.meta, async () => {
-    const plan = planRollover(await db.actions.toArray(), day);
-    if (plan.carry.length === 0 && plan.toLater.length === 0) return;
+    const all = await db.actions.toArray();
+    const plan = planRollover(all, day);
+    if (plan.carry.length === 0 && plan.toLater.length === 0 && plan.discard.length === 0) return;
     const t = now();
+    for (const id of plan.discard) await db.actions.update(id, { deletedAt: t, isMain: false, updatedAt: t });
     for (const id of plan.carry) await db.actions.update(id, { todayDay: day, updatedAt: t });
     for (const id of plan.toLater) {
       await db.actions.update(id, { state: 'later', isMain: false, todayDay: undefined, updatedAt: t });
@@ -133,7 +138,10 @@ export async function runRollover(day: DayKey): Promise<void> {
     if (plan.toLater.length > 0) {
       const prev = (await db.meta.get(ROLLOVER_KEY))?.value as RolloverNotice | undefined;
       const movedIds = prev && prev.day === day && !prev.dismissed ? [...prev.movedIds, ...plan.toLater] : plan.toLater;
-      await db.meta.put({ key: ROLLOVER_KEY, value: { day, movedIds } satisfies RolloverNotice });
+      const yesterday = addDays(day, -1);
+      const completedYesterday = all.filter((a) => a.completedAt !== undefined && dayKey(new Date(a.completedAt)) === yesterday).length;
+      const offerSmallDay = shouldOfferSmallDay(movedIds.length, completedYesterday);
+      await db.meta.put({ key: ROLLOVER_KEY, value: { day, movedIds, offerSmallDay } satisfies RolloverNotice });
     }
     await ensureMain();
   });

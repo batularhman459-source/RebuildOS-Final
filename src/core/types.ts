@@ -34,6 +34,11 @@ export interface Action extends BaseRecord {
   completedAt?: Timestamp;
   /** Manual ordering within a list. */
   sortOrder: number;
+  /**
+   * 'rebuild' marks small Actions created for a small day ("10-minute walk").
+   * If unfinished when the day ends they are cleared instead of moved to Later.
+   */
+  origin?: 'rebuild';
 }
 
 export type MissionStatus = 'active' | 'parked' | 'complete';

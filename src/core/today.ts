@@ -48,6 +48,8 @@ export interface RolloverPlan {
   carry: string[];
   /** Other unfinished Actions from an earlier day: they quietly return to Later. */
   toLater: string[];
+  /** Unfinished small-day Actions (origin 'rebuild'): cleared, never moved to Later. */
+  discard: string[];
 }
 
 /**
@@ -60,8 +62,9 @@ export function planRollover(actions: readonly Action[], today: DayKey): Rollove
     (a) => isLive(a) && a.state === 'today' && (a.todayDay === undefined || a.todayDay < today),
   );
   return {
-    carry: stale.filter((a) => a.isMain).map((a) => a.id),
-    toLater: stale.filter((a) => !a.isMain).map((a) => a.id),
+    carry: stale.filter((a) => a.isMain && a.origin !== 'rebuild').map((a) => a.id),
+    toLater: stale.filter((a) => !a.isMain && a.origin !== 'rebuild').map((a) => a.id),
+    discard: stale.filter((a) => a.origin === 'rebuild').map((a) => a.id),
   };
 }
 
