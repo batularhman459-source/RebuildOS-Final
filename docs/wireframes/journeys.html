@@ -1,0 +1,482 @@
+<title>RebuildOS Journey Wireframes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,600&family=Sora:wght@500;600;700&display=swap">
+<style>
+/* Layout: a single reading column; each journey is a horizontally scrolling strip of low-fi phone frames with captions. */
+:root {
+  --bg: #f3f2f0;
+  --surface: #ffffff;
+  --screen: #fbfbfa;
+  --ink: #1f1e1c;
+  --ink-2: #5f5c57;
+  --line: #d9d6d1;
+  --line-soft: #e8e6e2;
+  --fill: #efedea;
+  --accent: #d9692b;
+  --accent-soft: #fbe7da;
+  --scrim: rgba(20,19,17,.38);
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: "Roboto Flex", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161514; --surface: #1f1e1c; --screen: #232220; --ink: #f0eeea; --ink-2: #a8a49d;
+    --line: #3a3835; --line-soft: #2e2c2a; --fill: #2c2a28; --accent: #ec8547; --accent-soft: #3a2619;
+    --scrim: rgba(0,0,0,.55); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161514; --surface: #1f1e1c; --screen: #232220; --ink: #f0eeea; --ink-2: #a8a49d;
+  --line: #3a3835; --line-soft: #2e2c2a; --fill: #2c2a28; --accent: #ec8547; --accent-soft: #3a2619;
+  --scrim: rgba(0,0,0,.55); color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 72px; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; }
+h2 { font-size: 22px; font-weight: 600; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+.lede { color: var(--ink-2); font-size: 16px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+header { display: flex; flex-direction: column; gap: 12px; }
+
+/* Decisions */
+.decisions { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.decision { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.decision b { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.decision span { color: var(--ink-2); font-size: 14px; }
+.tag { align-self: flex-start; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; }
+section { display: flex; flex-direction: column; gap: 16px; }
+.journey-head { display: flex; flex-direction: column; gap: 6px; }
+
+/* Strip of frames */
+.strip { display: flex; gap: 20px; overflow-x: auto; padding: 4px 2px 16px; scroll-snap-type: x proximity; }
+.frame { margin: 0; flex: 0 0 236px; display: flex; flex-direction: column; gap: 10px; scroll-snap-align: start; }
+figcaption { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+figcaption b { color: var(--ink); font-weight: 600; }
+
+/* Phone (low-fi) */
+.phone { position: relative; height: 488px; background: var(--screen); border: 1.5px solid var(--line); border-radius: 28px; padding: 22px 16px 12px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; font-size: 12.5px; line-height: 1.4; }
+.phone .top { display: flex; justify-content: space-between; align-items: baseline; }
+.phone .title { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
+.phone .date, .phone .muted { color: var(--ink-2); }
+.phone .small { font-size: 11px; }
+.phone .big { font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.3; text-wrap: balance; }
+.phone .label { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.phone .main { border: 1.5px solid var(--ink); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); }
+.phone .main .name { font-weight: 600; font-size: 14px; }
+.phone .row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--line-soft); }
+.phone .row .grow { flex: 1; min-width: 0; }
+.phone .check { width: 16px; height: 16px; border: 1.5px solid var(--ink-2); border-radius: 50%; flex: none; }
+.phone .check.on { background: var(--ink); border-color: var(--ink); }
+.phone .done { color: var(--ink-2); text-decoration: line-through; }
+.phone .add { color: var(--ink-2); padding: 9px 2px; }
+.phone .btn { display: block; text-align: center; border-radius: 12px; padding: 10px; font-weight: 600; background: var(--ink); color: var(--screen); }
+.phone .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+.phone .btn.sm { padding: 7px 10px; font-size: 12px; }
+.phone .btns { display: flex; gap: 8px; }
+.phone .btns > * { flex: 1; }
+.phone .chip { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 99px; background: var(--fill); color: var(--ink-2); }
+.phone .chip.on { background: var(--ink); color: var(--screen); }
+.phone .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.phone .input { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px; color: var(--ink-2); background: var(--surface); }
+.phone .input.filled { color: var(--ink); }
+.phone .quiet { font-size: 11.5px; color: var(--ink-2); background: var(--fill); border-radius: 10px; padding: 8px 10px; display: flex; justify-content: space-between; gap: 8px; }
+.phone .quiet u { color: var(--ink); text-decoration: none; font-weight: 600; }
+.phone .hint { border: 1.5px dashed var(--line); border-radius: 12px; padding: 10px; color: var(--ink-2); }
+.phone .link { color: var(--ink); font-weight: 600; text-align: center; padding: 6px; }
+.phone .spacer { flex: 1; }
+.phone .tabs { margin: auto -16px -12px; border-top: 1px solid var(--line-soft); display: flex; justify-content: space-around; padding: 10px 0 14px; font-size: 11px; color: var(--ink-2); background: var(--screen); }
+.phone .tabs .on { color: var(--ink); font-weight: 600; }
+.phone .center { text-align: center; align-items: center; }
+.phone .timer { font-family: var(--font-display); font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.phone .ring { width: 168px; height: 168px; border-radius: 50%; border: 6px solid var(--fill); border-top-color: var(--ink); border-right-color: var(--ink); display: grid; place-items: center; margin: 0 auto; }
+.phone .slot { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 4px; background: var(--surface); }
+.phone .slot .line { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.phone .slot b { font-size: 13px; }
+.phone .stat { display: flex; gap: 16px; }
+.phone .stat div { display: flex; flex-direction: column; }
+.phone .stat strong { font-family: var(--font-display); font-size: 18px; font-variant-numeric: tabular-nums; }
+.phone .seg { display: flex; background: var(--fill); border-radius: 8px; padding: 2px; font-size: 11px; }
+.phone .seg span { padding: 3px 8px; border-radius: 6px; color: var(--ink-2); }
+.phone .seg .on { background: var(--surface); color: var(--ink); font-weight: 600; }
+.phone .dots { display: flex; gap: 8px; }
+.phone .dots i { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); }
+.phone .dots i.on { background: var(--ink); border-color: var(--ink); }
+.phone .card { border: 1px solid var(--line-soft); border-radius: 12px; padding: 10px; background: var(--surface); display: flex; flex-direction: column; gap: 4px; }
+.phone .scrim { position: absolute; inset: 0; background: var(--scrim); }
+.phone .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 20px 20px 0 0; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.phone .grab { width: 36px; height: 4px; border-radius: 4px; background: var(--line); align-self: center; }
+.star { width: 28px; height: 28px; color: var(--ink); }
+.phone .pin { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 10px; }
+
+.questions { display: flex; flex-direction: column; gap: 12px; }
+.questions li { max-width: 70ch; }
+.questions li + li { margin-top: 8px; }
+.legend { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.legend i { width: 14px; height: 14px; border-radius: 4px; outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (prefers-reduced-motion: no-preference) { .strip { scroll-behavior: smooth; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.5c.6 5.6 4.9 9.9 10.5 10.5-5.6.6-9.9 4.9-10.5 10.5C11.4 16.9 7.1 12.6 1.5 12 7.1 11.4 11.4 7.1 12 1.5z"/></symbol>
+</svg>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">RebuildOS · V1 · Low fidelity</span>
+  <h1>Journey wireframes</h1>
+  <p class="lede">The five agreed journeys, screen by screen. These show structure, wording and order, not visual design. Spacing, colour, type and motion come later. Frames scroll sideways within each journey.</p>
+  <div class="legend"><i></i> An orange outline marks a new decision that came out of drawing the flow.</div>
+</header>
+
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">What drawing the flows decided</span>
+    <h2>Proposed decisions</h2>
+    <p class="lede">These came up while walking through real cases. None of them are in the brief yet. Confirm or push back, and I'll add them.</p>
+  </div>
+  <div class="decisions">
+    <div class="decision"><span class="tag">Navigation</span><b>Three tabs: Today, Plan, Progress</b><span>Plan holds Missions and Later Actions that don't belong to a Mission. Focus, Rebuild and Close the day are full-screen moments, not tabs.</span></div>
+    <div class="decision"><span class="tag">Today</span><b>The first Today Action becomes the Main Action</b><span>Nobody has to choose a Main Action before they can start. It can be changed with one tap.</span></div>
+    <div class="decision"><span class="tag">Today</span><b>An empty Today suggests each Mission's next Action</b><span>This links Missions to Today without a separate planning step. One tap puts the suggestion on Today.</span></div>
+    <div class="decision"><span class="tag">Focus</span><b>The timer counts up, with an optional target</b><span>A countdown that runs out reads as failing. Counting up matches "record actual time". The target can be 25, 50 or 90 minutes, or the Action's estimate.</span></div>
+    <div class="decision"><span class="tag">Day</span><b>A new day starts at 4:00, not midnight</b><span>Someone working at 00:30 is still in their day. The overnight rule runs at 4:00.</span></div>
+    <div class="decision"><span class="tag">Adding</span><b>Where you add something decides where it goes</b><span>Adding from Today puts it on Today. Adding from Plan or a Mission puts it in Later. No extra choice is needed.</span></div>
+    <div class="decision"><span class="tag">Today</span><b>Completed Actions stay visible, struck through</b><span>They sink to the bottom of Today until the day ends. That's the evidence of the day, without a stats card.</span></div>
+    <div class="decision"><span class="tag">Close the day</span><b>Appears at the bottom of Today after 18:00</b><span>A quiet row, not a notification or a pop-up. It also appears once every Today Action is done.</span></div>
+    <div class="decision"><span class="tag">Rebuild</span><b>A small day has no score</b><span>Items are ticked off, but nothing says "2 of 3". One done is a good small day.</span></div>
+  </div>
+</section>
+
+<!-- Journey 1 -->
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">Journey 1</span>
+    <h2>First run</h2>
+    <p class="lede">Goal: the first real Action in about 60 seconds, with no sign-up, tour or Mission.</p>
+  </div>
+  <div class="strip">
+    <figure class="frame">
+      <div class="phone">
+        <svg class="star"><use href="#star"/></svg>
+        <div class="spacer"></div>
+        <div class="big">What's one thing you want to get done today?</div>
+        <div class="input">e.g. Revise chapter 3</div>
+        <div class="btn">Add to today</div>
+        <div class="muted small" style="text-align:center">You can add more later.</div>
+        <div class="spacer"></div>
+      </div>
+      <figcaption><b>1a · Welcome.</b> The only question on first open. The answer becomes the Main Action.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span><span class="date small">Mon 2 Nov</span></div>
+        <span class="label">Main action</span>
+        <div class="main pin"><span class="name">Revise chapter 3</span><span class="btn sm">Start focus</span></div>
+        <div class="add">+ Add an action</div>
+        <div class="spacer"></div>
+        <div class="hint small">Got bigger goals? <b>Add a Mission</b><br>Break them into steps you can do today.</div>
+        <div class="tabs"><span class="on">Today</span><span>Plan</span><span>Progress</span></div>
+      </div>
+      <figcaption><b>1b · Today.</b> The first Action is the Main Action automatically. The Mission hint shows once and can be dismissed.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone center">
+        <div class="top" style="width:100%"><span class="muted">✕</span><span class="muted small">Focus</span><span></span></div>
+        <div class="muted" style="margin-top:12px">Revise chapter 3</div>
+        <div class="spacer"></div>
+        <div class="ring pin"><span class="timer">18:42</span></div>
+        <div class="muted small">Target 25 min</div>
+        <div class="spacer"></div>
+        <div class="btns" style="width:100%"><span class="btn ghost">Pause</span><span class="btn">Finish</span></div>
+      </div>
+      <figcaption><b>1c · Focus.</b> Counts up. The ring fills towards the optional target and keeps going past it. Nothing else is on screen.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone center">
+        <div class="spacer"></div>
+        <svg class="star"><use href="#star"/></svg>
+        <div class="big">25 minutes on<br>Revise chapter 3</div>
+        <div class="muted">Is this action done?</div>
+        <div class="spacer"></div>
+        <div class="btn" style="width:100%">Done</div>
+        <div class="btn ghost" style="width:100%">More to do</div>
+        <div class="muted small">Time is saved either way.</div>
+      </div>
+      <figcaption><b>1d · End of Focus.</b> One tap closes the loop. "More to do" keeps the Action on Today with the time logged.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span><span class="date small">Mon 2 Nov</span></div>
+        <div class="row"><span class="check on"></span><span class="grow done">Revise chapter 3</span></div>
+        <div class="scrim"></div>
+        <div class="sheet pin">
+          <span class="grab"></span>
+          <b style="font-size:14px">Keep RebuildOS on your home screen</b>
+          <span class="muted">It opens like an app and keeps your progress safe on this phone.</span>
+          <div class="card small"><span>1 · Tap <b>Share</b> in Safari</span><span>2 · Tap <b>Add to Home Screen</b></span></div>
+          <span class="btn">Show me how</span>
+          <span class="link muted">Not now</span>
+        </div>
+      </div>
+      <figcaption><b>1e · Install prompt.</b> Shown after the first finished Focus session. After a session or two, "Not now" is no longer offered.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- Journey 2 -->
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">Journey 2</span>
+    <h2>A normal day</h2>
+    <p class="lede">Goal: open, know what to do and start. Close the day in the evening if you feel like it.</p>
+  </div>
+  <div class="strip">
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span><span class="date small">Tue 3 Nov</span></div>
+        <div class="quiet"><span>2 actions moved to Later</span><u>Undo</u></div>
+        <span class="label">Main action</span>
+        <div class="main"><span class="name">Write landing page copy</span><span class="chips"><span class="chip">Launch my app</span><span class="chip">45 min</span></span><span class="btn sm">Start focus</span></div>
+        <div class="row"><span class="check"></span><span class="grow">Gym: legs</span></div>
+        <div class="row"><span class="check"></span><span class="grow">Email the tutor</span></div>
+        <div class="add">+ Add an action</div>
+        <div class="spacer"></div>
+        <div class="link muted small">Make today smaller</div>
+        <div class="tabs"><span class="on">Today</span><span>Plan</span><span>Progress</span></div>
+      </div>
+      <figcaption><b>2a · Morning.</b> Yesterday's Main Action carried over. The overnight rule shows as one quiet line with Undo. Rebuild is always one tap away.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span></div>
+        <div class="main"><span class="name">Write landing page copy</span></div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <span class="grab"></span>
+          <div class="input filled">Book dentist</div>
+          <div class="chips pin"><span class="chip on">Today</span><span class="chip">+ Mission</span><span class="chip">+ Time</span><span class="chip">+ Day</span></div>
+          <span class="btn">Add</span>
+          <span class="muted small">Only the name is needed.</span>
+        </div>
+      </div>
+      <figcaption><b>2b · Quick add.</b> A name and Enter. Everything else is an optional chip. Added from Today, so it lands on Today.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span><span class="date small">18:40</span></div>
+        <div class="row"><span class="check"></span><span class="grow">Email the tutor</span></div>
+        <div class="row"><span class="check on"></span><span class="grow done">Write landing page copy</span></div>
+        <div class="row"><span class="check on"></span><span class="grow done">Gym: legs</span></div>
+        <div class="row"><span class="check on"></span><span class="grow done">Book dentist</span></div>
+        <div class="spacer"></div>
+        <div class="card pin"><b>Close the day</b><span class="muted small">See what you did and set up tomorrow. About 30 seconds.</span></div>
+        <div class="tabs"><span class="on">Today</span><span>Plan</span><span>Progress</span></div>
+      </div>
+      <figcaption><b>2c · Evening.</b> Done Actions stay visible, struck through. Close the day appears as a quiet row after 18:00.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="muted">✕</span><span class="muted small">Close the day</span><span></span></div>
+        <div class="big">Today you</div>
+        <div class="stat"><div><strong>3</strong><span class="muted small">actions</span></div><div><strong>1h 40m</strong><span class="muted small">focus</span></div></div>
+        <span class="label">Still open</span>
+        <div class="row"><span class="grow">Email the tutor</span><span class="seg"><span class="on">Tomorrow</span><span>Later</span></span></div>
+        <span class="label">Tomorrow's main action</span>
+        <div class="input filled">Write pricing section ▾</div>
+        <span class="label">Energy today (optional)</span>
+        <div class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></div>
+        <div class="spacer"></div>
+        <span class="btn">Close the day</span>
+      </div>
+      <figcaption><b>2d · Close the day.</b> What you did, where the leftovers go, tomorrow's Main Action and one optional energy tap. No journaling.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- Journey 3 -->
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">Journey 3</span>
+    <h2>A hard day</h2>
+    <p class="lede">Goal: turn "too much" into one to three small things, and make that feel like a good day.</p>
+  </div>
+  <div class="strip">
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="muted">✕</span><span class="muted small">Make today smaller</span><span></span></div>
+        <div class="big">A smaller day</div>
+        <span class="muted">Three small things. Do one, two or all three.</span>
+        <div class="slot"><span class="label">Something that matters</span><div class="line"><b>Write landing page copy</b><span class="muted small">Swap</span></div></div>
+        <div class="slot"><span class="label">For your body</span><div class="line"><b>10-minute walk</b><span class="muted small">Swap</span></div></div>
+        <div class="slot"><span class="label">For your space</span><div class="line"><b>Clear your desk</b><span class="muted small">Swap</span></div></div>
+        <div class="spacer"></div>
+        <span class="btn">Start this day</span>
+        <span class="muted small" style="text-align:center">Your full Today is kept for later.</span>
+      </div>
+      <figcaption><b>3a · Rebuild.</b> Three pre-filled slots. Swap or remove any of them. Slot 1 comes from the Main Action.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="big">A smaller day</div>
+        <div class="slot"><b>Write landing page copy</b></div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <span class="grab"></span>
+          <b style="font-size:14px">Something for your body</b>
+          <div class="row"><span class="grow">10-minute walk</span><span class="muted">✓</span></div>
+          <div class="row"><span class="grow">Stretch for 5 minutes</span></div>
+          <div class="row"><span class="grow">Cook a proper meal</span></div>
+          <div class="row"><span class="grow">Gym: legs <span class="chip">yours</span></span></div>
+          <div class="add">+ Write your own</div>
+          <span class="link muted small">Remove this slot</span>
+        </div>
+      </div>
+      <figcaption><b>3b · Swap.</b> Suggestions, your own Actions or something new. Removing a slot is allowed. A one-thing day is fine.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span><span class="chip">Small day</span></div>
+        <div class="row"><span class="check on"></span><span class="grow done">10-minute walk</span></div>
+        <div class="row"><span class="check"></span><span class="grow">Write landing page copy</span><span class="muted small">Focus</span></div>
+        <div class="row"><span class="check"></span><span class="grow">Clear your desk</span></div>
+        <div class="spacer"></div>
+        <div class="link muted small">Back to full Today</div>
+        <div class="tabs"><span class="on">Today</span><span>Plan</span><span>Progress</span></div>
+      </div>
+      <figcaption><b>3c · During the small day.</b> No counter, no "1 of 3". Focus works the same. The full Today is one tap away.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone center">
+        <div class="spacer"></div>
+        <svg class="star"><use href="#star"/></svg>
+        <div class="big">Morning.</div>
+        <div class="muted">Yesterday you walked and wrote for 30 minutes.</div>
+        <div class="spacer"></div>
+        <span class="btn" style="width:100%">Normal day</span>
+        <span class="btn ghost" style="width:100%">Another small one</span>
+      </div>
+      <figcaption><b>3d · Next morning.</b> A small day ends on its own. The app asks once, mentions what was done and never what wasn't.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- Journey 4 -->
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">Journey 4</span>
+    <h2>Coming back after three weeks</h2>
+    <p class="lede">Goal: working again within two taps, with no guilt and nothing lost.</p>
+  </div>
+  <div class="strip">
+    <figure class="frame">
+      <div class="phone center">
+        <div class="spacer"></div>
+        <svg class="star"><use href="#star"/></svg>
+        <div class="big">Welcome back.</div>
+        <div class="muted">Everything is where you left it.</div>
+        <div class="card" style="width:100%"><span class="label">Your record</span><div class="stat" style="justify-content:center"><div><strong>41h</strong><span class="muted small">focus</span></div><div><strong>96</strong><span class="muted small">actions</span></div></div></div>
+        <div class="spacer"></div>
+        <span class="btn" style="width:100%">Start with a small day</span>
+        <span class="btn ghost" style="width:100%">Go to Today</span>
+      </div>
+      <figcaption><b>4a · Return.</b> Shown after 3 or more days away. The all-time record is unchanged. No list of what was missed.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Today</span><span class="date small">Mon 23 Nov</span></div>
+        <div class="muted">Nothing planned yet. Pick up where you left off:</div>
+        <div class="card pin"><span class="label">Launch my app</span><div class="line" style="display:flex;justify-content:space-between;gap:8px"><b>Write pricing section</b><span class="chip">+ Today</span></div></div>
+        <div class="card"><span class="label">Pass maths exam</span><div style="display:flex;justify-content:space-between;gap:8px"><b>Past paper 2019</b><span class="chip">+ Today</span></div></div>
+        <div class="add">+ Add something else</div>
+        <div class="spacer"></div>
+        <div class="tabs"><span class="on">Today</span><span>Plan</span><span>Progress</span></div>
+      </div>
+      <figcaption><b>4b · Empty Today.</b> If they choose "Go to Today", each Mission's next Action is offered. One tap and it's the Main Action.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- Journey 5 -->
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">Journey 5</span>
+    <h2>Creating a Mission</h2>
+    <p class="lede">Goal: a goal with a first step in under a minute, and no setup screens.</p>
+  </div>
+  <div class="strip">
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="title">Plan</span><span class="muted">+</span></div>
+        <span class="label">Missions</span>
+        <div class="card"><b>Launch my app</b><span class="muted small">Next: Write pricing section</span></div>
+        <div class="card"><b>Pass maths exam</b><span class="muted small">Next: Past paper 2019</span></div>
+        <div class="add">+ New Mission</div>
+        <span class="label">Later</span>
+        <div class="row"><span class="check"></span><span class="grow">Fix bike light</span></div>
+        <div class="row"><span class="check"></span><span class="grow">Email the tutor</span></div>
+        <div class="tabs"><span>Today</span><span class="on">Plan</span><span>Progress</span></div>
+      </div>
+      <figcaption><b>5a · Plan tab.</b> Missions, each showing its next Action, then Later Actions with no Mission. Adding here goes to Later.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="muted">✕</span><span class="muted small">New Mission</span><span></span></div>
+        <div class="big">What are you building?</div>
+        <div class="input filled">Run a half marathon</div>
+        <span class="label">Optional</span>
+        <div class="input">You'll know it's done when…</div>
+        <div class="chips"><span class="chip">+ Target date</span></div>
+        <div class="spacer"></div>
+        <span class="btn">Next</span>
+      </div>
+      <figcaption><b>5b · Name it.</b> One required field. "Done when" and the date are optional and visibly secondary.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="muted">←</span><span class="muted small">New Mission</span><span></span></div>
+        <div class="big">What's the first step?</div>
+        <div class="input filled">Run 3 km, easy pace</div>
+        <div class="row"><span class="grow">Do it today</span><span class="seg"><span class="on">Yes</span><span>Later</span></span></div>
+        <div class="spacer"></div>
+        <span class="btn">Create Mission</span>
+      </div>
+      <figcaption><b>5c · First step.</b> The one question every Mission asks. A Mission never exists without a next Action.</figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="phone">
+        <div class="top"><span class="muted">←</span><span class="muted">•••</span></div>
+        <div class="big">Run a half marathon</div>
+        <span class="muted small">Done when: I finish the Berlin half in April</span>
+        <div class="stat"><div><strong>4</strong><span class="muted small">done</span></div><div><strong>3h 10m</strong><span class="muted small">focus</span></div><div><strong>Yday</strong><span class="muted small">last</span></div></div>
+        <span class="label">Next</span>
+        <div class="main"><span class="name">Run 5 km, easy pace</span><span class="btns"><span class="btn sm ghost">+ Today</span><span class="btn sm">Focus</span></span></div>
+        <div class="row"><span class="check"></span><span class="grow">Buy proper shoes</span></div>
+        <div class="add">+ Add an action</div>
+        <div class="spacer"></div>
+        <span class="link muted small">Mark Mission complete</span>
+      </div>
+      <figcaption><b>5d · Mission detail.</b> Work invested, not a percentage. The next Action is always first. The user decides when it's complete.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="journey-head">
+    <span class="eyebrow">Still open</span>
+    <h2>Questions for you</h2>
+  </div>
+  <ol class="questions">
+    <li><b>Does Progress need its own tab?</b> Without points and rank it's light: this week, the all-time record, and per-Mission investment. It could live at the top of Plan instead, which would leave only two tabs. I lean towards keeping the tab, so progress has a home that isn't Today.</li>
+    <li><b>Is Focus allowed without an Action?</b> I'd say no. If the user taps Focus with nothing selected, they type a name first. Every minute is recorded against something, which keeps Mission investment honest.</li>
+    <li><b>Are the Rebuild slot names right?</b> "Something that matters / For your body / For your space" is my draft. Your words for these matter more than mine.</li>
+  </ol>
+</section>
+
+</div>
