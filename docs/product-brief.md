@@ -1,6 +1,45 @@
 # RebuildOS — Product Brief (V1 / MVP)
 
-_Status: agreed direction, pre-design. This document is the reference for user journeys, design, and implementation. If something here turns out to be wrong, change this document first._
+_Status: V1 built. **V1.1 direction below supersedes the rest of this document where they differ.** This document is the reference for user journeys, design, and implementation. If something here turns out to be wrong, change this document first._
+
+---
+
+## V1.1 direction (after testing V1 on an iPhone 15 Pro)
+
+**What testing showed:** colours and layout fit well, but motion felt choppy and cheap; the install prompt was confusing and blocking; the app felt **empty, abstract and not helpful enough**. Its vocabulary (Missions, Actions, Later, Main Action) had to be learned, there were no dates, it wasn't clear where to put what, and "Make today smaller" asked too many questions on exactly the days with the least energy.
+
+**What the user wants RebuildOS to do:**
+1. Tell me **what to work on next**.
+2. Show **how I'm progressing towards my goals**.
+3. Help me **keep good habits** and stay on track.
+4. Let my day flex: a guided day, a "just my list" day, or **the minimum on bad days** so nothing fully breaks.
+
+**Decisions:**
+
+| Topic | Decision |
+|---|---|
+| Vocabulary | **Goals, Tasks, Habits** in plain words. "Rebuild" stays as the app name and the bad-day mode. |
+| Adding a task | One field, then simple options: **When** (Today · Tomorrow · Pick a date, optional time), **Repeat**, **Goal**. |
+| Dates | A task with a date appears on Today by itself on that day. |
+| Times | **For ordering the day only.** No reminders until the App Store version (web push on iPhone is unreliable). |
+| Habits | Both **every day** and **X times a week**. Shown on Today; weekly dots on Progress. A missed day is an empty dot, never a broken streak. |
+| Goals | Optional measurable target (e.g. "Run 21 km", "Save €2,000") with a real progress bar; otherwise "5 of 8 steps done". **Focus time per goal stays** — it's useful. |
+| Bad days | **"My minimum day"**, set once during setup; one tap on a bad day, no choosing or swapping. |
+| First use | A ~60-second setup (goal with template steps, one or two habits, my minimum) so the app is never empty. |
+| Today | The one thing to do next at the top, then **Habits today**, then **Tasks**. The app suggests the next thing from dated tasks and goals' next steps; the user can always override. |
+| Install | **Never blocking.** One clear, closable prompt with a visual; outside Safari on iPhone, "Open in Safari" with Copy link. |
+| AI | Later, once the app proves itself. Templates now, built so AI suggestions can slot in. |
+
+**Plan:**
+
+| Phase | Scope |
+|---|---|
+| 1 | Motion and performance on iPhone; install prompt rework |
+| 2 | Plain words; simpler add sheet with dates and times; simplified Today |
+| 3 | Habits; My minimum day |
+| 4 | Goal progress; first-time setup with templates |
+
+Each phase is checked on a real iPhone before the next starts.
 
 ---
 
