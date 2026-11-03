@@ -1,9 +1,28 @@
 /// <reference types="vitest/config" />
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Which build is running, shown at the bottom of Progress. Cloudflare Pages sets CF_PAGES_COMMIT_SHA.
+function buildVersion(): string {
+  const fromEnv = process.env.CF_PAGES_COMMIT_SHA;
+  let sha = fromEnv ? fromEnv.slice(0, 7) : '';
+  if (!sha) {
+    try {
+      sha = execSync('git rev-parse --short HEAD').toString().trim();
+    } catch {
+      sha = 'dev';
+    }
+  }
+  const date = new Date().toISOString().slice(0, 10);
+  return `${sha} · ${date}`;
+}
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(buildVersion()),
+  },
   plugins: [
     react(),
     VitePWA({

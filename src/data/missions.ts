@@ -19,7 +19,7 @@ export interface NewMission {
 export async function createMission(input: NewMission): Promise<string> {
   const title = input.title.trim();
   const firstStep = input.firstStep.trim();
-  if (!title || !firstStep) throw new Error('A Mission needs a name and a first step.');
+  if (!title || !firstStep) throw new Error('A goal needs a name and a first step.');
   const id = newId();
   const t = now();
   await db.transaction('rw', db.missions, db.actions, async () => {
