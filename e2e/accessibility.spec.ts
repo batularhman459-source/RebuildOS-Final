@@ -15,6 +15,17 @@ async function check(page: Page, name: string) {
   expect(summary, `${name} has accessibility issues`).toEqual([]);
 }
 
+test('first-time setup has no serious accessibility issues', async ({ page }) => {
+  await openApp(page, '/', { setup: true });
+  await expect(page).toHaveURL(/\/setup$/);
+  await check(page, 'Setup intro');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByRole('button', { name: 'Get fit' }).click();
+  await check(page, 'Setup: goal');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await check(page, 'Setup: steps');
+});
+
 test('screens have no serious accessibility issues', async ({ page }) => {
   await openApp(page);
   await check(page, 'Today (first run)');

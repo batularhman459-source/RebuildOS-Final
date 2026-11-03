@@ -12,6 +12,8 @@ import { dayLabel, upcoming } from '../core/schedule';
 import { APP_LOCALE } from '../core/locale';
 import { useDay } from '../app/day';
 import { scheduleLabel } from '../core/habits';
+import { goalProgress } from '../core/goals';
+import { GoalProgressBar } from '../components/GoalProgressBar';
 import { getMinimum } from '../data/minimum';
 import type { Action, FocusSession, Mission } from '../core/types';
 import { moveToToday } from '../data/actions';
@@ -190,6 +192,7 @@ function MissionSection({ mission, actions, sessions }: { mission: Mission; acti
         <span className={own.missionTitle}>{mission.title}</span>
         {meta && <span className={own.missionMeta}>{meta}</span>}
       </Link>
+      <GoalProgressBar progress={goalProgress(mission, actions)} />
       {next ? (
         <div className={own.nextRow}>
           <span className={own.next}>Next: {next.title}</span>

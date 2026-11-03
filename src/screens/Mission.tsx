@@ -17,7 +17,10 @@ import type { Action, Mission as MissionRecord } from '../core/types';
 import { moveToToday } from '../data/actions';
 import { db } from '../data/db';
 import { startFocus } from '../data/focus';
-import { deleteMission, setMissionStatus, updateMission } from '../data/missions';
+import { deleteMission, setGoalMeasure, setMissionStatus, updateGoalProgress, updateMission } from '../data/missions';
+import { goalProgress, parseAmount, withUnit } from '../core/goals';
+import { GoalProgressBar } from '../components/GoalProgressBar';
+import { MeasureFields } from '../components/MeasureFields';
 import styles from './Screen.module.css';
 import own from './Mission.module.css';
 
@@ -29,6 +32,7 @@ export function Mission() {
   const [editing, setEditing] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const data = useLiveQuery(async () => {
     const mission = await db.missions.get(id);
@@ -77,6 +81,19 @@ export function Mission() {
         {mission.doneWhen && <p className={own.doneWhen}>Done when: {mission.doneWhen}</p>}
         {mission.targetDay && <p className={own.doneWhen}>By {formatShortDay(mission.targetDay)}</p>}
       </header>
+
+      <section className={own.progress} aria-label="Progress">
+        <GoalProgressBar progress={goalProgress(mission, actions)} large />
+        {mission.measure ? (
+          <button type="button" className={own.progressButton} onClick={() => setUpdating(true)}>
+            Update progress
+          </button>
+        ) : (
+          <button type="button" className={own.progressLink} onClick={() => setEditing(true)}>
+            + Add a target to measure (e.g. 21 km)
+          </button>
+        )}
+      </section>
 
       <dl className={own.stats}>
         <div>
@@ -184,6 +201,8 @@ export function Mission() {
         )}
       </div>
 
+      {mission.measure && <UpdateProgressSheet mission={mission} open={updating} onClose={() => setUpdating(false)} />}
+
       <EditMissionSheet
         mission={mission}
         open={editing}
@@ -238,6 +257,8 @@ function EditMissionSheet({
   const [title, setTitle] = useState(mission.title);
   const [doneWhen, setDoneWhen] = useState(mission.doneWhen ?? '');
   const [targetDay, setTargetDay] = useState(mission.targetDay ?? '');
+  const [measureTarget, setMeasureTarget] = useState(mission.measure ? String(mission.measure.target) : '');
+  const [measureUnit, setMeasureUnit] = useState(mission.measure?.unit ?? '');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
@@ -246,10 +267,18 @@ function EditMissionSheet({
     setDoneWhen(mission.doneWhen ?? '');
     setTargetDay(mission.targetDay ?? '');
     setConfirmDelete(false);
+    setMeasureTarget(mission.measure ? String(mission.measure.target) : '');
+    setMeasureUnit(mission.measure?.unit ?? '');
   }, [open, mission]);
 
   async function save() {
     await updateMission(mission.id, { title, doneWhen, targetDay });
+    const target = parseAmount(measureTarget);
+    if (target !== undefined && target > 0) {
+      if (target !== mission.measure?.target || measureUnit.trim() !== mission.measure?.unit) await setGoalMeasure(mission.id, { target, unit: measureUnit });
+    } else if (!measureTarget.trim() && mission.measure) {
+      await setGoalMeasure(mission.id, undefined);
+    }
   }
 
   return (
@@ -286,6 +315,7 @@ function EditMissionSheet({
         </label>
         <input id="edit-mission-date" type="date" className={forms.input} value={targetDay} onChange={(e) => setTargetDay(e.target.value)} />
       </div>
+      <MeasureFields target={measureTarget} unit={measureUnit} onTarget={setMeasureTarget} onUnit={setMeasureUnit} />
       <div className={forms.list}>
         {mission.status === 'active' ? (
           <button
@@ -356,5 +386,54 @@ function MissionComplete({ mission, done, focusMs, onClose }: { mission: Mission
         </button>
       </Stage>
     </motion.div>
+  );
+}
+
+// ── Update progress (measured goals) ────────────────────────────────────────
+
+function UpdateProgressSheet({ mission, open, onClose }: { mission: MissionRecord; open: boolean; onClose: () => void }) {
+  const m = mission.measure!;
+  const [value, setValue] = useState(String(m.current));
+  useEffect(() => {
+    if (open) setValue(String(m.current));
+  }, [open, m.current]);
+
+  const parsed = parseAmount(value);
+  const step = m.target >= 100 ? Math.pow(10, Math.floor(Math.log10(m.target)) - 1) : 1;
+
+  async function save() {
+    if (parsed === undefined) return;
+    await updateGoalProgress(mission.id, parsed);
+    onClose();
+  }
+
+  return (
+    <Sheet open={open} onClose={onClose} label="Update progress">
+      <h2 className={forms.title}>Where are you now?</h2>
+      <p className={own.sheetText}>Target: {withUnit(m.target, m.unit)}</p>
+      <div className={own.amountRow}>
+        <button type="button" className={own.amountStep} aria-label={`Minus ${step}`} onClick={() => setValue(String(Math.max(0, (parsed ?? 0) - step)))}>
+          −
+        </button>
+        <label htmlFor="goal-current" className="visually-hidden">
+          Current amount in {m.unit}
+        </label>
+        <input
+          id="goal-current"
+          className={own.amountInput}
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && void save()}
+        />
+        <span className={own.amountUnit}>{m.unit}</span>
+        <button type="button" className={own.amountStep} aria-label={`Plus ${step}`} onClick={() => setValue(String((parsed ?? 0) + step))}>
+          +
+        </button>
+      </div>
+      <button type="button" className={forms.primary} disabled={parsed === undefined} onClick={() => void save()}>
+        Save
+      </button>
+    </Sheet>
   );
 }

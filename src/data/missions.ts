@@ -13,6 +13,8 @@ export interface NewMission {
   /** Every Mission starts with a first step. */
   firstStep: string;
   firstStepToday: boolean;
+  /** Optional measurable target. */
+  measure?: { target: number; unit: string };
 }
 
 /** Create a Mission together with its first Action. Returns the Mission id. */
@@ -28,6 +30,7 @@ export async function createMission(input: NewMission): Promise<string> {
       title,
       doneWhen: input.doneWhen?.trim() || undefined,
       targetDay: input.targetDay || undefined,
+      measure: input.measure ? { target: input.measure.target, unit: input.measure.unit.trim(), current: 0, updatedAt: t } : undefined,
       status: 'active',
       createdAt: t,
       updatedAt: t,
@@ -67,4 +70,25 @@ export async function deleteMission(id: string): Promise<void> {
 
 export async function setActionMission(actionId: string, missionId: string | undefined): Promise<void> {
   await db.actions.update(actionId, { missionId, updatedAt: now() });
+}
+
+/** Set, change or remove a goal's measurable target. */
+export async function setGoalMeasure(id: string, measure: { target: number; unit: string; current?: number } | undefined): Promise<void> {
+  const g = await db.missions.get(id);
+  if (!g) return;
+  if (!measure) {
+    await db.missions.update(id, { measure: undefined, updatedAt: Date.now() });
+    return;
+  }
+  await db.missions.update(id, {
+    measure: { target: measure.target, unit: measure.unit.trim(), current: measure.current ?? g.measure?.current ?? 0, start: g.measure?.start, updatedAt: Date.now() },
+    updatedAt: Date.now(),
+  });
+}
+
+/** Record where the person is now on a measurable goal. */
+export async function updateGoalProgress(id: string, current: number): Promise<void> {
+  const g = await db.missions.get(id);
+  if (!g?.measure) return;
+  await db.missions.update(id, { measure: { ...g.measure, current, updatedAt: Date.now() }, updatedAt: Date.now() });
 }

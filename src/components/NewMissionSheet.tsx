@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { activeMissions, RECOMMENDED_ACTIVE_MISSIONS } from '../core/missions';
 import { db } from '../data/db';
 import { createMission } from '../data/missions';
+import { parseAmount } from '../core/goals';
+import { MeasureFields } from './MeasureFields';
 import { Sheet } from './Sheet';
 import forms from './forms.module.css';
 import styles from './NewMissionSheet.module.css';
@@ -25,6 +27,9 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
   const [doneWhen, setDoneWhen] = useState('');
   const [targetDay, setTargetDay] = useState('');
   const [showDate, setShowDate] = useState(false);
+  const [showMeasure, setShowMeasure] = useState(false);
+  const [measureTarget, setMeasureTarget] = useState('');
+  const [measureUnit, setMeasureUnit] = useState('');
   const [firstStep, setFirstStep] = useState('');
   const [today, setToday] = useState(true);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -37,6 +42,9 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
     setDoneWhen('');
     setTargetDay('');
     setShowDate(false);
+    setShowMeasure(false);
+    setMeasureTarget('');
+    setMeasureUnit('');
     setFirstStep('');
     setToday(true);
     const t = window.setTimeout(() => titleRef.current?.focus(), 60);
@@ -55,7 +63,9 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
   async function create(e: FormEvent) {
     e.preventDefault();
     if (!firstStep.trim()) return;
-    const id = await createMission({ title, doneWhen, targetDay, firstStep, firstStepToday: today });
+    const target = parseAmount(measureTarget);
+    const measure = showMeasure && target !== undefined && target > 0 ? { target, unit: measureUnit } : undefined;
+    const id = await createMission({ title, doneWhen, targetDay, firstStep, firstStepToday: today, measure });
     onClose();
     navigate(`/goal/${id}`);
   }
@@ -92,18 +102,27 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
               maxLength={160}
             />
           </div>
-          {showDate ? (
+          {showDate && (
             <div className={forms.group}>
               <label htmlFor="mission-date" className={forms.label}>
                 Target date (optional)
               </label>
               <input id="mission-date" type="date" className={forms.input} value={targetDay} onChange={(e) => setTargetDay(e.target.value)} />
             </div>
-          ) : (
+          )}
+          {showMeasure && <MeasureFields target={measureTarget} unit={measureUnit} onTarget={setMeasureTarget} onUnit={setMeasureUnit} />}
+          {(!showDate || !showMeasure) && (
             <div className={forms.chips}>
-              <button type="button" className={forms.chip} onClick={() => setShowDate(true)}>
-                + Target date
-              </button>
+              {!showDate && (
+                <button type="button" className={forms.chip} onClick={() => setShowDate(true)}>
+                  + Target date
+                </button>
+              )}
+              {!showMeasure && (
+                <button type="button" className={forms.chip} onClick={() => setShowMeasure(true)}>
+                  + Measure it (e.g. 21 km)
+                </button>
+              )}
             </div>
           )}
           {activeCount >= RECOMMENDED_ACTIVE_MISSIONS && (

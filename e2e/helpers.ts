@@ -41,10 +41,20 @@ export async function seed(page: Page, body: string): Promise<unknown> {
   );
 }
 
-/** Open the app fresh and wait until the database exists. */
-export async function openApp(page: Page, path = '/'): Promise<void> {
+/**
+ * Open the app and wait until it's ready. A brand-new person is sent to the
+ * first-time setup; unless `setup` is true, skip it the way a person would.
+ */
+export async function openApp(page: Page, path = '/', opts: { setup?: boolean } = {}): Promise<void> {
   await page.goto(path);
   await expect(page.locator('main')).toBeVisible();
+  if (path !== '/' || opts.setup) return;
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(400);
+  if (page.url().endsWith('/setup')) {
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+    await expect(page).toHaveURL(/\/$/);
+  }
 }
 
 export async function addFirstAction(page: Page, title: string): Promise<void> {

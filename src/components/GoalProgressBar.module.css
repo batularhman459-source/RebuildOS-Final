@@ -1,0 +1,37 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+/* Scale, not width: smooth on iPhone (see DESIGN.md performance rules). */
+.fill {
+  height: 100%;
+  width: 100%;
+  background: var(--ink);
+  border-radius: 3px;
+  transform-origin: left center;
+}
+
+.label {
+  font-size: 14px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.large .track {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.large .label {
+  font-size: 16px;
+  color: var(--ink-secondary);
+}

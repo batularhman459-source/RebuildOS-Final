@@ -52,6 +52,19 @@ export interface Mission extends BaseRecord {
   status: MissionStatus;
   completedAt?: Timestamp;
   sortOrder: number;
+  /** Optional measurable target, e.g. 21 km or €2,000. Without it, progress is steps done. */
+  measure?: GoalMeasure;
+}
+
+export interface GoalMeasure {
+  target: number;
+  /** Short unit shown with numbers: "km", "€", "chapters". */
+  unit: string;
+  /** Where the person is now. Updated by hand. */
+  current: number;
+  /** Where they started (default 0), so "lose 5 kg" style goals still work later. */
+  start?: number;
+  updatedAt?: Timestamp;
 }
 
 /** A continuous stretch of running time inside a Focus session. `end` is absent while running. */

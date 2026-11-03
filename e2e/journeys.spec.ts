@@ -280,3 +280,57 @@ test('dated tasks: upcoming, then on Today on their day, ordered by time', async
   await expect(rows.nth(1)).toContainText('Gym: legs');
   await expect(rows.nth(1)).toContainText('18:00');
 });
+
+test('first-time setup: from a template to a full Today in about a minute', async ({ page }) => {
+  await openApp(page, '/', { setup: true });
+  await expect(page).toHaveURL(/\/setup$/);
+  await expect(page.getByRole('heading', { name: 'Let’s set you up.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Start' }).click();
+
+  await page.getByRole('button', { name: 'Run a race' }).click();
+  await expect(page.locator('#setup-goal')).toHaveValue('Run a half marathon');
+  await expect(page.getByText('A progress bar will track 0 → 21 km.')).toBeVisible();
+  await page.getByRole('button', { name: 'Next' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Your first steps' })).toBeVisible();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('heading', { name: 'Habits to keep' })).toBeVisible();
+  await expect(page.getByText('3× a week')).toBeVisible();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('heading', { name: 'On a bad day…' })).toBeVisible();
+  await page.getByRole('button', { name: 'Done — show me Today' }).click();
+
+  // Never empty: the goal's first step is up next, the habit is on Today.
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('region', { name: 'Up next' })).toContainText('Run a half marathon');
+  await expect(stageTitle(page)).toHaveText('Pick a race and a date');
+  await expect(page.getByRole('list', { name: 'Habits today' })).toContainText('Run');
+
+  // Goal progress: measured in km, updated by hand.
+  await page.getByRole('link', { name: 'Plan' }).click();
+  await expect(page.getByRole('region', { name: 'Goals' })).toContainText('0 km of 21 km');
+  await page.getByRole('link', { name: /Run a half marathon/ }).click();
+  await page.getByRole('button', { name: 'Update progress' }).click();
+  await page.locator('#goal-current').fill('5');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('progressbar', { name: '5 km of 21 km' })).toBeVisible();
+
+  // Setup doesn't come back.
+  await page.goto('/');
+  await page.waitForTimeout(500);
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('goals without a target show steps done', async ({ page }) => {
+  await openApp(page, '/plan');
+  await page.getByRole('button', { name: 'New goal' }).click();
+  await page.locator('#mission-title').fill('Launch my app');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.locator('#mission-first-step').fill('Write landing page copy');
+  await page.getByRole('button', { name: 'Create goal' }).click();
+  await expect(page.getByRole('progressbar', { name: '0 of 1 step done' })).toBeVisible();
+  await page.getByRole('link', { name: 'Today' }).click();
+  await page.getByRole('button', { name: 'Mark as done' }).click();
+  await page.getByRole('link', { name: 'Plan' }).click();
+  await expect(page.getByRole('region', { name: 'Goals' })).toContainText('1 of 1 step done');
+});

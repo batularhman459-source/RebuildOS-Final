@@ -9,6 +9,8 @@ import { APP_LOCALE } from '../core/locale';
 import { activeMissions, missionStats } from '../core/missions';
 import { allTime, lastSevenDays } from '../core/progress';
 import { habitWeek, isActive, recentWeeks } from '../core/habits';
+import { goalProgress } from '../core/goals';
+import { GoalProgressBar } from '../components/GoalProgressBar';
 import { db } from '../data/db';
 import styles from './Screen.module.css';
 import own from './Progress.module.css';
@@ -151,11 +153,12 @@ export function Progress() {
           <ul className={own.missions}>
             {missions.map(({ m, stats }) => (
               <li key={m.id}>
-                <Link to={`/goal/${m.id}`} className={own.missionRow}>
-                  <span className={own.missionTitle}>{m.title}</span>
-                  <span className={own.missionMeta}>
-                    {focusText(stats.focusMs)} · {stats.done} done
+                <Link to={`/goal/${m.id}`} className={own.goalRow}>
+                  <span className={own.missionRow}>
+                    <span className={own.missionTitle}>{m.title}</span>
+                    <span className={own.missionMeta}>{focusText(stats.focusMs)} focused</span>
                   </span>
+                  <GoalProgressBar progress={goalProgress(m, data.actions)} />
                 </Link>
               </li>
             ))}

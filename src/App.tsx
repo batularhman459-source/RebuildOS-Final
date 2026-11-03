@@ -17,11 +17,13 @@ import { Progress } from './screens/Progress';
 import { Rebuild } from './screens/Rebuild';
 import { CloseDay } from './screens/CloseDay';
 import { Welcome } from './screens/Welcome';
+import { Setup } from './screens/Setup';
+import { needsSetup } from './data/setup';
 import { Today } from './screens/Today';
 import styles from './App.module.css';
 
 /** Full-screen moments hide the dock. */
-const FULL_SCREEN = ['/focus', '/minimum', '/welcome', '/close'];
+const FULL_SCREEN = ['/focus', '/minimum', '/welcome', '/close', '/setup'];
 
 /** Tabs fade in; opacity only, because a transform would break fixed overlays (Focus, compact bar). */
 function section(pathname: string): string {
@@ -57,6 +59,7 @@ export function App() {
                 <Route path="/minimum" element={<Rebuild />} />
                 <Route path="/rebuild" element={<Navigate to="/minimum" replace />} />
                 <Route path="/welcome" element={<Welcome />} />
+                <Route path="/setup" element={<Setup />} />
                 <Route path="/close" element={<CloseDay />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
@@ -72,7 +75,7 @@ export function App() {
 
 /**
  * On opening the app: go straight back to a running Focus session; otherwise, after
- * three or more days away, show Welcome back. Then remember today as the last day seen.
+ * three or more days away, show Welcome back; a brand-new person gets the first-time setup. Then remember today as the last day seen.
  */
 function StartupRouting() {
   const navigate = useNavigate();
@@ -92,6 +95,8 @@ function StartupRouting() {
         if (path !== '/focus') navigate('/focus');
       } else if (shouldWelcomeBack(lastSeen, day) && path === '/') {
         navigate('/welcome');
+      } else if (path === '/' && (await needsSetup())) {
+        navigate('/setup', { replace: true });
       }
       await setLastSeenDay(day);
     })();
@@ -101,7 +106,7 @@ function StartupRouting() {
 }
 
 /** Screens whose top edge is a dark stage. */
-const DARK_TOP = ['/focus', '/minimum', '/welcome', '/close'];
+const DARK_TOP = ['/focus', '/minimum', '/welcome', '/close', '/setup'];
 
 /**
  * Match the phone's status bar area (behind the time and battery) to the top of the

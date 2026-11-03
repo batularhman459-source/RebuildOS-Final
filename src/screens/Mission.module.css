@@ -266,3 +266,78 @@
   font-size: 17px;
   font-weight: 600;
 }
+
+/* ── Goal progress ───────────────────────────────────── */
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.progressButton {
+  align-self: flex-start;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.progressLink {
+  align-self: flex-start;
+  min-height: var(--touch-min);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  text-align: left;
+}
+
+.sheetText {
+  color: var(--ink-secondary);
+}
+
+.amountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.amountStep {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  font-size: 24px;
+  color: var(--ink);
+}
+
+.amountInput {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--canvas);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.amountInput:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.amountUnit {
+  flex: none;
+  font-size: 17px;
+  color: var(--ink-muted);
+}
