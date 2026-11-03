@@ -82,8 +82,8 @@ export function YourData() {
           <>
             <h2 className={forms.title}>Restore this backup?</h2>
             <p className={styles.sheetText}>
-              It’s from {formatShortDay(isoDay(pending.exportedAt))} and has {pending.tables.actions.filter((a) => !a.deletedAt).length} actions and{' '}
-              {pending.tables.missions.filter((m) => !m.deletedAt).length} Missions. It will replace everything currently on this phone.
+              It’s from {formatShortDay(isoDay(pending.exportedAt))} and has {pending.tables.actions.filter((a) => !a.deletedAt).length} tasks and{' '}
+              {pending.tables.missions.filter((m) => !m.deletedAt).length} goals. It will replace everything currently on this phone.
             </p>
             <button type="button" className={forms.primary} onClick={() => void confirmRestore()}>
               Replace with backup

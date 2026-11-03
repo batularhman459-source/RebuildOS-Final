@@ -14,7 +14,7 @@ test('1 · first run: one Action, Focus, done', async ({ page }) => {
   await expect(page.getByRole('timer')).toHaveText(/00:0[1-9]/, { timeout: 5000 });
 
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('Is this action done?')).toBeVisible();
+  await expect(page.getByText('Is this task done?')).toBeVisible();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
 
   // The first finished Focus session suggests the home screen, once.
@@ -45,14 +45,15 @@ test('2 · a normal day: add, complete, Later, and the overnight rule', async ({
   `);
   await page.reload();
   await expect(stageTitle(page)).toHaveText('Write landing page copy');
-  await expect(page.getByRole('status')).toContainText('1 action moved to Later');
+  await expect(page.getByRole('status')).toContainText('1 task moved to Someday');
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(alsoToday(page).getByText('Gym: legs')).toBeVisible();
 
   await alsoToday(page).getByText('Gym: legs').click();
-  await page.getByRole('button', { name: 'Move to Later' }).click();
+  await page.getByRole('dialog', { name: 'Edit task' }).getByRole('button', { name: 'Someday' }).click();
+  await page.keyboard.press('Escape');
   await page.getByRole('link', { name: 'Plan' }).click();
-  await expect(page.getByRole('region', { name: 'Later' }).getByText('Gym: legs')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Someday' }).getByText('Gym: legs')).toBeVisible();
 });
 
 test('3 · a hard day: make today smaller', async ({ page }) => {
@@ -99,24 +100,24 @@ test('4 · coming back after three weeks', async ({ page }) => {
 
 test('5 · creating a Mission', async ({ page }) => {
   await openApp(page, '/plan');
-  await page.getByRole('button', { name: 'New Mission' }).click();
+  await page.getByRole('button', { name: 'New goal' }).click();
   await page.locator('#mission-title').fill('Launch my app');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.locator('#mission-first-step').fill('Write landing page copy');
-  await page.getByRole('button', { name: 'Create Mission' }).click();
+  await page.getByRole('button', { name: 'Create goal' }).click();
 
-  await expect(page).toHaveURL(/\/mission\//);
+  await expect(page).toHaveURL(/\/goal\//);
   await expect(page.getByRole('heading', { name: 'Launch my app' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Next' })).toContainText('On Today');
 
   await page.getByRole('link', { name: 'Today' }).click();
-  await expect(page.getByRole('region', { name: 'Main action' })).toContainText('Launch my app');
+  await expect(page.getByRole('region', { name: 'Up next' })).toContainText('Launch my app');
   await expect(stageTitle(page)).toHaveText('Write landing page copy');
 
   await page.getByRole('link', { name: 'Plan' }).click();
   await page.getByRole('link', { name: /Launch my app/ }).click();
-  await page.getByRole('button', { name: 'Mark Mission complete' }).click();
-  await expect(page.getByRole('heading', { name: 'Mission complete.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Mark goal complete' }).click();
+  await expect(page.getByRole('heading', { name: 'Goal complete.' })).toBeVisible();
 });
 
 test('close the day sets up tomorrow', async ({ page }) => {
@@ -173,4 +174,41 @@ test('install help: Safari gets steps, other iPhone browsers are sent to Safari'
   await expect(page2.getByText(/open it in Safari/)).toBeVisible();
   await expect(page2.getByRole('button', { name: 'Copy link' })).toBeVisible();
   await other.close();
+});
+
+test('dated tasks: upcoming, then on Today on their day, ordered by time', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Write landing page copy');
+
+  // A task for tomorrow at 18:00 waits in Plan → Upcoming.
+  await page.getByRole('button', { name: 'Add a task' }).last().click();
+  const dialog = page.getByRole('dialog', { name: 'New task' });
+  await dialog.getByPlaceholder('What do you need to do?').fill('Gym: legs');
+  await dialog.getByRole('button', { name: 'Tomorrow' }).click();
+  await dialog.getByLabel(/^Time/).fill('18:00');
+  await dialog.getByRole('button', { name: 'Add task' }).click();
+  await expect(page.getByRole('region', { name: 'Up next' })).not.toContainText('Gym');
+
+  await page.getByRole('link', { name: 'Plan' }).click();
+  const upcomingSection = page.getByRole('region', { name: 'Upcoming' });
+  await expect(upcomingSection).toContainText('Tomorrow');
+  await expect(upcomingSection).toContainText('Gym: legs');
+  await expect(upcomingSection).toContainText('18:00');
+
+  // Its day arrives (simulated): it moves onto Today by itself.
+  await seed(page, `
+    const req = stores.actions.getAll();
+    req.onsuccess = () => { for (const a of req.result) if (a.title === 'Gym: legs') { a.targetDay = u.today; stores.actions.put(a); } };
+  `);
+  await page.goto('/');
+  await quickAdd(page, 'Morning run');
+  await page.getByRole('button', { name: 'Morning run', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Edit task' }).getByLabel(/^Time/).fill('07:30');
+  await page.keyboard.press('Escape');
+
+  const rows = page.getByRole('region', { name: 'Also today' }).getByRole('listitem');
+  await expect(rows.nth(0)).toContainText('Morning run');
+  await expect(rows.nth(0)).toContainText('07:30');
+  await expect(rows.nth(1)).toContainText('Gym: legs');
+  await expect(rows.nth(1)).toContainText('18:00');
 });

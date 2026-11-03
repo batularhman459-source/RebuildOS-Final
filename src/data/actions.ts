@@ -1,5 +1,6 @@
 import { addDays, dayKey } from '../core/day';
 import { shouldOfferSmallDay } from '../core/rebuild';
+import { dueForToday } from '../core/schedule';
 import { nextMain, planRollover } from '../core/today';
 import type { Action, DayKey } from '../core/types';
 import { db, newId } from './db';
@@ -23,27 +24,43 @@ async function ensureMain(): Promise<void> {
   if (next) await db.actions.update(next.id, { isMain: true, updatedAt: now() });
 }
 
+/** When a task should happen: today, a specific day (tomorrow or later), or someday ("later"). */
+export type When = 'today' | 'later' | { day: DayKey };
+
 export interface NewAction {
   title: string;
-  destination: 'today' | 'later';
+  /** Kept for existing callers; `when` takes precedence. */
+  destination?: 'today' | 'later';
+  when?: When;
+  /** "HH:MM", optional. Orders the day only. */
+  time?: string;
   estimateMinutes?: number;
   missionId?: string;
 }
 
+/** The stored fields for a When, relative to today. A date that has arrived means Today. */
+function placement(when: When, t: DayKey): Pick<Action, 'state' | 'todayDay' | 'targetDay'> {
+  if (when === 'today') return { state: 'today', todayDay: t, targetDay: undefined };
+  if (when === 'later') return { state: 'later', todayDay: undefined, targetDay: undefined };
+  if (when.day <= t) return { state: 'today', todayDay: t, targetDay: undefined };
+  return { state: 'later', todayDay: undefined, targetDay: when.day };
+}
+
 export async function addAction(input: NewAction): Promise<string> {
   const title = input.title.trim();
-  if (!title) throw new Error('An Action needs a name.');
+  if (!title) throw new Error('A task needs a name.');
   const id = newId();
   const t = now();
+  const when: When = input.when ?? input.destination ?? 'today';
   await db.transaction('rw', db.actions, async () => {
     await db.actions.add({
       id,
       title,
-      state: input.destination,
+      ...placement(when, today()),
+      time: input.time,
       isMain: false,
       estimateMinutes: input.estimateMinutes,
       missionId: input.missionId,
-      todayDay: input.destination === 'today' ? today() : undefined,
       createdAt: t,
       updatedAt: t,
       sortOrder: t,
@@ -51,6 +68,24 @@ export async function addAction(input: NewAction): Promise<string> {
     await ensureMain();
   });
   return id;
+}
+
+/** Change when a task happens, and optionally its time ("" clears it). */
+export async function scheduleAction(id: string, when: When, time?: string): Promise<void> {
+  await db.transaction('rw', db.actions, async () => {
+    const a = await db.actions.get(id);
+    if (!a || a.deletedAt || a.state === 'done') return;
+    const p = placement(when, today());
+    const leavingToday = a.state === 'today' && p.state !== 'today';
+    await db.actions.update(id, {
+      ...p,
+      ...(time !== undefined ? { time: time || undefined } : {}),
+      ...(leavingToday ? { isMain: false } : {}),
+      ...(p.state === 'today' && a.state !== 'today' ? { sortOrder: now() } : {}),
+      updatedAt: now(),
+    });
+    await ensureMain();
+  });
 }
 
 export async function updateAction(id: string, changes: Partial<Pick<Action, 'title' | 'estimateMinutes'>>): Promise<void> {
@@ -127,9 +162,15 @@ export interface RolloverNotice {
 export async function runRollover(day: DayKey): Promise<void> {
   await db.transaction('rw', db.actions, db.meta, async () => {
     const all = await db.actions.toArray();
-    const plan = planRollover(all, day);
-    if (plan.carry.length === 0 && plan.toLater.length === 0 && plan.discard.length === 0) return;
     const t = now();
+    // Dated tasks whose day has arrived come onto Today first.
+    const due = dueForToday(all, day);
+    for (const id of due) await db.actions.update(id, { state: 'today', todayDay: day, targetDay: undefined, sortOrder: t, updatedAt: t });
+    const plan = planRollover(all, day);
+    if (plan.carry.length === 0 && plan.toLater.length === 0 && plan.discard.length === 0) {
+      if (due.length > 0) await ensureMain();
+      return;
+    }
     for (const id of plan.discard) await db.actions.update(id, { deletedAt: t, isMain: false, updatedAt: t });
     for (const id of plan.carry) await db.actions.update(id, { todayDay: day, updatedAt: t });
     for (const id of plan.toLater) {

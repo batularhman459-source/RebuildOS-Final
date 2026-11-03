@@ -1,3 +1,4 @@
+import { compareForToday } from './schedule';
 import type { Action, DayKey, Timestamp } from './types';
 
 /**
@@ -24,7 +25,7 @@ export interface TodayView {
 
 export function todayView(actions: readonly Action[], today: DayKey, dayOf: (t: Timestamp) => DayKey): TodayView {
   const live = actions.filter(isLive);
-  const onToday = live.filter((a) => a.state === 'today').sort(bySortOrder);
+  const onToday = live.filter((a) => a.state === 'today').sort(compareForToday);
   const main = onToday.find((a) => a.isMain);
   return {
     main,
@@ -35,8 +36,9 @@ export function todayView(actions: readonly Action[], today: DayKey, dayOf: (t: 
   };
 }
 
+/** Undated Later tasks ("someday"). Dated ones are listed as Upcoming instead. */
 export function laterList(actions: readonly Action[]): Action[] {
-  return actions.filter((a) => isLive(a) && a.state === 'later').sort(bySortOrder);
+  return actions.filter((a) => isLive(a) && a.state === 'later' && a.targetDay === undefined).sort(bySortOrder);
 }
 
 export function bySortOrder(a: Action, b: Action): number {
@@ -70,5 +72,5 @@ export function planRollover(actions: readonly Action[], today: DayKey): Rollove
 
 /** The Action that should become Main when there is none: the first open Today Action. */
 export function nextMain(actions: readonly Action[]): Action | undefined {
-  return actions.filter((a) => isLive(a) && a.state === 'today' && !a.isMain).sort(bySortOrder)[0];
+  return actions.filter((a) => isLive(a) && a.state === 'today' && !a.isMain).sort(compareForToday)[0];
 }

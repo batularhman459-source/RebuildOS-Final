@@ -14,7 +14,7 @@ interface NewMissionSheetProps {
 }
 
 /**
- * Two short steps: "What are you building?" then "What's the first step?".
+ * Two short steps: "What’s your goal?" then "What's the first step?".
  * A Mission never exists without a next Action. No setup screens.
  */
 export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
@@ -57,15 +57,15 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
     if (!firstStep.trim()) return;
     const id = await createMission({ title, doneWhen, targetDay, firstStep, firstStepToday: today });
     onClose();
-    navigate(`/mission/${id}`);
+    navigate(`/goal/${id}`);
   }
 
   return (
-    <Sheet open={open} onClose={onClose} label="New Mission">
+    <Sheet open={open} onClose={onClose} label="New goal">
       {step === 1 ? (
         <form onSubmit={next} className={styles.form}>
           <label htmlFor="mission-title" className={styles.question}>
-            What are you building?
+            What’s your goal?
           </label>
           <input
             ref={titleRef}
@@ -108,7 +108,7 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
           )}
           {activeCount >= RECOMMENDED_ACTIVE_MISSIONS && (
             <p className={styles.note}>
-              You have {activeCount} active Missions. Fewer at a time is usually easier — you can park one any time.
+              You have {activeCount} active goals. Fewer at a time is usually easier — you can pause one any time.
             </p>
           )}
           <button type="submit" className={forms.primary} disabled={!title.trim()}>
@@ -143,7 +143,7 @@ export function NewMissionSheet({ open, onClose }: NewMissionSheetProps) {
             </button>
           </div>
           <button type="submit" className={forms.primary} disabled={!firstStep.trim()}>
-            Create Mission
+            Create goal
           </button>
         </form>
       )}

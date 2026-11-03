@@ -16,7 +16,7 @@ export function MissionPicker({ value, onChange }: MissionPickerProps) {
   return (
     <div className={forms.group}>
       <span className={forms.label} id="mission-label">
-        Part of a Mission? (optional)
+        Goal (optional)
       </span>
       <div className={forms.chips} role="group" aria-labelledby="mission-label">
         {missions.map((m) => (

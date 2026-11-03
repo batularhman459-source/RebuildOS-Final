@@ -60,7 +60,7 @@ export function Mission() {
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </button>
-        <button type="button" className={own.round} aria-label="Edit Mission" onClick={() => setEditing(true)}>
+        <button type="button" className={own.round} aria-label="Edit goal" onClick={() => setEditing(true)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <circle cx="5" cy="12" r="1.8" />
             <circle cx="12" cy="12" r="1.8" />
@@ -71,7 +71,7 @@ export function Mission() {
 
       <header className={own.header}>
         {mission.status !== 'active' && (
-          <span className={own.status}>{mission.status === 'complete' ? 'Completed' : 'Parked'}</span>
+          <span className={own.status}>{mission.status === 'complete' ? 'Completed' : 'Paused'}</span>
         )}
         <h1 className={own.title}>{mission.title}</h1>
         {mission.doneWhen && <p className={own.doneWhen}>Done when: {mission.doneWhen}</p>}
@@ -175,11 +175,11 @@ export function Mission() {
               setCelebrate(true);
             }}
           >
-            Mark Mission complete
+            Mark goal complete
           </button>
         ) : (
           <button type="button" className={own.footerButton} onClick={() => void setMissionStatus(mission.id, 'active')}>
-            {mission.status === 'complete' ? 'Reopen Mission' : 'Make it active again'}
+            {mission.status === 'complete' ? 'Reopen goal' : 'Make it active again'}
           </button>
         )}
       </div>
@@ -259,11 +259,11 @@ function EditMissionSheet({
         void save();
         onClose();
       }}
-      label="Edit Mission"
+      label="Edit goal"
     >
       <div className={forms.group}>
         <label htmlFor="edit-mission-title" className={forms.label}>
-          Mission
+          Goal
         </label>
         <input id="edit-mission-title" className={forms.input} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />
       </div>
@@ -297,7 +297,7 @@ function EditMissionSheet({
               onClose();
             }}
           >
-            Park this Mission for now
+            Pause this goal for now
           </button>
         ) : (
           <button
@@ -325,7 +325,7 @@ function EditMissionSheet({
             onDeleted();
           }}
         >
-          {confirmDelete ? 'Tap again to delete. Its actions are kept.' : 'Delete Mission'}
+          {confirmDelete ? 'Tap again to delete. Its tasks are kept.' : 'Delete goal'}
         </button>
       </div>
     </Sheet>
@@ -337,16 +337,16 @@ function EditMissionSheet({
 function MissionComplete({ mission, done, focusMs, onClose }: { mission: MissionRecord; done: number; focusMs: number; onClose: () => void }) {
   return (
     <motion.div className={own.complete} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-      <Stage glowTop="40%" aria-label="Mission complete">
+      <Stage glowTop="40%" aria-label="Goal complete">
         <div style={{ flex: 1 }} />
         <motion.div className={own.completeBody} initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15, duration: 0.4 }}>
           <Star size={72} variant="gradient" />
           <h1 className={own.completeTitle}>
-            Mission <i>complete.</i>
+            Goal <i>complete.</i>
           </h1>
           <p className={own.completeMission}>{mission.title}</p>
           <p className={own.completeStats}>
-            {done} {done === 1 ? 'action' : 'actions'}
+            {done} {done === 1 ? 'task' : 'tasks'}
             {focusMs >= 60_000 ? ` · ${formatDuration(focusMs)} focused` : ''}
           </p>
         </motion.div>

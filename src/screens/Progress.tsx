@@ -68,7 +68,7 @@ export function Progress() {
         </p>
         <dl className={own.stats}>
           <div>
-            <dt>actions done</dt>
+            <dt>tasks done</dt>
             <dd>{week.actionsDone}</dd>
           </div>
           <div>
@@ -88,7 +88,7 @@ export function Progress() {
             <dd>{focusText(record.focusMs)}</dd>
           </div>
           <div>
-            <dt>actions done</dt>
+            <dt>tasks done</dt>
             <dd>{record.actionsDone}</dd>
           </div>
         </dl>
@@ -98,12 +98,12 @@ export function Progress() {
       {missions.length > 0 && (
         <section aria-labelledby="missions-heading" className={own.section}>
           <h2 id="missions-heading" className={own.heading}>
-            Missions
+            Goals
           </h2>
           <ul className={own.missions}>
             {missions.map(({ m, stats }) => (
               <li key={m.id}>
-                <Link to={`/mission/${m.id}`} className={own.missionRow}>
+                <Link to={`/goal/${m.id}`} className={own.missionRow}>
                   <span className={own.missionTitle}>{m.title}</span>
                   <span className={own.missionMeta}>
                     {focusText(stats.focusMs)} · {stats.done} done

@@ -77,7 +77,7 @@ export function CloseDay() {
             'A quiet day.'
           ) : (
             <>
-              <strong>{summary.actionsDone}</strong> {summary.actionsDone === 1 ? 'action' : 'actions'} done
+              <strong>{summary.actionsDone}</strong> {summary.actionsDone === 1 ? 'task' : 'tasks'} done
               {summary.focusMs >= 60_000 && (
                 <>
                   {' · '}
@@ -125,7 +125,7 @@ export function CloseDay() {
                         aria-pressed={leftovers[a.id] === c}
                         onClick={() => setLeftovers({ ...leftovers, [a.id]: c })}
                       >
-                        {c === 'tomorrow' ? 'Tomorrow' : 'Later'}
+                        {c === 'tomorrow' ? 'Tomorrow' : 'Someday'}
                       </button>
                     ))}
                   </div>
@@ -137,7 +137,7 @@ export function CloseDay() {
 
         <section className={styles.section} aria-labelledby="main-heading">
           <h2 id="main-heading" className={styles.heading}>
-            Tomorrow’s main action
+            First thing tomorrow
           </h2>
           <div className={styles.options} role="radiogroup" aria-labelledby="main-heading">
             {mainOptions.map((a) => (
@@ -165,7 +165,7 @@ export function CloseDay() {
               <input
                 className={styles.newInput}
                 placeholder="Something new"
-                aria-label="Tomorrow’s main action"
+                aria-label="First thing tomorrow"
                 value={newMain}
                 onFocus={() => setMainChoice(NEW)}
                 onChange={(e) => {

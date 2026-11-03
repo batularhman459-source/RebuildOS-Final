@@ -1,0 +1,51 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 4px 4px 4px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.rowLabel {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.optional {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.timeWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Native pickers: iOS shows its own wheel, which is the most familiar control there is. */
+.native {
+  min-height: 40px;
+  min-width: 96px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--surface-muted);
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  text-align: center;
+}
+
+.native:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.clear {
+  width: var(--touch-min);
+  height: var(--touch-min);
+  font-size: 22px;
+  color: var(--ink-muted);
+}

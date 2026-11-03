@@ -54,16 +54,19 @@ export async function addFirstAction(page: Page, title: string): Promise<void> {
 }
 
 export async function quickAdd(page: Page, title: string, opts: { estimate?: string } = {}): Promise<void> {
-  await page.getByRole('button', { name: 'Add an action' }).last().click();
-  const dialog = page.getByRole('dialog', { name: 'Add an action' });
-  await dialog.getByPlaceholder('e.g. Book dentist').fill(title);
-  if (opts.estimate) await dialog.getByRole('button', { name: opts.estimate }).click();
-  await dialog.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('button', { name: 'Add a task' }).last().click();
+  const dialog = page.getByRole('dialog', { name: 'New task' });
+  await dialog.getByPlaceholder('What do you need to do?').fill(title);
+  if (opts.estimate) {
+    await dialog.getByRole('button', { name: '+ How long it takes' }).click();
+    await dialog.getByRole('button', { name: opts.estimate }).click();
+  }
+  await dialog.getByRole('button', { name: 'Add task' }).click();
   await expect(dialog).toBeHidden();
 }
 
 export function stageTitle(page: Page) {
-  return page.getByRole('region', { name: 'Main action' }).locator('h1');
+  return page.getByRole('region', { name: 'Up next' }).locator('h1');
 }
 
 export function alsoToday(page: Page) {

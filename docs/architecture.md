@@ -45,13 +45,25 @@ DESIGN.md      Design system — read before writing UI.
 
 **Rule of thumb:** if it's a rule from the product brief (overnight rule, Rebuild trigger, active day, record), it lives in `src/core` with tests. Screens call it; they never re-implement it.
 
+## Vocabulary in code
+
+Since V1.1 the app says **Goals**, **Tasks** and **Someday**. The code and database keep their original names so no data migration is needed:
+
+| On screen | In code |
+|---|---|
+| Goal | `Mission` (`missions` table, `/goal/:id` route; old `/mission/:id` links redirect) |
+| Task | `Action` (`actions` table) |
+| Someday | `state: 'later'` with no `targetDay` |
+| Upcoming | `state: 'later'` with a future `targetDay` |
+| Up next | the Main Action (`isMain`) |
+
 ## Data model
 
 All records have `id` (UUID), `createdAt`, `updatedAt` and optional `deletedAt` (soft delete), so a sync layer can be added later without migration. Types live in `src/core/types.ts`.
 
 | Table | Key | Purpose |
 |---|---|---|
-| `actions` | id | title, state (`later`/`today`/`done`), isMain, missionId, estimate, todayDay, targetDay, completedAt, sortOrder |
+| `actions` | id | title, state (`later`/`today`/`done`), isMain, missionId, estimate, todayDay, targetDay (date), time ("HH:MM", ordering only), completedAt, sortOrder, origin |
 | `missions` | id | title, doneWhen, targetDay, status (`active`/`parked`/`complete`), sortOrder |
 | `focusSessions` | id | actionId, segments `[{start, end?}]`, targetMinutes, finishedAt |
 | `days` | day | logical day: mode (`normal`/`small`), rebuild slots, energy, closedAt, rolledOverAt |

@@ -62,7 +62,7 @@ export function Today() {
 
   return (
     <>
-      <Stage height="max(420px, 58vh)" aria-label="Main action">
+      <Stage height="max(420px, 58vh)" aria-label="Up next">
         <span className={styles.date}>{dateFormat.format(new Date())}</span>
         <div className={styles.spacer} />
         {view && morningWins !== undefined && (
@@ -111,17 +111,18 @@ export function Today() {
             />
           ) : (
             <QuietNotice
-              text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'action' : 'actions'} moved to Later`}
+              text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'task' : 'tasks'} moved to Someday`}
               actionLabel="Undo"
               onAction={() => void undoRollover(day)}
               onDismiss={() => void dismissRolloverNotice(day)}
             />
           )
         )}
+        {listOpen.length > 0 && <h2 className={styles.listHeading}>Also today</h2>}
         {hasList && (
           <ul className={styles.list}>
             {listOpen.map((a) => (
-              <ActionRow key={a.id} action={a} meta={a.estimateMinutes ? `${a.estimateMinutes} min` : undefined} />
+              <ActionRow key={a.id} action={a} meta={a.time ?? (a.estimateMinutes ? `${a.estimateMinutes} min` : undefined)} />
             ))}
             {view.doneToday.map((a) => (
               <ActionRow key={a.id} action={a} />
@@ -133,7 +134,7 @@ export function Today() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
             </svg>
-            Add an action
+            Add a task
           </button>
         )}
         {showCloseRow && (
@@ -169,14 +170,20 @@ function MainAction({ action, missionTitle }: { action: Action; missionTitle?: s
 
   return (
     <motion.div className={styles.main} {...enter} transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}>
-      {missionTitle && <p className={styles.context}>{missionTitle}</p>}
+      <p className={styles.context}>{missionTitle ?? 'Up next'}</p>
       <button type="button" className={styles.mainTitle} onClick={() => openAction(action.id)}>
         <h1>{action.title}</h1>
       </button>
       {pausedHere ? (
         <p className={styles.support}>{formatSpent(elapsedMs(pausedHere.segments, Date.now()))} so far</p>
       ) : (
-        action.estimateMinutes && <p className={styles.support}>{formatEstimate(action.estimateMinutes)}</p>
+        (action.time || action.estimateMinutes) && (
+          <p className={styles.support}>
+            {[action.time ? `At ${action.time}` : undefined, action.estimateMinutes ? formatEstimate(action.estimateMinutes) : undefined]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )
       )}
       <div className={styles.stageButtons}>
         <button type="button" className={styles.stagePrimary} onClick={() => void focus()}>
@@ -221,7 +228,7 @@ function AskForAction({ again, suggestions }: { again: boolean; suggestions: Sug
         <h1 className={styles.question}>What’s one thing you want to get done today?</h1>
       )}
       <label htmlFor="first-action" className="visually-hidden">
-        Action
+        Task
       </label>
       <input
         id="first-action"

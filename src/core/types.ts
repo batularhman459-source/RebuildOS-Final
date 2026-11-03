@@ -29,8 +29,10 @@ export interface Action extends BaseRecord {
   estimateMinutes?: number;
   /** Logical day this Action was put on Today. */
   todayDay?: DayKey;
-  /** Optional day the user wants to do it. */
+  /** Optional day the user wants to do it. Dated Later tasks move onto Today on that day. */
   targetDay?: DayKey;
+  /** Optional time of day, "HH:MM". Only orders the day; no reminders yet. */
+  time?: string;
   completedAt?: Timestamp;
   /** Manual ordering within a list. */
   sortOrder: number;

@@ -1,6 +1,6 @@
 import { MotionConfig, motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { DayProvider } from './app/day';
 import { SheetsProvider } from './app/sheets';
 import { InstallFlow } from './app/InstallFlow';
@@ -51,7 +51,8 @@ export function App() {
                 <Route path="/" element={<Today />} />
                 <Route path="/plan" element={<Plan />} />
                 <Route path="/progress" element={<Progress />} />
-                <Route path="/mission/:id" element={<Mission />} />
+                <Route path="/goal/:id" element={<Mission />} />
+                <Route path="/mission/:id" element={<OldMissionLink />} />
                 <Route path="/focus" element={<Focus />} />
                 <Route path="/rebuild" element={<Rebuild />} />
                 <Route path="/welcome" element={<Welcome />} />
@@ -118,4 +119,10 @@ function useStatusBarColour(pathname: string) {
     meta.content = colour;
     document.documentElement.style.backgroundColor = colour;
   }, [pathname]);
+}
+
+/** Goals used to live at /mission/:id. */
+function OldMissionLink() {
+  const { id = '' } = useParams();
+  return <Navigate to={`/goal/${id}`} replace />;
 }

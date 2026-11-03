@@ -267,7 +267,7 @@ Tested on an iPhone 15 Pro, live effects made motion choppy. Keep to these:
 
 - Warm, direct, plain. Speak like a friend who has their life together.
 - Sentence case. Verbs on buttons ("Start focus", "Start this day", not "OK").
-- Name things the way users think of them: Actions, Missions, Today, Later.
+- Name things the way users think of them: **Goals, Tasks, Habits, Today, Upcoming, Someday**. The top task on Today is "Up next"; "Do this first" makes a task the one up next.
 - **Banned:** "overdue", "missed", "failed", "streak", "you only did…", exclamation marks in system copy, hustle or motivational quotes.
 - Numbers are honest and real units: "41h 20m focused", "96 actions done". Never points.
 

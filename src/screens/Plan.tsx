@@ -8,6 +8,9 @@ import { formatDuration } from '../core/focus';
 import { formatShortDay } from '../core/locale';
 import { activeMissions, missionStats, nextAction } from '../core/missions';
 import { laterList } from '../core/today';
+import { dayLabel, upcoming } from '../core/schedule';
+import { APP_LOCALE } from '../core/locale';
+import { useDay } from '../app/day';
 import type { Action, FocusSession, Mission } from '../core/types';
 import { moveToToday } from '../data/actions';
 import { db } from '../data/db';
@@ -15,6 +18,7 @@ import styles from './Screen.module.css';
 import own from './Plan.module.css';
 
 export function Plan() {
+  const today = useDay();
   const { openAdd, openNewMission } = useSheets();
   const data = useLiveQuery(async () => {
     const [missions, actions, sessions] = await Promise.all([db.missions.toArray(), db.actions.toArray(), db.focusSessions.toArray()]);
@@ -26,6 +30,7 @@ export function Plan() {
   // Later shows loose Actions, plus leftovers from Missions that are complete or gone.
   // Steps of active and parked Missions live on the Mission's page.
   const missionById = new Map(data.missions.map((m) => [m.id, m]));
+  const soon = upcoming(data.actions, today);
   const later = laterList(data.actions).filter((a) => {
     const m = a.missionId ? missionById.get(a.missionId) : undefined;
     return !m || m.deletedAt !== undefined || m.status === 'complete';
@@ -40,36 +45,54 @@ export function Plan() {
         <h1 className={styles.title}>Plan</h1>
         {active.length > 0 && (
           <span className={styles.meta}>
-            {active.length} {active.length === 1 ? 'Mission' : 'Missions'}
+            {active.length} {active.length === 1 ? 'goal' : 'goals'}
           </span>
         )}
       </header>
 
       {active.length === 0 ? (
         <div className={styles.empty}>
-          <h2 className={styles.emptyTitle}>No Missions yet</h2>
+          <h2 className={styles.emptyTitle}>No goals yet</h2>
           <p className={styles.emptyText}>
-            Missions are bigger goals, like passing an exam or getting fit. Each one always shows its next step.
+            A goal is something bigger you’re working towards, like passing an exam or getting fit. Each one always shows its next step.
           </p>
           <button type="button" className={own.newMission} onClick={openNewMission}>
-            New Mission
+            New goal
           </button>
         </div>
       ) : (
-        <section aria-label="Missions">
+        <section aria-label="Goals">
           {active.map((m) => (
             <MissionSection key={m.id} mission={m} actions={data.actions} sessions={data.sessions} />
           ))}
           <button type="button" className={own.addRow} onClick={openNewMission}>
             <PlusIcon />
-            New Mission
+            New goal
           </button>
+        </section>
+      )}
+
+      {soon.length > 0 && (
+        <section className={own.section} aria-labelledby="upcoming-heading">
+          <h2 id="upcoming-heading" className={own.heading}>
+            Upcoming
+          </h2>
+          {groupByDay(soon).map(([d, tasks]) => (
+            <div key={d} className={own.dayGroup}>
+              <h3 className={own.dayLabel}>{dayLabel(d, today, (k) => longDay.format(new Date(`${k}T12:00:00`)))}</h3>
+              <ul className={own.list}>
+                {tasks.map((a) => (
+                  <ActionRow key={a.id} action={a} meta={a.time} />
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       )}
 
       <section className={own.section} aria-labelledby="later-heading">
         <h2 id="later-heading" className={own.heading}>
-          Later
+          Someday
         </h2>
         {later.length > 0 ? (
           <ul className={own.list}>
@@ -78,26 +101,26 @@ export function Plan() {
             ))}
           </ul>
         ) : (
-          <p className={own.hint}>Things you want to do, just not today.</p>
+          <p className={own.hint}>Tasks without a date. Do them whenever suits you.</p>
         )}
         <button type="button" className={own.addRow} onClick={() => openAdd('later')}>
           <PlusIcon />
-          Add for later
+          Add a task
         </button>
       </section>
 
       {others.length > 0 && (
         <section className={own.section} aria-labelledby="others-heading">
           <h2 id="others-heading" className={own.heading}>
-            Parked and completed
+            Paused and completed
           </h2>
           <ul className={own.list}>
             {others.map((m) => (
               <li key={m.id} className={own.otherRow}>
-                <Link to={`/mission/${m.id}`} className={own.otherLink}>
+                <Link to={`/goal/${m.id}`} className={own.otherLink}>
                   <span className={own.otherTitle}>{m.title}</span>
                   <span className={own.otherMeta}>
-                    {m.status === 'complete' && m.completedAt ? `Completed ${formatShortDay(dayKey(new Date(m.completedAt)))}` : 'Parked'}
+                    {m.status === 'complete' && m.completedAt ? `Completed ${formatShortDay(dayKey(new Date(m.completedAt)))}` : 'Paused'}
                   </span>
                 </Link>
               </li>
@@ -117,7 +140,7 @@ function MissionSection({ mission, actions, sessions }: { mission: Mission; acti
 
   return (
     <div className={own.mission}>
-      <Link to={`/mission/${mission.id}`} className={own.missionHead}>
+      <Link to={`/goal/${mission.id}`} className={own.missionHead}>
         <span className={own.missionTitle}>{mission.title}</span>
         {meta && <span className={own.missionMeta}>{meta}</span>}
       </Link>
@@ -153,3 +176,14 @@ function PlusIcon() {
   );
 }
 
+
+const longDay = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'long', day: 'numeric', month: 'short' });
+
+function groupByDay(tasks: Action[]): [string, Action[]][] {
+  const groups = new Map<string, Action[]>();
+  for (const t of tasks) {
+    const key = t.targetDay!;
+    groups.set(key, [...(groups.get(key) ?? []), t]);
+  }
+  return [...groups.entries()];
+}

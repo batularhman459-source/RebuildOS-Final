@@ -23,18 +23,18 @@ test('screens have no serious accessibility issues', async ({ page }) => {
   await quickAdd(page, 'Gym: legs');
   await check(page, 'Today');
 
-  await page.getByRole('button', { name: 'Add an action' }).last().click();
+  await page.getByRole('button', { name: 'Add a task' }).last().click();
   await check(page, 'Add sheet');
   await page.keyboard.press('Escape');
 
   await page.getByRole('link', { name: 'Plan' }).click();
   await check(page, 'Plan');
 
-  await page.getByRole('button', { name: 'New Mission' }).click();
+  await page.getByRole('button', { name: 'New goal' }).click();
   await page.locator('#mission-title').fill('Launch my app');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.locator('#mission-first-step').fill('Write pricing section');
-  await page.getByRole('button', { name: 'Create Mission' }).click();
+  await page.getByRole('button', { name: 'Create goal' }).click();
   await check(page, 'Mission');
 
   await page.getByRole('link', { name: 'Progress' }).click();

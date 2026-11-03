@@ -43,7 +43,7 @@ export function Welcome() {
               {record.focused >= 60_000 && record.done > 0 && ' · '}
               {record.done > 0 && (
                 <>
-                  <strong>{record.done}</strong> {record.done === 1 ? 'action' : 'actions'} done
+                  <strong>{record.done}</strong> {record.done === 1 ? 'task' : 'tasks'} done
                 </>
               )}
             </p>

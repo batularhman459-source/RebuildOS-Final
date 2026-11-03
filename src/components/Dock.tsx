@@ -22,7 +22,7 @@ export function Dock() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `${styles.tab} ${isActive || (tab.to === '/plan' && pathname.startsWith('/mission/')) ? styles.active : ''}`
+              `${styles.tab} ${isActive || (tab.to === '/plan' && pathname.startsWith('/goal/')) ? styles.active : ''}`
             }
           >
             {tab.label}
@@ -32,9 +32,9 @@ export function Dock() {
       <button
         type="button"
         className={styles.add}
-        aria-label="Add an action"
+        aria-label="Add a task"
         onClick={() => {
-          const missionId = pathname.match(/^\/mission\/([^/]+)/)?.[1];
+          const missionId = pathname.match(/^\/goal\/([^/]+)/)?.[1];
           openAdd(pathname.startsWith('/plan') || missionId ? 'later' : 'today', missionId);
         }}
       >

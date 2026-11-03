@@ -1,7 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteAction, makeMain, moveToLater, moveToToday, reopenAction, updateAction } from '../data/actions';
+import { deleteAction, makeMain, reopenAction, scheduleAction, updateAction, type When } from '../data/actions';
+import { useDay } from '../app/day';
+import type { Action } from '../core/types';
+import { WhenPicker } from './WhenPicker';
 import { db } from '../data/db';
 import { startFocus } from '../data/focus';
 import { setActionMission } from '../data/missions';
@@ -15,15 +18,18 @@ interface ActionSheetProps {
   onClose: () => void;
 }
 
-/** Edit an Action and move it around. Opened by tapping an Action anywhere. */
+/** Edit a task: name, when, goal, how long; start Focus or do it first. Opened by tapping a task anywhere. */
 export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
   const action = useLiveQuery(() => (actionId ? db.actions.get(actionId) : undefined), [actionId]);
   const [title, setTitle] = useState('');
   const inputId = useId();
   const navigate = useNavigate();
+  const today = useDay();
+  const [more, setMore] = useState(false);
 
   useEffect(() => {
     if (action) setTitle(action.title);
+    setMore(false);
   }, [action?.id]);
 
   const open = actionId !== undefined && action !== undefined;
@@ -45,12 +51,12 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
         void saveTitle();
         onClose();
       }}
-      label="Edit action"
+      label="Edit task"
     >
       {action && (
         <>
           <label htmlFor={inputId} className="visually-hidden">
-            Action name
+            Task name
           </label>
           <input
             id={inputId}
@@ -63,12 +69,22 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
             enterKeyHint="done"
           />
           {action.state !== 'done' && (
-            <EstimateChips
-              value={action.estimateMinutes}
-              onChange={(m) => void updateAction(action.id, { estimateMinutes: m })}
+            <WhenPicker
+              today={today}
+              when={whenOf(action)}
+              time={action.time}
+              onChange={(w, t) => void scheduleAction(action.id, w, t ?? '')}
             />
           )}
           <MissionPicker value={action.missionId} onChange={(m) => void setActionMission(action.id, m)} />
+          {action.state !== 'done' &&
+            (action.estimateMinutes || more ? (
+              <EstimateChips value={action.estimateMinutes} onChange={(m) => void updateAction(action.id, { estimateMinutes: m })} />
+            ) : (
+              <button type="button" className={forms.moreLink} onClick={() => setMore(true)}>
+                + How long it takes
+              </button>
+            ))}
           <div className={forms.list}>
             {action.state !== 'done' && (
               <button
@@ -86,17 +102,7 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
             )}
             {action.state === 'today' && !action.isMain && (
               <button type="button" className={forms.listButton} onClick={() => run(() => makeMain(action.id))}>
-                Make it the main action
-              </button>
-            )}
-            {action.state === 'today' && (
-              <button type="button" className={forms.listButton} onClick={() => run(() => moveToLater(action.id))}>
-                Move to Later
-              </button>
-            )}
-            {action.state === 'later' && (
-              <button type="button" className={forms.listButton} onClick={() => run(() => moveToToday(action.id))}>
-                Move to Today
+                Do this first
               </button>
             )}
             {action.state === 'done' && (
@@ -112,4 +118,9 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
       )}
     </Sheet>
   );
+}
+
+function whenOf(a: Action): When {
+  if (a.state === 'today') return 'today';
+  return a.targetDay ? { day: a.targetDay } : 'later';
 }

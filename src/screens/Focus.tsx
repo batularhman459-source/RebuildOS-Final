@@ -215,7 +215,7 @@ function FinishView({ finished, onDone }: { finished: Finished; onDone: () => vo
                 <br />
                 {action.title}
               </h1>
-              <p className={styles.question}>Is this action done?</p>
+              <p className={styles.question}>Is this task done?</p>
             </motion.div>
           ) : (
             <LongSessionCheck
