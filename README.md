@@ -18,4 +18,4 @@ npm install
 npm run dev
 ```
 
-Tests: `npm test` · Type check: `npm run typecheck` · Production build: `npm run build`
+Rule tests: `npm test` · Journey and accessibility tests: `npm run test:e2e` · Type check: `npm run typecheck` · Production build: `npm run build`

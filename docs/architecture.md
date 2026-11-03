@@ -22,7 +22,7 @@ _Companion to `docs/product-brief.md` (what and why) and `DESIGN.md` (how it loo
 | Fonts | Sora, Roboto Flex, Fraunces via `@fontsource-variable` (bundled, offline) |
 | Data | IndexedDB via Dexie + `dexie-react-hooks` (`useLiveQuery`) |
 | Routing | React Router |
-| Tests | Vitest (rules), Playwright (journeys, from step 6) |
+| Tests | Vitest (rules), Playwright + axe (journeys and accessibility, `e2e/`) |
 | Hosting | Cloudflare Pages (static, HTTPS) |
 | Native later | Capacitor wraps the same app for iOS/Android |
 
@@ -65,7 +65,9 @@ Schema changes go through Dexie versioning (`db.version(n)`), never by editing a
 
 **Focus timer.** Time is derived from stored segment timestamps (`core/focus.ts`), recomputed on render and on `visibilitychange`. Locking the phone, backgrounding or reloading can't corrupt it. The Screen Wake Lock API is requested during Focus where supported. Sessions over 3 hours ask for confirmation.
 
-**Durability.** On start the app calls `navigator.storage.persist()`. Installing to the home screen (required after a session or two) exempts data from Safari's 7-day eviction. Settings will offer JSON export/import. Accounts and sync are deliberately postponed.
+**Durability.** On start the app calls `navigator.storage.persist()`. Installing to the home screen exempts data from Safari's 7-day eviction. Progress → Your data offers **Save a backup** (JSON via the share sheet or a download) and **Restore from a backup** (validated before anything is replaced; `core/backup.ts`). Accounts and sync are deliberately postponed.
+
+**Install.** In a phone browser, the first finished Focus session shows a one-time "Keep RebuildOS on your home screen" sheet; from the third distinct day opened in a phone browser, a full-screen step asks to install before continuing (`core/install.ts`). Chrome/Android get the native Install button; iPhone gets Share → Add to Home Screen steps. Installed apps and desktop browsers never see either.
 
 **Notifications.** None in the MVP (iOS web push needs install and is unreliable). Capacitor brings native notifications later.
 
@@ -76,7 +78,8 @@ Schema changes go through Dexie versioning (`db.version(n)`), never by editing a
 ```
 npm install        # once
 npm run dev        # local dev server
-npm test           # rule tests
+npm test           # rule tests (Vitest)
+npm run test:e2e   # journey + accessibility tests (Playwright, builds first)
 npm run typecheck  # TypeScript
 npm run build      # production build into dist/
 npm run preview    # serve the production build
@@ -101,8 +104,10 @@ No `404.html` is shipped, so Pages serves `index.html` for every route (single-p
 | 3 | Plan and Missions: create with first step, next Action, move to Today | Done |
 | 4 | Rebuild and Welcome back: small day, swap, return detection | Done |
 | 5 | Close the day and Progress: evening ritual, week stars, record | Done |
-| 6 | Polish: install flow, export/import, motion, Playwright journeys, release | Next |
+| 6 | Polish: install flow, export/import, motion, Playwright journeys, release | Done |
 
 ## Known notes
 
+- Contrast over the Apricot glow can't be checked by axe; it was measured on rendered screens (see DESIGN.md §5). Re-measure after changing the glow or stage text colours.
+- The main JS bundle is ~580 kB (~180 kB gzipped), mostly React, Motion and Dexie. Fine for an installed app that caches it; code-split Focus/Close/Rebuild if first load becomes a concern.
 - `npm audit` reports moderate advisories in build-time dependencies of Workbox (via vite-plugin-pwa). None of this code ships to users. Revisit when vite-plugin-pwa updates; don't `--force` downgrade.

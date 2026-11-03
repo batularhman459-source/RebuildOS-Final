@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDay } from '../app/day';
 import { useSheets } from '../app/sheets';
@@ -43,6 +43,7 @@ export function Today() {
   const hasList = view && (listOpen.length > 0 || view.doneToday.length > 0);
   const tomorrowMain = closed ? actions?.find((a) => !a.deletedAt && a.state === 'today' && a.isMain && (a.todayDay ?? '') > day) : undefined;
   const hour = new Date().getHours();
+  const [stageHidden, setStageHidden] = useState(false);
   const showCloseRow =
     view !== undefined &&
     !closed &&
@@ -94,6 +95,10 @@ export function Today() {
         )}
         <div className={styles.spacer} />
       </Stage>
+      <StageSentinel onChange={setStageHidden} />
+      <AnimatePresence>
+        {stageHidden && view?.main && !closed && !morningWins && <CompactMain key="compact" action={view.main} />}
+      </AnimatePresence>
 
       <section className={styles.below} aria-label="Also today">
         {notice && !small && !morningWins && !closed && (
@@ -313,6 +318,50 @@ function DayClosed({ tomorrow, onReopen }: { tomorrow?: string; onReopen: () => 
           Open today again
         </button>
       </div>
+    </motion.div>
+  );
+}
+
+/** Reports when the bottom of the stage has scrolled out of view. */
+function StageSentinel({ onChange }: { onChange: (hidden: boolean) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry) onChange(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onChange]);
+  return <div ref={ref} aria-hidden="true" style={{ height: 1, marginTop: -1 }} />;
+}
+
+/** When a long list scrolls the stage away, the Main Action stays one tap from Focus. */
+function CompactMain({ action }: { action: Action }) {
+  const navigate = useNavigate();
+  return (
+    <motion.div
+      className={styles.compact}
+      initial={{ y: '-100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '-100%' }}
+      transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
+    >
+      <span className={styles.compactTitle}>{action.title}</span>
+      <button
+        type="button"
+        className={styles.compactButton}
+        onClick={async () => {
+          await startFocus(action.id);
+          navigate('/focus');
+        }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6 3.5v17l14-8.5z" />
+        </svg>
+        Focus
+      </button>
     </motion.div>
   );
 }

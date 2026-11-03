@@ -1,0 +1,52 @@
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+  color: var(--ink);
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 17px;
+}
+
+.num {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dark {
+  color: var(--on-stage);
+}
+
+.dark .num {
+  background: var(--on-stage-control);
+}
+
+.install {
+  width: 100%;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.dark .install {
+  background: var(--on-stage);
+  color: var(--stage);
+}

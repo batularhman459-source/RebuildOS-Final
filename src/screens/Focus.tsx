@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Sheet } from '../components/Sheet';
 import { Stage } from '../components/Stage';
@@ -20,6 +20,7 @@ import type { Action, FocusSession } from '../core/types';
 import { completeAction } from '../data/actions';
 import { db } from '../data/db';
 import { adjustSession, finishFocus, getActiveSession, pauseFocus, resumeFocus, setTarget } from '../data/focus';
+import { markInstallPromptDue } from '../data/install';
 import { useNow } from '../data/useNow';
 import { useWakeLock } from '../data/useWakeLock';
 import styles from './Focus.module.css';
@@ -89,7 +90,7 @@ function RunningView({ session, action, onLeave, onFinish }: RunningProps) {
       animate={{ clipPath: 'inset(0 0 0% 0)' }}
       transition={{ duration: 0.42, ease }}
     >
-      <Stage glowTop="58%" glowScale={glowScale(elapsed, session.targetMinutes)} aria-label="Focus">
+      <Stage glowTop="66%" glowScale={glowScale(elapsed, session.targetMinutes)} aria-label="Focus">
         <button type="button" className={styles.close} aria-label="Leave focus" onClick={onLeave}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" />
@@ -189,6 +190,10 @@ function RunningView({ session, action, onLeave, onFinish }: RunningProps) {
 
 function FinishView({ finished, onDone }: { finished: Finished; onDone: () => void }) {
   const { session, action } = finished;
+  // The first finished session is a good moment to suggest the home screen (shown back on Today).
+  useEffect(() => {
+    void markInstallPromptDue();
+  }, []);
   const [ms, setMs] = useState(() => elapsedMs(session.segments, session.finishedAt ?? Date.now()));
   const [checkedLong, setCheckedLong] = useState(ms < LONG_SESSION_MS);
 

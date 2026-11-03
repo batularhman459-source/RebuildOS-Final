@@ -58,7 +58,7 @@
   min-height: var(--touch-min);
   padding: 0 var(--space-4);
   font-size: 15px;
-  color: var(--on-stage-muted);
+  color: var(--on-stage-secondary);
   font-variant-numeric: tabular-nums;
 }
 

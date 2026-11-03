@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { useDay } from '../app/day';
 import { Star } from '../components/Star';
+import { YourData } from '../components/YourData';
 import { dayKey } from '../core/day';
 import { formatDuration } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
@@ -113,6 +114,8 @@ export function Progress() {
           </ul>
         </section>
       )}
+
+      <YourData />
     </div>
   );
 }

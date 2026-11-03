@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { DayProvider } from './app/day';
 import { SheetsProvider } from './app/sheets';
+import { InstallFlow } from './app/InstallFlow';
 import { Dock } from './components/Dock';
 import { isRunning } from './core/focus';
 import { getActiveSession } from './data/focus';
@@ -31,6 +32,7 @@ export function App() {
       <DayProvider>
         <SheetsProvider>
           <StartupRouting />
+          <InstallFlow />
           <div className={styles.shell}>
             <main className={styles.main}>
               <Routes>

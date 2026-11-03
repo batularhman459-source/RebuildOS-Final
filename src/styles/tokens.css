@@ -18,8 +18,8 @@
   /* Dark (doing) stages */
   --stage: #121110;
   --on-stage: #ffffff;
-  --on-stage-secondary: rgba(255, 255, 255, 0.72);
-  --on-stage-muted: rgba(255, 255, 255, 0.6);
+  --on-stage-secondary: rgba(255, 255, 255, 0.9);
+  --on-stage-muted: rgba(255, 255, 255, 0.74);
   --on-stage-control: rgba(255, 255, 255, 0.12);
 
   /* Apricot */
@@ -63,9 +63,9 @@
   /* Effects */
   --apricot-glow: radial-gradient(
     closest-side,
-    rgba(238, 125, 82, 0.9) 0%,
-    rgba(238, 125, 82, 0.5) 30%,
-    rgba(255, 227, 204, 0.1) 64%,
+    rgba(238, 125, 82, 0.62) 0%,
+    rgba(238, 125, 82, 0.36) 30%,
+    rgba(255, 227, 204, 0.08) 64%,
     rgba(18, 17, 16, 0) 100%
   );
 

@@ -22,8 +22,8 @@ colors:
   # Dark (doing) stages
   stage: "#121110"
   on-stage: "#FFFFFF"
-  on-stage-secondary: "rgba(255,255,255,0.72)"
-  on-stage-muted: "rgba(255,255,255,0.60)"
+  on-stage-secondary: "rgba(255,255,255,0.90)"
+  on-stage-muted: "rgba(255,255,255,0.74)"
   on-stage-control: "rgba(255,255,255,0.12)"
 
   # Apricot (brand)
@@ -74,7 +74,7 @@ motion:
   stage-expand: { duration: 420ms, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
 
 effects:
-  apricot-glow: "radial-gradient(closest-side, rgba(238,125,82,0.9) 0%, rgba(238,125,82,0.5) 30%, rgba(255,227,204,0.1) 64%, rgba(18,17,16,0) 100%)"
+  apricot-glow: "radial-gradient(closest-side, rgba(238,125,82,0.62) 0%, rgba(238,125,82,0.36) 30%, rgba(255,227,204,0.08) 64%, rgba(18,17,16,0) 100%)"
   grain: "SVG feTurbulence fractalNoise, baseFrequency 0.85, numOctaves 2, desaturated, opacity 0.22, mix-blend-mode overlay"
   frosted: "background {colors.surface-frosted}; backdrop-filter: saturate(180%) blur(20px); 1px {colors.hairline-frosted} border"
   star-gradient: "linear-gradient(160deg, #FFF6EE 0%, #FFE3CC 55%, #F49A70 100%)"
@@ -129,8 +129,8 @@ Reference designs: the "v4" row of the RebuildOS Visual Direction canvas (Today,
 |---|---|---|
 | `stage` | #121110 | Every dark stage. Near-black with a warm bias. |
 | `on-stage` | #FFFFFF | Stage titles, timer, primary pill fill. |
-| `on-stage-secondary` | white 72% | Supporting line under a stage title. |
-| `on-stage-muted` | white 60% | Date, Mission name, meta. |
+| `on-stage-secondary` | white 90% | Supporting line under a stage title; any small text that may sit over the glow. |
+| `on-stage-muted` | white 74% | Date, Mission name, meta — only where the glow is faint. |
 | `on-stage-control` | white 12% | Round icon buttons (close, pause) on stages. |
 
 ### Apricot
@@ -196,6 +196,7 @@ Three families, each with one job.
 **No `box-shadow` anywhere in the product UI.**
 
 ### The Apricot glow
+- **Contrast rule:** small text (under 24px) must reach 4.5:1 against the *brightest* part of the glow behind it, and large text 3:1. Automated checkers can't measure text over gradients, so this was measured on the rendered screens; keep the glow core at 62% opacity or lower and position it below small text.
 - A **radial gradient** (`effects.apricot-glow`) placed behind the stage's main message, usually centred horizontally and slightly below the title.
 - Always paired with **grain** (`effects.grain`). Grain is what stops the gradient looking flat and computer-made. Never ship the glow without it.
 - Only on `stage` backgrounds. Never on light surfaces, buttons, cards or text.
