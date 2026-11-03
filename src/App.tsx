@@ -21,7 +21,7 @@ import { Today } from './screens/Today';
 import styles from './App.module.css';
 
 /** Full-screen moments hide the dock. */
-const FULL_SCREEN = ['/focus', '/rebuild', '/welcome', '/close'];
+const FULL_SCREEN = ['/focus', '/minimum', '/welcome', '/close'];
 
 /** Tabs fade in; opacity only, because a transform would break fixed overlays (Focus, compact bar). */
 function section(pathname: string): string {
@@ -54,7 +54,8 @@ export function App() {
                 <Route path="/goal/:id" element={<Mission />} />
                 <Route path="/mission/:id" element={<OldMissionLink />} />
                 <Route path="/focus" element={<Focus />} />
-                <Route path="/rebuild" element={<Rebuild />} />
+                <Route path="/minimum" element={<Rebuild />} />
+                <Route path="/rebuild" element={<Navigate to="/minimum" replace />} />
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/close" element={<CloseDay />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
@@ -100,7 +101,7 @@ function StartupRouting() {
 }
 
 /** Screens whose top edge is a dark stage. */
-const DARK_TOP = ['/focus', '/rebuild', '/welcome', '/close'];
+const DARK_TOP = ['/focus', '/minimum', '/welcome', '/close'];
 
 /**
  * Match the phone's status bar area (behind the time and battery) to the top of the
@@ -117,7 +118,6 @@ function useStatusBarColour(pathname: string) {
       document.head.appendChild(meta);
     }
     meta.content = colour;
-    document.documentElement.style.backgroundColor = colour;
   }, [pathname]);
 }
 

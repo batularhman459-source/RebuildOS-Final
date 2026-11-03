@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultSlots, shouldOfferSmallDay, shouldWelcomeBack, suggestForward } from './rebuild';
+import { DEFAULT_MINIMUM, defaultSlots, minimumSlots, shouldOfferSmallDay, shouldWelcomeBack, suggestForward } from './rebuild';
 import type { Action, Mission } from './types';
 
 let seq = 0;
@@ -59,5 +59,26 @@ describe('when to offer', () => {
     expect(shouldOfferSmallDay(3, 0)).toBe(true);
     expect(shouldOfferSmallDay(1, 0)).toBe(false);
     expect(shouldOfferSmallDay(4, 1)).toBe(false);
+  });
+});
+
+describe('My minimum day', () => {
+  it('starts from the saved plan: a goal step plus the person’s own items', () => {
+    const slots = minimumSlots(DEFAULT_MINIMUM, [action({ id: 'main', title: 'Write copy', state: 'today', isMain: true })], [], []);
+    expect(slots.map((s) => [s.kind, s.title])).toEqual([
+      ['forward', 'Write copy'],
+      ['custom', '10-minute walk'],
+      ['custom', 'Clear your desk'],
+    ]);
+  });
+
+  it('skips the goal step when there is nothing to suggest, and ignores empty items', () => {
+    const slots = minimumSlots({ includeGoalStep: true, items: ['Stretch', '  '] }, [], [], []);
+    expect(slots.map((s) => s.title)).toEqual(['Stretch']);
+  });
+
+  it('can leave out the goal step entirely', () => {
+    const slots = minimumSlots({ includeGoalStep: false, items: ['Walk'] }, [action({ state: 'today', isMain: true })], [], []);
+    expect(slots.map((s) => s.kind)).toEqual(['custom']);
   });
 });

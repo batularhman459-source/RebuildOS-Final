@@ -178,3 +178,31 @@
   font-weight: 600;
   letter-spacing: -0.025em;
 }
+
+button.otherLink {
+  width: 100%;
+  text-align: left;
+  font-size: 17px;
+}
+
+.minimumRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.minimumRow:active {
+  transform: none;
+  opacity: 0.6;
+}
+
+.minimumTitle {
+  font-size: 17px;
+}
+
+.minimumText {
+  font-size: 15px;
+  color: var(--ink-muted);
+}

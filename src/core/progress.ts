@@ -1,11 +1,11 @@
 import { lastDays } from './day';
 import { elapsedMs } from './focus';
-import type { Action, DayKey, FocusSession, Timestamp } from './types';
+import type { Action, DayKey, FocusSession, HabitCheck, Timestamp } from './types';
 
 /**
  * Honest progress. Only real units, never points. See docs/product-brief.md §4.7.
  *
- * Active day: a day with at least one completed Action or one finished Focus session.
+ * Active day: a day with at least one completed task, one finished Focus session, or one ticked habit.
  */
 
 type DayOf = (t: Timestamp) => DayKey;
@@ -18,8 +18,13 @@ function completed(actions: readonly Action[]): Action[] {
   return actions.filter((a) => !a.deletedAt && a.state === 'done' && a.completedAt !== undefined);
 }
 
-export function activeDays(actions: readonly Action[], sessions: readonly FocusSession[], dayOf: DayOf): Set<DayKey> {
-  const days = new Set<DayKey>();
+export function activeDays(
+  actions: readonly Action[],
+  sessions: readonly FocusSession[],
+  dayOf: DayOf,
+  checks: readonly HabitCheck[] = [],
+): Set<DayKey> {
+  const days = new Set<DayKey>(checks.map((c) => c.day));
   for (const a of completed(actions)) days.add(dayOf(a.completedAt!));
   for (const s of finished(sessions)) days.add(dayOf(s.finishedAt!));
   return days;
@@ -47,9 +52,15 @@ export interface WeekSummary extends Summary {
   activeCount: number;
 }
 
-export function lastSevenDays(today: DayKey, actions: readonly Action[], sessions: readonly FocusSession[], dayOf: DayOf): WeekSummary {
+export function lastSevenDays(
+  today: DayKey,
+  actions: readonly Action[],
+  sessions: readonly FocusSession[],
+  dayOf: DayOf,
+  checks: readonly HabitCheck[] = [],
+): WeekSummary {
   const keys = lastDays(today, 7);
-  const active = activeDays(actions, sessions, dayOf);
+  const active = activeDays(actions, sessions, dayOf, checks);
   const days = keys.map((day) => ({ day, active: active.has(day) }));
   return { ...summarise(keys, actions, sessions, dayOf), days, activeCount: days.filter((d) => d.active).length };
 }

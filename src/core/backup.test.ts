@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { backupFileName, makeBackup, parseBackup } from './backup';
 
-const empty = { actions: [], missions: [], focusSessions: [], days: [], meta: [] };
+const empty = { actions: [], missions: [], focusSessions: [], days: [], meta: [], habits: [], habitChecks: [] };
 
 describe('backup', () => {
   it('round-trips through JSON', () => {
@@ -26,5 +26,13 @@ describe('backup', () => {
 
   it('names the file by date', () => {
     expect(backupFileName(new Date(2026, 10, 3, 20).getTime())).toBe('rebuildos-backup-2026-11-03.json');
+  });
+});
+
+describe('older backups', () => {
+  it('restore version 1 files that have no habits', () => {
+    const v1 = { app: 'rebuildos', version: 1, exportedAt: 1, tables: { actions: [], missions: [], focusSessions: [], days: [], meta: [] } };
+    const parsed = parseBackup(JSON.stringify(v1));
+    expect(parsed.ok && parsed.backup.tables.habits).toEqual([]);
   });
 });

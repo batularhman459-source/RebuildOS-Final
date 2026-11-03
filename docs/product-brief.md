@@ -36,7 +36,7 @@ _Status: V1 built. **V1.1 direction below supersedes the rest of this document w
 |---|---|
 | 1 | Motion and performance on iPhone; install prompt rework — **done** |
 | 2 | Plain words; simpler add sheet with dates and times; simplified Today — **done** |
-| 3 | Habits; My minimum day |
+| 3 | Habits; My minimum day — **done** |
 | 4 | Goal progress; first-time setup with templates |
 
 Each phase is checked on a real iPhone before the next starts.

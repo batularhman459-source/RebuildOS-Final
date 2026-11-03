@@ -5,11 +5,14 @@ import { Stage } from '../components/Stage';
 import { Star } from '../components/Star';
 import { elapsedMs, formatDuration } from '../core/focus';
 import { db } from '../data/db';
+import { startMinimumDay } from '../data/minimum';
+import { useDay } from '../app/day';
 import styles from './Welcome.module.css';
 
 /** Shown after three or more days away. Nothing is listed as missed; everything is where it was. */
 export function Welcome() {
   const navigate = useNavigate();
+  const day = useDay();
   const record = useLiveQuery(async () => {
     const [done, sessions] = await Promise.all([
       db.actions.filter((a) => !a.deletedAt && a.state === 'done').count(),
@@ -51,8 +54,12 @@ export function Welcome() {
         </motion.div>
         <div style={{ flex: 1.2 }} />
         <div className={styles.buttons}>
-          <button type="button" className={styles.primary} onClick={() => navigate('/rebuild', { replace: true })}>
-            Start with a small day
+          <button
+            type="button"
+            className={styles.primary}
+            onClick={async () => navigate((await startMinimumDay(day)) ? '/' : '/minimum', { replace: true })}
+          >
+            Start with my minimum day
           </button>
           <button type="button" className={styles.secondary} onClick={() => navigate('/', { replace: true })}>
             Go to Today

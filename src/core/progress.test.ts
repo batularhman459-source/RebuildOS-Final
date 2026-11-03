@@ -44,3 +44,10 @@ describe('summaries', () => {
     expect(allTime(actions, sessions)).toEqual({ actionsDone: 3, focusMs: 95 * MIN });
   });
 });
+
+describe('habits count towards active days', () => {
+  it('marks a day active when only a habit was ticked', () => {
+    const days = activeDays([], [], dayOf, [{ id: 'h:2026-11-05', habitId: 'h', day: '2026-11-05', createdAt: 0 }]);
+    expect([...days]).toEqual(['2026-11-05']);
+  });
+});

@@ -8,6 +8,7 @@ import { formatDuration } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
 import { activeMissions, missionStats } from '../core/missions';
 import { allTime, lastSevenDays } from '../core/progress';
+import { habitWeek, isActive, recentWeeks } from '../core/habits';
 import { db } from '../data/db';
 import styles from './Screen.module.css';
 import own from './Progress.module.css';
@@ -24,12 +25,19 @@ function focusText(ms: number): string {
 export function Progress() {
   const today = useDay();
   const data = useLiveQuery(async () => {
-    const [actions, sessions, missions] = await Promise.all([db.actions.toArray(), db.focusSessions.toArray(), db.missions.toArray()]);
-    return { actions, sessions, missions };
+    const [actions, sessions, missions, habits, checks] = await Promise.all([
+      db.actions.toArray(),
+      db.focusSessions.toArray(),
+      db.missions.toArray(),
+      db.habits.toArray(),
+      db.habitChecks.toArray(),
+    ]);
+    return { actions, sessions, missions, habits, checks };
   }, []);
 
   if (!data) return <div className={styles.screen} />;
-  const week = lastSevenDays(today, data.actions, data.sessions, dayOf);
+  const week = lastSevenDays(today, data.actions, data.sessions, dayOf, data.checks);
+  const habits = data.habits.filter(isActive).sort((a, b) => a.sortOrder - b.sortOrder);
   const record = allTime(data.actions, data.sessions);
   const missions = activeMissions(data.missions).map((m) => ({ m, stats: missionStats(m.id, data.actions, data.sessions) }));
 
@@ -94,6 +102,46 @@ export function Progress() {
         </dl>
         <p className={own.caption}>Your record only ever grows.</p>
       </section>
+
+      {habits.length > 0 && (
+        <section aria-labelledby="habits-heading" className={own.section}>
+          <h2 id="habits-heading" className={own.heading}>
+            Habits this week
+          </h2>
+          <ul className={own.habits}>
+            {habits.map((h) => {
+              const wk = habitWeek(h, today, data.checks);
+              const lately = recentWeeks(h, today, data.checks);
+              return (
+                <li key={h.id} className={own.habit}>
+                  <div className={own.habitHead}>
+                    <span className={own.habitTitle}>{h.title}</span>
+                    <span className={own.habitCount}>
+                      {wk.done} of {wk.target}
+                    </span>
+                  </div>
+                  <ol className={own.dots} aria-label={`${h.title}: ${wk.done} of ${wk.target} this week`}>
+                    {wk.dots.map((d) => (
+                      <li
+                        key={d.day}
+                        className={`${own.dot} ${d.done ? own.dotDone : ''} ${d.done === null ? own.dotFuture : ''} ${d.day === today ? own.dotToday : ''}`}
+                        aria-hidden="true"
+                      >
+                        <span>{weekday.format(new Date(`${d.day}T12:00:00`))}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  {lately.possible > 0 && (
+                    <span className={own.lately}>
+                      Last 4 weeks: {lately.done} of {lately.possible}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {missions.length > 0 && (
         <section aria-labelledby="missions-heading" className={own.section}>

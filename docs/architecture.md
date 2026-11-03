@@ -56,6 +56,8 @@ Since V1.1 the app says **Goals**, **Tasks** and **Someday**. The code and datab
 | Someday | `state: 'later'` with no `targetDay` |
 | Upcoming | `state: 'later'` with a future `targetDay` |
 | Up next | the Main Action (`isMain`) |
+| Habit | `Habit` (`habits` table); ticks in `habitChecks` |
+| My minimum day | `meta.minimumDay`; a minimum day is a `days` record with `mode: 'small'` (route `/minimum`, old `/rebuild` redirects) |
 
 ## Data model
 
@@ -67,6 +69,8 @@ All records have `id` (UUID), `createdAt`, `updatedAt` and optional `deletedAt` 
 | `missions` | id | title, doneWhen, targetDay, status (`active`/`parked`/`complete`), sortOrder |
 | `focusSessions` | id | actionId, segments `[{start, end?}]`, targetMinutes, finishedAt |
 | `days` | day | logical day: mode (`normal`/`small`), rebuild slots, energy, closedAt, rolledOverAt |
+| `habits` | id | title, schedule (`daily` or `weekly` × times), missionId, pausedAt, sortOrder |
+| `habitChecks` | id (`habitId:day`) | one tick of a habit on one logical day |
 | `meta` | key | app state: last opened, session count, install prompt state |
 
 Schema changes go through Dexie versioning (`db.version(n)`), never by editing an existing version.

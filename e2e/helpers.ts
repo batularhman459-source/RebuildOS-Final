@@ -3,7 +3,7 @@ import { expect, type Page } from '@playwright/test';
 /**
  * Run a function against the app's IndexedDB inside the page, to set up situations
  * that would otherwise take days (yesterday's plans, three weeks away…).
- * `body` receives `stores` (actions, missions, days, meta, focusSessions) and `u`
+ * `body` receives `stores` (actions, missions, days, meta, focusSessions, habits, habitChecks) and `u`
  * (`today`, `ago(n)`: logical day keys, matching the app's 04:00 day start).
  */
 export async function seed(page: Page, body: string): Promise<unknown> {
@@ -13,7 +13,7 @@ export async function seed(page: Page, body: string): Promise<unknown> {
         const open = indexedDB.open('rebuildos');
         open.onsuccess = () => {
           const db = open.result;
-          const names = ['actions', 'missions', 'days', 'meta', 'focusSessions'];
+          const names = ['actions', 'missions', 'days', 'meta', 'focusSessions', 'habits', 'habitChecks'];
           const tx = db.transaction(names, 'readwrite');
           const stores = Object.fromEntries(names.map((n) => [n, tx.objectStore(n)]));
           const pad = (n: number) => String(n).padStart(2, '0');

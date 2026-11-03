@@ -11,6 +11,8 @@ import { laterList } from '../core/today';
 import { dayLabel, upcoming } from '../core/schedule';
 import { APP_LOCALE } from '../core/locale';
 import { useDay } from '../app/day';
+import { scheduleLabel } from '../core/habits';
+import { getMinimum } from '../data/minimum';
 import type { Action, FocusSession, Mission } from '../core/types';
 import { moveToToday } from '../data/actions';
 import { db } from '../data/db';
@@ -19,10 +21,16 @@ import own from './Plan.module.css';
 
 export function Plan() {
   const today = useDay();
-  const { openAdd, openNewMission } = useSheets();
+  const { openAdd, openNewMission, openNewHabit, openHabit } = useSheets();
+  const minimum = useLiveQuery(() => getMinimum(), []);
   const data = useLiveQuery(async () => {
-    const [missions, actions, sessions] = await Promise.all([db.missions.toArray(), db.actions.toArray(), db.focusSessions.toArray()]);
-    return { missions, actions, sessions };
+    const [missions, actions, sessions, allHabits] = await Promise.all([
+      db.missions.toArray(),
+      db.actions.toArray(),
+      db.focusSessions.toArray(),
+      db.habits.toArray(),
+    ]);
+    return { missions, actions, sessions, allHabits };
   }, []);
 
   if (!data) return <div className={styles.screen} />;
@@ -31,6 +39,10 @@ export function Plan() {
   // Steps of active and parked Missions live on the Mission's page.
   const missionById = new Map(data.missions.map((m) => [m.id, m]));
   const soon = upcoming(data.actions, today);
+  const habits = data.allHabits.filter((h) => !h.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder);
+  const minimumSummary = minimum
+    ? [minimum.includeGoalStep ? 'One goal step' : undefined, ...minimum.items].filter(Boolean).join(' · ')
+    : '';
   const later = laterList(data.actions).filter((a) => {
     const m = a.missionId ? missionById.get(a.missionId) : undefined;
     return !m || m.deletedAt !== undefined || m.status === 'complete';
@@ -71,6 +83,40 @@ export function Plan() {
           </button>
         </section>
       )}
+
+      <section className={own.section} aria-labelledby="habits-heading">
+        <h2 id="habits-heading" className={own.heading}>
+          Habits
+        </h2>
+        {habits.length > 0 ? (
+          <ul className={own.list}>
+            {habits.map((h) => (
+              <li key={h.id} className={own.otherRow}>
+                <button type="button" className={own.otherLink} onClick={() => openHabit(h.id)}>
+                  <span className={own.otherTitle}>{h.title}</span>
+                  <span className={own.otherMeta}>{h.pausedAt ? 'Paused' : scheduleLabel(h.schedule)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={own.hint}>Things you want to keep doing, like reading or the gym. They show up on Today.</p>
+        )}
+        <button type="button" className={own.addRow} onClick={openNewHabit}>
+          <PlusIcon />
+          New habit
+        </button>
+      </section>
+
+      <section className={own.section} aria-labelledby="minimum-heading">
+        <h2 id="minimum-heading" className={own.heading}>
+          For bad days
+        </h2>
+        <Link to="/minimum" className={own.minimumRow}>
+          <span className={own.minimumTitle}>My minimum day</span>
+          <span className={own.minimumText}>{minimumSummary}</span>
+        </Link>
+      </section>
 
       {soon.length > 0 && (
         <section className={own.section} aria-labelledby="upcoming-heading">

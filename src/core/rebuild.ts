@@ -14,12 +14,14 @@ export const SLOT_LABELS: Record<RebuildSlotKind, string> = {
   forward: 'One step forward',
   body: 'Move your body',
   space: 'Reset your space',
+  custom: 'Your minimum',
 };
 
 export const SLOT_SUGGESTIONS: Record<RebuildSlotKind, string[]> = {
   forward: [],
   body: ['10-minute walk', 'Stretch for 5 minutes', 'Cook a proper meal', 'Go to bed on time', 'Drink a glass of water'],
   space: ['Clear your desk', 'Do the dishes', 'Make your bed', 'Take out the rubbish', 'Tidy one drawer'],
+  custom: [],
 };
 
 /**
@@ -64,4 +66,51 @@ export function shouldWelcomeBack(lastSeenDay: DayKey | undefined, today: DayKey
  */
 export function shouldOfferSmallDay(movedToLater: number, completedYesterday: number): boolean {
   return movedToLater >= 2 && completedYesterday === 0;
+}
+
+// ── My minimum day ───────────────────────────────────────────────────────────
+
+/**
+ * The person's bad-day plan, set once. On a bad day it starts with one tap:
+ * no choosing, no swapping.
+ */
+export interface MinimumDay {
+  /** Include one step on the most relevant goal (the "up next" task or a goal's next step). */
+  includeGoalStep: boolean;
+  /** Small things, in the person's own words. */
+  items: string[];
+}
+
+export const DEFAULT_MINIMUM: MinimumDay = { includeGoalStep: true, items: ['10-minute walk', 'Clear your desk'] };
+
+export const MAX_MINIMUM_ITEMS = 4;
+
+/** Ideas offered when editing My minimum day. */
+export const MINIMUM_SUGGESTIONS = [
+  '10-minute walk',
+  'Clear your desk',
+  'Stretch for 5 minutes',
+  'Drink a glass of water',
+  'Cook a proper meal',
+  'Make your bed',
+  'Read for 10 minutes',
+  'Go to bed on time',
+];
+
+/** The slots a minimum day starts with, from the saved plan. */
+export function minimumSlots(
+  minimum: MinimumDay,
+  actions: readonly Action[],
+  missions: readonly Mission[],
+  sessions: readonly FocusSession[],
+): RebuildSlot[] {
+  const slots: RebuildSlot[] = [];
+  if (minimum.includeGoalStep) {
+    const step = suggestForward(actions, missions, sessions);
+    if (step) slots.push({ kind: 'forward', title: step.title, actionId: step.id, done: false });
+  }
+  for (const item of minimum.items.map((i) => i.trim()).filter(Boolean).slice(0, MAX_MINIMUM_ITEMS)) {
+    slots.push({ kind: 'custom', title: item, done: false });
+  }
+  return slots;
 }

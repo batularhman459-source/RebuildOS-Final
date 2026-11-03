@@ -70,7 +70,8 @@ export interface FocusSession extends BaseRecord {
 
 export type DayMode = 'normal' | 'small';
 
-export type RebuildSlotKind = 'forward' | 'body' | 'space';
+/** 'custom' is an item from My minimum day. */
+export type RebuildSlotKind = 'forward' | 'body' | 'space' | 'custom';
 
 export interface RebuildSlot {
   kind: RebuildSlotKind;
@@ -91,6 +92,28 @@ export interface DayRecord {
   /** Whether the overnight rule already ran for this day. */
   rolledOverAt?: Timestamp;
   updatedAt: Timestamp;
+}
+
+// ── Habits ────────────────────────────────────────────────────────────────────
+
+/** How often a habit happens: every day, or a number of times per week (Mon–Sun). */
+export type HabitSchedule = { kind: 'daily' } | { kind: 'weekly'; times: number };
+
+export interface Habit extends BaseRecord {
+  title: string;
+  schedule: HabitSchedule;
+  missionId?: string;
+  sortOrder: number;
+  /** Paused habits stay in history but don't appear on Today. */
+  pausedAt?: Timestamp;
+}
+
+/** One tick of a habit on one logical day. id is `${habitId}:${day}`. */
+export interface HabitCheck {
+  id: string;
+  habitId: string;
+  day: DayKey;
+  createdAt: Timestamp;
 }
 
 /** Small key–value store for app-level state (last opened, session count, install state…). */

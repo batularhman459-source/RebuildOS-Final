@@ -15,6 +15,9 @@ import { activeMissions, nextAction } from '../core/missions';
 import type { Action, DayRecord, Mission } from '../core/types';
 import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, moveToToday, undoRollover } from '../data/actions';
 import { getDayRecord, needsMorningChoice, setDayMode, yesterdayWins } from '../data/days';
+import { startMinimumDay } from '../data/minimum';
+import { doneThisWeek, isDoneOn, showsToday, weekStart } from '../core/habits';
+import { HabitRow } from '../components/HabitRow';
 import { reopenDay } from '../data/closeDay';
 import { db } from '../data/db';
 import { getActiveSession, startFocus } from '../data/focus';
@@ -34,12 +37,33 @@ export function Today() {
   const record = useLiveQuery(async () => (await getDayRecord(day)) ?? null, [day]);
   const morningWins = useLiveQuery(async () => ((await needsMorningChoice(day)) ? await yesterdayWins(day) : null), [day]);
   const small = record?.mode === 'small';
+  const habitData = useLiveQuery(async () => {
+    const [habits, checks] = await Promise.all([db.habits.toArray(), db.habitChecks.where('day').aboveOrEqual(weekStart(day)).toArray()]);
+    return { habits, checks };
+  }, [day]);
+
+  /** One tap: today becomes My minimum day (or the editor opens if the plan is empty). */
+  async function doMinimum() {
+    if (!(await startMinimumDay(day))) navigate('/minimum');
+  }
   const closed = record?.closedAt !== undefined;
 
   const normalView = actions ? todayView(actions, day, dayOf) : undefined;
   const view = actions && normalView ? (small && record ? smallDayView(record, actions) : normalView) : undefined;
   // Once the day is closed, Today only shows what was done; tomorrow's Actions wait for tomorrow.
   const listOpen = view && !closed ? view.open : [];
+  // Habits show on a normal, open day; a minimum day stays minimal.
+  const todaysHabits =
+    habitData && !small && !closed && !morningWins
+      ? habitData.habits
+          .filter((h) => showsToday(h, day, habitData.checks))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((h) => {
+            const done = isDoneOn(h.id, day, habitData.checks);
+            const meta = h.schedule.kind === 'weekly' ? `${doneThisWeek(h.id, day, habitData.checks)} of ${h.schedule.times} this week` : undefined;
+            return { habit: h, done, meta };
+          })
+      : [];
   const hasList = view && (listOpen.length > 0 || view.doneToday.length > 0);
   const tomorrowMain = closed ? actions?.find((a) => !a.deletedAt && a.state === 'today' && a.isMain && (a.todayDay ?? '') > day) : undefined;
   const hour = new Date().getHours();
@@ -74,13 +98,13 @@ export function Today() {
                 key="morning"
                 wins={morningWins}
                 onNormal={() => void setDayMode(day, 'normal')}
-                onSmall={() => navigate('/rebuild')}
+                onSmall={() => void doMinimum()}
               />
             ) : view.main ? (
               <MainAction
                 key={view.main.id}
                 action={view.main}
-                missionTitle={small ? 'A smaller day' : missionOf(view.main)?.title}
+                missionTitle={small ? 'Minimum day' : missionOf(view.main)?.title}
               />
             ) : small ? (
               <GoodDay key="good-day" />
@@ -106,7 +130,7 @@ export function Today() {
             <QuietNotice
               text="Yesterday was a lot. Want a smaller day?"
               actionLabel="Make it smaller"
-              onAction={() => navigate('/rebuild')}
+              onAction={() => void doMinimum()}
               onDismiss={() => void dismissRolloverNotice(day)}
             />
           ) : (
@@ -117,6 +141,16 @@ export function Today() {
               onDismiss={() => void dismissRolloverNotice(day)}
             />
           )
+        )}
+        {todaysHabits.length > 0 && (
+          <>
+            <h2 className={styles.listHeading}>Habits today</h2>
+            <ul className={styles.list} aria-label="Habits today">
+              {todaysHabits.map(({ habit, done, meta }) => (
+                <HabitRow key={habit.id} habit={habit} day={day} done={done} meta={meta} />
+              ))}
+            </ul>
+          </>
         )}
         {listOpen.length > 0 && <h2 className={styles.listHeading}>Also today</h2>}
         {hasList && (
@@ -144,13 +178,20 @@ export function Today() {
           </button>
         )}
         {view && !morningWins && !closed && (
-          <button
-            type="button"
-            className={styles.smallerLink}
-            onClick={() => (small ? void setDayMode(day, 'normal') : navigate('/rebuild'))}
-          >
-            {small ? 'Back to full Today' : 'Make today smaller'}
-          </button>
+          <div className={styles.smallerLinks}>
+            <button
+              type="button"
+              className={styles.smallerLink}
+              onClick={() => (small ? void setDayMode(day, 'normal') : void doMinimum())}
+            >
+              {small ? 'Back to full Today' : 'Bad day? Just do my minimum'}
+            </button>
+            {small && (
+              <button type="button" className={styles.editMinimum} onClick={() => navigate('/minimum')}>
+                Edit my minimum
+              </button>
+            )}
+          </div>
         )}
       </section>
     </>

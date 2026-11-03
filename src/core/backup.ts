@@ -1,4 +1,4 @@
-import type { Action, DayRecord, FocusSession, MetaEntry, Mission } from './types';
+import type { Action, DayRecord, FocusSession, Habit, HabitCheck, MetaEntry, Mission } from './types';
 
 /**
  * Backup file format. Until accounts exist, this is the safety net that keeps
@@ -6,7 +6,8 @@ import type { Action, DayRecord, FocusSession, MetaEntry, Mission } from './type
  */
 
 export const BACKUP_APP = 'rebuildos';
-export const BACKUP_VERSION = 1;
+/** 2 adds habits. Version 1 files still restore (with no habits). */
+export const BACKUP_VERSION = 2;
 
 export interface BackupTables {
   actions: Action[];
@@ -14,6 +15,8 @@ export interface BackupTables {
   focusSessions: FocusSession[];
   days: DayRecord[];
   meta: MetaEntry[];
+  habits: Habit[];
+  habitChecks: HabitCheck[];
 }
 
 export interface Backup {
@@ -29,8 +32,10 @@ export function makeBackup(tables: BackupTables, exportedAt: number): Backup {
 
 export type ParseResult = { ok: true; backup: Backup } | { ok: false; reason: string };
 
-const TABLES: (keyof BackupTables)[] = ['actions', 'missions', 'focusSessions', 'days', 'meta'];
-const KEYS: Record<keyof BackupTables, string> = { actions: 'id', missions: 'id', focusSessions: 'id', days: 'day', meta: 'key' };
+const TABLES: (keyof BackupTables)[] = ['actions', 'missions', 'focusSessions', 'days', 'meta', 'habits', 'habitChecks'];
+/** Tables added after version 1; missing in older files means empty. */
+const OPTIONAL: (keyof BackupTables)[] = ['habits', 'habitChecks'];
+const KEYS: Record<keyof BackupTables, string> = { actions: 'id', missions: 'id', focusSessions: 'id', days: 'day', meta: 'key', habits: 'id', habitChecks: 'id' };
 
 /** Validate a backup file's text before anything on the device is touched. */
 export function parseBackup(text: string): ParseResult {
@@ -48,7 +53,9 @@ export function parseBackup(text: string): ParseResult {
   }
   if (typeof b.tables !== 'object' || b.tables === null) return { ok: false, reason: 'This backup is incomplete.' };
   for (const name of TABLES) {
-    const rows = (b.tables as unknown as Record<string, unknown>)[name];
+    const tables = b.tables as unknown as Record<string, unknown>;
+    if (tables[name] === undefined && OPTIONAL.includes(name)) tables[name] = [];
+    const rows = tables[name];
     if (!Array.isArray(rows)) return { ok: false, reason: 'This backup is incomplete.' };
     const key = KEYS[name];
     if (!rows.every((r) => typeof r === 'object' && r !== null && typeof (r as Record<string, unknown>)[key] === 'string')) {

@@ -1,6 +1,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useDay } from '../app/day';
 import { addAction, type When } from '../data/actions';
+import { addHabit } from '../data/habits';
+import type { HabitSchedule } from '../core/types';
+import { RepeatPicker } from './RepeatPicker';
 import { EstimateChips } from './EstimateChips';
 import { MissionPicker } from './MissionPicker';
 import { Sheet } from './Sheet';
@@ -13,10 +16,12 @@ interface AddSheetProps {
   /** Where the task goes by default: from Today it's today, from Plan it's someday. */
   defaultDestination: 'today' | 'later';
   defaultMissionId?: string;
+  /** Start with Repeat set to every day (from "New habit"). */
+  asHabit?: boolean;
 }
 
 /** New task: only the name is required. Everything else is optional and in plain words. */
-export function AddSheet({ open, onClose, defaultDestination, defaultMissionId }: AddSheetProps) {
+export function AddSheet({ open, onClose, defaultDestination, defaultMissionId, asHabit = false }: AddSheetProps) {
   const today = useDay();
   const [title, setTitle] = useState('');
   const [when, setWhen] = useState<When>(defaultDestination);
@@ -24,6 +29,7 @@ export function AddSheet({ open, onClose, defaultDestination, defaultMissionId }
   const [estimate, setEstimate] = useState<number | undefined>();
   const [missionId, setMissionId] = useState<string | undefined>();
   const [more, setMore] = useState(false);
+  const [repeat, setRepeat] = useState<HabitSchedule | undefined>();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
@@ -35,22 +41,24 @@ export function AddSheet({ open, onClose, defaultDestination, defaultMissionId }
     setEstimate(undefined);
     setMissionId(defaultMissionId);
     setMore(false);
+    setRepeat(asHabit ? { kind: 'daily' } : undefined);
     const t = window.setTimeout(() => inputRef.current?.focus(), 60);
     return () => window.clearTimeout(t);
-  }, [open, defaultDestination, defaultMissionId]);
+  }, [open, defaultDestination, defaultMissionId, asHabit]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    await addAction({ title, when, time, estimateMinutes: estimate, missionId });
+    if (repeat) await addHabit({ title, schedule: repeat, missionId });
+    else await addAction({ title, when, time, estimateMinutes: estimate, missionId });
     onClose();
   }
 
   return (
-    <Sheet open={open} onClose={onClose} label="New task">
+    <Sheet open={open} onClose={onClose} label={repeat ? 'New habit' : 'New task'}>
       <form onSubmit={submit} className={forms.group} style={{ gap: 'var(--space-5, 20px)' }}>
         <label htmlFor={inputId} className={forms.title}>
-          New task
+          {repeat ? 'New habit' : 'New task'}
         </label>
         <input
           ref={inputRef}
@@ -58,22 +66,25 @@ export function AddSheet({ open, onClose, defaultDestination, defaultMissionId }
           className={forms.input}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="What do you need to do?"
+          placeholder={repeat ? 'e.g. Read for 20 minutes' : 'What do you need to do?'}
           autoComplete="off"
           enterKeyHint="done"
           maxLength={140}
         />
-        <WhenPicker
-          today={today}
-          when={when}
-          time={time}
-          onChange={(w, t) => {
-            setWhen(w);
-            setTime(t);
-          }}
-        />
+        <RepeatPicker value={repeat} onChange={setRepeat} />
+        {!repeat && (
+          <WhenPicker
+            today={today}
+            when={when}
+            time={time}
+            onChange={(w, t) => {
+              setWhen(w);
+              setTime(t);
+            }}
+          />
+        )}
         <MissionPicker value={missionId} onChange={setMissionId} />
-        {more ? (
+        {repeat ? null : more ? (
           <EstimateChips value={estimate} onChange={setEstimate} />
         ) : (
           <button type="button" className={forms.moreLink} onClick={() => setMore(true)}>
@@ -81,7 +92,7 @@ export function AddSheet({ open, onClose, defaultDestination, defaultMissionId }
           </button>
         )}
         <button type="submit" className={forms.primary} disabled={!title.trim()}>
-          Add task
+          {repeat ? 'Add habit' : 'Add task'}
         </button>
       </form>
     </Sheet>

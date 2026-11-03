@@ -56,29 +56,96 @@ test('2 · a normal day: add, complete, Later, and the overnight rule', async ({
   await expect(page.getByRole('region', { name: 'Someday' }).getByText('Gym: legs')).toBeVisible();
 });
 
-test('3 · a hard day: make today smaller', async ({ page }) => {
+test('3 · a hard day: one tap to my minimum', async ({ page }) => {
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
   await quickAdd(page, 'Gym: legs');
 
-  await page.getByRole('button', { name: 'Make today smaller' }).click();
-  await expect(page.getByRole('heading', { name: 'A smaller day.' })).toBeVisible();
-  const slots = page.getByRole('region', { name: 'Your small things' });
-  await expect(slots).toContainText('Write landing page copy');
-
-  await slots.getByRole('button', { name: 'Swap' }).nth(1).click();
-  await page.getByRole('button', { name: 'Stretch for 5 minutes' }).click();
-  await page.getByRole('button', { name: 'Start this day' }).click();
-
-  await expect(page.getByText('A smaller day', { exact: true })).toBeVisible();
+  // One tap, no choosing: the saved minimum (goal step + 10-minute walk + clear your desk).
+  await page.getByRole('button', { name: 'Bad day? Just do my minimum' }).click();
+  await expect(page.getByText('Minimum day', { exact: true })).toBeVisible();
+  await expect(stageTitle(page)).toHaveText('Write landing page copy');
+  await expect(alsoToday(page)).toContainText('10-minute walk');
+  await expect(alsoToday(page)).toContainText('Clear your desk');
   await expect(alsoToday(page)).not.toContainText('Gym: legs');
-  await page.getByRole('button', { name: 'Mark Stretch for 5 minutes as done' }).click();
+
+  await page.getByRole('button', { name: 'Mark 10-minute walk as done' }).click();
   await page.getByRole('button', { name: 'Mark as done' }).click();
   await page.getByRole('button', { name: 'Mark as done' }).click();
   await expect(stageTitle(page)).toHaveText('Good day.');
 
   await page.getByRole('button', { name: 'Back to full Today' }).click();
   await expect(stageTitle(page)).toHaveText('Gym: legs');
+});
+
+test('my minimum day can be edited once and then used', async ({ page }) => {
+  await openApp(page, '/plan');
+  await page.getByRole('link', { name: /My minimum day/ }).click();
+  await expect(page.getByRole('heading', { name: 'My minimum day.' })).toBeVisible();
+  await page.getByRole('switch').uncheck();
+  await page.getByRole('button', { name: 'Remove Clear your desk' }).click();
+  await page.getByRole('button', { name: '+ Stretch for 5 minutes' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('link', { name: /My minimum day/ })).toContainText('10-minute walk · Stretch for 5 minutes');
+
+  await page.getByRole('link', { name: 'Today' }).click();
+  await page.getByRole('button', { name: 'Bad day? Just do my minimum' }).click();
+  await expect(stageTitle(page)).toHaveText('10-minute walk');
+  await expect(alsoToday(page)).toContainText('Stretch for 5 minutes');
+});
+
+test('habits: your own, every day or some days a week', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Write landing page copy');
+
+  // A daily habit, from the + sheet with Repeat.
+  await page.getByRole('button', { name: 'Add a task' }).last().click();
+  let dialog = page.getByRole('dialog', { name: 'New task' });
+  await dialog.getByPlaceholder('What do you need to do?').fill('Read for 20 minutes');
+  await dialog.getByRole('button', { name: 'Every day' }).click();
+  await page.getByRole('dialog', { name: 'New habit' }).getByRole('button', { name: 'Add habit' }).click();
+
+  // A weekly habit, from Plan → New habit.
+  await page.getByRole('link', { name: 'Plan' }).click();
+  await page.getByRole('button', { name: 'New habit' }).click();
+  dialog = page.getByRole('dialog', { name: 'New habit' });
+  await dialog.getByPlaceholder('e.g. Read for 20 minutes').fill('Gym');
+  await dialog.getByRole('button', { name: 'Some days a week' }).click();
+  await dialog.getByRole('button', { name: 'Fewer times a week' }).click();
+  await expect(dialog.getByText('2×')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Add habit' }).click();
+  await expect(page.getByRole('region', { name: 'Habits' })).toContainText('2× a week');
+
+  await page.getByRole('link', { name: 'Today' }).click();
+  const habits = page.getByRole('list', { name: 'Habits today' });
+  await expect(habits).toContainText('Read for 20 minutes');
+  await expect(habits).toContainText('0 of 2 this week');
+  await page.getByRole('button', { name: 'Tick Gym' }).click();
+  await expect(habits).toContainText('1 of 2 this week');
+
+  // Done twice this week already (simulated): the weekly habit leaves Today until next week.
+  await seed(page, `
+    const pad = (n) => String(n).padStart(2, '0');
+    const key = (t) => t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate());
+    const [y, m, d] = u.today.split('-').map(Number);
+    const monday = new Date(y, m - 1, d, 12);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const week = Array.from({ length: 7 }, (_, i) => { const t = new Date(monday); t.setDate(monday.getDate() + i); return key(t); });
+    const otherDays = week.filter((k) => k !== u.today).slice(0, 2);
+    const req = stores.habits.getAll();
+    req.onsuccess = () => {
+      const gym = req.result.find((h) => h.title === 'Gym');
+      stores.habitChecks.delete(gym.id + ':' + u.today);
+      for (const day of otherDays) stores.habitChecks.put({ id: gym.id + ':' + day, habitId: gym.id, day, createdAt: 0 });
+    };
+  `);
+  await page.reload();
+  await expect(page.getByRole('list', { name: 'Habits today' })).not.toContainText('Gym');
+  await expect(page.getByRole('list', { name: 'Habits today' })).toContainText('Read for 20 minutes');
+
+  await page.getByRole('link', { name: 'Progress' }).click();
+  await expect(page.getByRole('region', { name: 'Habits this week' })).toContainText('Gym');
+  await expect(page.getByLabel(/^Gym: [0-2] of 2 this week$/)).toBeVisible();
 });
 
 test('4 · coming back after three weeks', async ({ page }) => {
@@ -90,8 +157,9 @@ test('4 · coming back after three weeks', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible();
   await expect(page.getByText('Everything is where you left it.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Start with a small day' }).click();
-  await expect(page.getByRole('region', { name: 'Your small things' })).toContainText('Write landing page copy');
+  await page.getByRole('button', { name: 'Start with my minimum day' }).click();
+  await expect(page.getByText('Minimum day', { exact: true })).toBeVisible();
+  await expect(stageTitle(page)).toHaveText('Write landing page copy');
 
   // Once seen, Welcome back doesn't repeat the same day.
   await page.goto('/');
