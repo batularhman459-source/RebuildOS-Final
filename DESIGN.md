@@ -75,8 +75,8 @@ motion:
 
 effects:
   apricot-glow: "radial-gradient(closest-side, rgba(238,125,82,0.62) 0%, rgba(238,125,82,0.36) 30%, rgba(255,227,204,0.08) 64%, rgba(18,17,16,0) 100%)"
-  grain: "SVG feTurbulence fractalNoise, baseFrequency 0.85, numOctaves 2, desaturated, opacity 0.22, mix-blend-mode overlay"
-  frosted: "background {colors.surface-frosted}; backdrop-filter: saturate(180%) blur(20px); 1px {colors.hairline-frosted} border"
+  grain: "static 128px tiled PNG (src/assets/grain.png): light and dark specks at very low alpha; no SVG filter, no blend mode"
+  frosted: "background rgba(255,255,255,0.86); backdrop-filter: blur(10px); 1px {colors.hairline-frosted} border"
   star-gradient: "linear-gradient(160deg, #FFF6EE 0%, #FFE3CC 55%, #F49A70 100%)"
 ---
 
@@ -250,6 +250,17 @@ One-line, non-blocking info such as "2 Actions moved to Later · Undo": `surface
 - **Today → Focus:** the Today stage expands to fill the screen (420ms); the glow grows; the title shrinks to the small line above the timer while the timer fades in. Reverse on finish.
 - **Completing an Action:** the check fills, the row settles to the bottom of the list. No confetti, no bounce.
 - **Never** animate to attract attention (no pulsing badges, no looping glow).
+- **Sheets** move like iOS sheets: 0.42s in on `cubic-bezier(0.32, 0.72, 0, 1)`, 0.28s out, and can be dragged down from the top strip to close.
+- **Tabs** cross-fade (0.18s, opacity only).
+- **Ticking a task** pops the circle (scale 1 → 1.22 → 1) and draws the tick; only for the tap that just happened.
+
+### Performance rules (iPhone)
+Tested on an iPhone 15 Pro, live effects made motion choppy. Keep to these:
+- Animate only `transform` and `opacity`. No `clip-path`, `filter`, width/height or layout-shifting animations.
+- Grain is a **static image**, never a live SVG filter; no `mix-blend-mode` on large areas.
+- Keep `backdrop-filter` to small floating elements (the dock) and light (≤ 10px).
+- Large layers that change (the glow) get `will-change: transform` and change rarely, in small steps.
+- Don't wrap screens in transformed containers: it breaks `position: fixed` overlays.
 - Respect `prefers-reduced-motion`: replace movement with instant changes or short cross-fades.
 
 ## 8. Copy and tone

@@ -22,7 +22,7 @@ import styles from './Today.module.css';
 
 const dateFormat = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
 const dayOf = (t: number) => dayKey(new Date(t));
-const enter = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -12 } };
+const enter = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 } };
 
 export function Today() {
   const day = useDay();
@@ -168,7 +168,7 @@ function MainAction({ action, missionTitle }: { action: Action; missionTitle?: s
   }
 
   return (
-    <motion.div className={styles.main} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+    <motion.div className={styles.main} {...enter} transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}>
       {missionTitle && <p className={styles.context}>{missionTitle}</p>}
       <button type="button" className={styles.mainTitle} onClick={() => openAction(action.id)}>
         <h1>{action.title}</h1>
@@ -209,7 +209,7 @@ function AskForAction({ again, suggestions }: { again: boolean; suggestions: Sug
   }
 
   return (
-    <motion.form className={styles.ask} onSubmit={submit} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+    <motion.form className={styles.ask} onSubmit={submit} {...enter} transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}>
       {again ? (
         <>
           <h1 className={styles.moment}>
@@ -270,7 +270,7 @@ function smallDayView(record: DayRecord, actions: Action[]): TodayView {
 
 function MorningChoice({ wins, onNormal, onSmall }: { wins: string[]; onNormal: () => void; onSmall: () => void }) {
   return (
-    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}>
       <h1 className={styles.moment}>
         <i>Morning.</i>
       </h1>
@@ -291,7 +291,7 @@ function MorningChoice({ wins, onNormal, onSmall }: { wins: string[]; onNormal: 
 
 function GoodDay() {
   return (
-    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}>
       <h1 className={styles.moment}>
         Good <i>day.</i>
       </h1>
@@ -308,7 +308,7 @@ function joinTitles(titles: string[]): string {
 
 function DayClosed({ tomorrow, onReopen }: { tomorrow?: string; onReopen: () => void }) {
   return (
-    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}>
       <h1 className={styles.moment}>
         Done for <i>today.</i>
       </h1>

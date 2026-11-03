@@ -1,24 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { detectPlatform, shouldPromptInstall, shouldRequireInstall } from './install';
+import { detectPlatform, isIOSSafari, shouldPromptInstall } from './install';
+
+const SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 
 describe('install rules', () => {
-  it('requires install on a phone browser from the third day', () => {
-    expect(shouldRequireInstall({ installed: false, isPhone: true, openDays: 2 })).toBe(false);
-    expect(shouldRequireInstall({ installed: false, isPhone: true, openDays: 3 })).toBe(true);
-    expect(shouldRequireInstall({ installed: true, isPhone: true, openDays: 9 })).toBe(false);
-    expect(shouldRequireInstall({ installed: false, isPhone: false, openDays: 9 })).toBe(false);
-  });
-
-  it('prompts once, when due', () => {
+  it('prompts once, when due, and never once installed', () => {
     expect(shouldPromptInstall({ installed: false, due: true, shownBefore: false })).toBe(true);
     expect(shouldPromptInstall({ installed: false, due: true, shownBefore: true })).toBe(false);
     expect(shouldPromptInstall({ installed: false, due: false, shownBefore: false })).toBe(false);
+    expect(shouldPromptInstall({ installed: true, due: true, shownBefore: false })).toBe(false);
   });
 
   it('detects the platform', () => {
-    expect(detectPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', 5)).toBe('ios');
+    expect(detectPlatform(SAFARI, 5)).toBe('ios');
     expect(detectPlatform('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5)).toBe('ios');
     expect(detectPlatform('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 0)).toBe('other');
     expect(detectPlatform('Mozilla/5.0 (Linux; Android 15; Pixel 9)', 5)).toBe('android');
+  });
+
+  it('tells Safari apart from other iPhone browsers', () => {
+    expect(isIOSSafari(SAFARI)).toBe(true);
+    expect(isIOSSafari(SAFARI.replace('Version/18.0', 'CriOS/130.0'))).toBe(false);
+    expect(isIOSSafari(SAFARI.replace('Version/18.0', 'FxiOS/130.0'))).toBe(false);
+    expect(isIOSSafari(`${SAFARI} Ddg/18.0`)).toBe(false);
+    expect(isIOSSafari(`${SAFARI} DuckDuckGo/7`)).toBe(false);
   });
 });

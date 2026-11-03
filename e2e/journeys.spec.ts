@@ -20,7 +20,7 @@ test('1 · first run: one Action, Focus, done', async ({ page }) => {
   // The first finished Focus session suggests the home screen, once.
   const install = page.getByRole('dialog', { name: 'Add RebuildOS to your home screen' });
   await expect(install).toBeVisible();
-  await install.getByRole('button', { name: 'Not now' }).click();
+  await install.getByRole('button', { name: 'Maybe later' }).click();
   await expect(install).toBeHidden();
 
   await expect(stageTitle(page)).toHaveText('That’s done.');
@@ -158,9 +158,19 @@ test('backup: save and restore', async ({ page }) => {
   await expect(stageTitle(page)).toHaveText('Write landing page copy');
 });
 
-test('install is required on a phone browser from the third day', async ({ page }) => {
-  await openApp(page);
-  await seed(page, `stores.meta.put({ key: 'browserOpenDays', value: [u.ago(2), u.ago(1)] });`);
-  await page.reload();
-  await expect(page.getByRole('heading', { name: 'One more step.' })).toBeVisible();
+test('install help: Safari gets steps, other iPhone browsers are sent to Safari', async ({ page, browser }) => {
+  await openApp(page, '/progress');
+  await page.getByRole('button', { name: 'Add to home screen' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Add to home screen' });
+  await expect(sheet.getByText('Add to Home Screen', { exact: true }).first()).toBeVisible();
+  await expect(sheet.getByText('Don’t see it? Tap ••• first, then Share.')).toBeVisible();
+
+  const ua = (await page.evaluate(() => navigator.userAgent)).replace(/Version\/[\d.]+/, 'CriOS/130.0');
+  const other = await browser.newContext({ ...(await import('@playwright/test')).devices['iPhone 13'], userAgent: ua });
+  const page2 = await other.newPage();
+  await page2.goto('/progress');
+  await page2.getByRole('button', { name: 'Add to home screen' }).click();
+  await expect(page2.getByText(/open it in Safari/)).toBeVisible();
+  await expect(page2.getByRole('button', { name: 'Copy link' })).toBeVisible();
+  await other.close();
 });

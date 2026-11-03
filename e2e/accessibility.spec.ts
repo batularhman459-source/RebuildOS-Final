@@ -46,7 +46,7 @@ test('screens have no serious accessibility issues', async ({ page }) => {
   await page.getByRole('button', { name: 'Finish' }).click();
   await check(page, 'Focus finished');
   await page.getByRole('button', { name: 'More to do' }).click();
-  await page.getByRole('button', { name: 'Not now' }).click();
+  await page.getByRole('button', { name: 'Maybe later' }).click();
 
   await page.getByRole('button', { name: 'Make today smaller' }).click();
   await check(page, 'A smaller day');

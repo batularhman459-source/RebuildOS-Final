@@ -86,9 +86,9 @@ function RunningView({ session, action, onLeave, onFinish }: RunningProps) {
   return (
     <motion.div
       className={styles.root}
-      initial={{ clipPath: 'inset(0 0 42% 0)' }}
-      animate={{ clipPath: 'inset(0 0 0% 0)' }}
-      transition={{ duration: 0.42, ease }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease }}
     >
       <Stage glowTop="66%" glowScale={glowScale(elapsed, session.targetMinutes)} aria-label="Focus">
         <button type="button" className={styles.close} aria-label="Leave focus" onClick={onLeave}>

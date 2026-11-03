@@ -4,14 +4,12 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  text-align: left;
-  color: var(--ink);
+  gap: var(--space-4);
 }
 
 .steps li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
   font-size: 17px;
 }
@@ -28,12 +26,48 @@
   font-weight: 600;
 }
 
-.dark {
-  color: var(--on-stage);
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-top: 2px;
 }
 
-.dark .num {
-  background: var(--on-stage-control);
+/* Little stand-ins for what Safari shows, so the person knows what to look for. */
+.mock {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.mockIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #0a7aff;
+  box-shadow: 0 0 0 2px var(--apricot);
+}
+
+.mockRow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  min-width: 220px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+  font-size: 16px;
+  box-shadow: 0 0 0 2px var(--apricot);
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--ink-muted);
 }
 
 .install {
@@ -46,7 +80,38 @@
   font-weight: 600;
 }
 
-.dark .install {
-  background: var(--on-stage);
-  color: var(--stage);
+.safari {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  color: var(--ink-secondary);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 6px 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.copy {
+  flex: none;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 15px;
+  font-weight: 600;
 }

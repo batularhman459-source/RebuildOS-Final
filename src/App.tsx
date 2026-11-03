@@ -1,4 +1,4 @@
-import { MotionConfig } from 'motion/react';
+import { MotionConfig, motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { DayProvider } from './app/day';
@@ -23,6 +23,11 @@ import styles from './App.module.css';
 /** Full-screen moments hide the dock. */
 const FULL_SCREEN = ['/focus', '/rebuild', '/welcome', '/close'];
 
+/** Tabs fade in; opacity only, because a transform would break fixed overlays (Focus, compact bar). */
+function section(pathname: string): string {
+  return '/' + (pathname.split('/')[1] ?? '');
+}
+
 export function App() {
   const { pathname } = useLocation();
   const fullScreen = FULL_SCREEN.some((p) => pathname.startsWith(p));
@@ -35,6 +40,12 @@ export function App() {
           <InstallFlow />
           <div className={styles.shell}>
             <main className={styles.main}>
+              <motion.div
+                key={section(pathname)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
               <Routes>
                 <Route path="/" element={<Today />} />
                 <Route path="/plan" element={<Plan />} />
@@ -46,6 +57,7 @@ export function App() {
                 <Route path="/close" element={<CloseDay />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </motion.div>
             </main>
             {!fullScreen && <Dock />}
           </div>

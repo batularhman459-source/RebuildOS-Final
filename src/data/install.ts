@@ -1,22 +1,12 @@
 import { useEffect, useState } from 'react';
-import { detectPlatform, type Platform } from '../core/install';
-import type { DayKey } from '../core/types';
+import { detectPlatform, isIOSSafari, type Platform } from '../core/install';
 import { db } from './db';
 import { isInstalled } from './storage';
 
-/** Install state: which days the app was opened in a browser, and whether the friendly prompt was shown. */
+/** Install state: whether the friendly prompt is due and whether it was shown. */
 
-const OPEN_DAYS_KEY = 'browserOpenDays';
 const PROMPT_DUE_KEY = 'installPromptDue';
 const PROMPT_SHOWN_KEY = 'installPromptShown';
-
-/** Remember that the app was opened in a browser (not installed) on `day`. Returns the number of such days. */
-export async function recordBrowserOpen(day: DayKey): Promise<number> {
-  const days = ((await db.meta.get(OPEN_DAYS_KEY))?.value as DayKey[] | undefined) ?? [];
-  if (!days.includes(day)) days.push(day);
-  await db.meta.put({ key: OPEN_DAYS_KEY, value: days.slice(-30) });
-  return days.length;
-}
 
 export async function markInstallPromptDue(): Promise<void> {
   await db.meta.put({ key: PROMPT_DUE_KEY, value: true });
@@ -35,9 +25,9 @@ export function currentPlatform(): Platform {
   return detectPlatform(navigator.userAgent, navigator.maxTouchPoints ?? 0);
 }
 
-/** A phone-sized touch screen. Desktop browsers are never blocked. */
-export function isPhone(): boolean {
-  return window.matchMedia('(pointer: coarse)').matches && Math.min(window.screen.width, window.screen.height) <= 820;
+/** On iPhone, whether this is Safari (which can always add to the home screen). */
+export function inIOSSafari(): boolean {
+  return isIOSSafari(navigator.userAgent);
 }
 
 // ── Native install prompt (Chrome, Edge, Android) ─────────────────────────────
