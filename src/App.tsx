@@ -14,12 +14,13 @@ import { Mission } from './screens/Mission';
 import { Plan } from './screens/Plan';
 import { Progress } from './screens/Progress';
 import { Rebuild } from './screens/Rebuild';
+import { CloseDay } from './screens/CloseDay';
 import { Welcome } from './screens/Welcome';
 import { Today } from './screens/Today';
 import styles from './App.module.css';
 
 /** Full-screen moments hide the dock. */
-const FULL_SCREEN = ['/focus', '/rebuild', '/welcome'];
+const FULL_SCREEN = ['/focus', '/rebuild', '/welcome', '/close'];
 
 export function App() {
   const { pathname } = useLocation();
@@ -40,6 +41,7 @@ export function App() {
                 <Route path="/focus" element={<Focus />} />
                 <Route path="/rebuild" element={<Rebuild />} />
                 <Route path="/welcome" element={<Welcome />} />
+                <Route path="/close" element={<CloseDay />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>

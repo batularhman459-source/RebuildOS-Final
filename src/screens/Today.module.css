@@ -204,3 +204,29 @@
   font-weight: 600;
   color: var(--ink-secondary);
 }
+
+/* ── Close the day ────────────────────────────────────── */
+
+.closeCard {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.closeTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.closeText {
+  font-size: 15px;
+  color: var(--ink-muted);
+}

@@ -15,6 +15,7 @@ import { activeMissions, nextAction } from '../core/missions';
 import type { Action, DayRecord, Mission } from '../core/types';
 import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, moveToToday, undoRollover } from '../data/actions';
 import { getDayRecord, needsMorningChoice, setDayMode, yesterdayWins } from '../data/days';
+import { reopenDay } from '../data/closeDay';
 import { db } from '../data/db';
 import { getActiveSession, startFocus } from '../data/focus';
 import styles from './Today.module.css';
@@ -33,10 +34,21 @@ export function Today() {
   const record = useLiveQuery(async () => (await getDayRecord(day)) ?? null, [day]);
   const morningWins = useLiveQuery(async () => ((await needsMorningChoice(day)) ? await yesterdayWins(day) : null), [day]);
   const small = record?.mode === 'small';
+  const closed = record?.closedAt !== undefined;
 
   const normalView = actions ? todayView(actions, day, dayOf) : undefined;
   const view = actions && normalView ? (small && record ? smallDayView(record, actions) : normalView) : undefined;
-  const hasList = view && (view.open.length > 0 || view.doneToday.length > 0);
+  // Once the day is closed, Today only shows what was done; tomorrow's Actions wait for tomorrow.
+  const listOpen = view && !closed ? view.open : [];
+  const hasList = view && (listOpen.length > 0 || view.doneToday.length > 0);
+  const tomorrowMain = closed ? actions?.find((a) => !a.deletedAt && a.state === 'today' && a.isMain && (a.todayDay ?? '') > day) : undefined;
+  const hour = new Date().getHours();
+  const showCloseRow =
+    view !== undefined &&
+    !closed &&
+    !morningWins &&
+    (view.main !== undefined || view.open.length > 0 || view.doneToday.length > 0) &&
+    (hour >= 18 || hour < 4 || (!view.main && view.open.length === 0 && view.doneToday.length > 0));
   const missionOf = (a: Action) => (a.missionId ? missions?.find((m) => m.id === a.missionId && !m.deletedAt) : undefined);
   // When Today has no Main Action, offer each active Mission's next step from Later.
   const suggestions =
@@ -54,7 +66,9 @@ export function Today() {
         <div className={styles.spacer} />
         {view && morningWins !== undefined && (
           <AnimatePresence mode="wait" initial={false}>
-            {morningWins && !small ? (
+            {closed ? (
+              <DayClosed key="closed" tomorrow={tomorrowMain?.title} onReopen={() => void reopenDay(day)} />
+            ) : morningWins && !small ? (
               <MorningChoice
                 key="morning"
                 wins={morningWins}
@@ -82,7 +96,7 @@ export function Today() {
       </Stage>
 
       <section className={styles.below} aria-label="Also today">
-        {notice && !small && !morningWins && (
+        {notice && !small && !morningWins && !closed && (
           notice.offerSmallDay ? (
             <QuietNotice
               text="Yesterday was a lot. Want a smaller day?"
@@ -101,7 +115,7 @@ export function Today() {
         )}
         {hasList && (
           <ul className={styles.list}>
-            {view.open.map((a) => (
+            {listOpen.map((a) => (
               <ActionRow key={a.id} action={a} meta={a.estimateMinutes ? `${a.estimateMinutes} min` : undefined} />
             ))}
             {view.doneToday.map((a) => (
@@ -109,7 +123,7 @@ export function Today() {
             ))}
           </ul>
         )}
-        {view?.main && !small && (
+        {view?.main && !small && !closed && (
           <button type="button" className={styles.addRow} onClick={() => openAdd('today')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
@@ -117,7 +131,13 @@ export function Today() {
             Add an action
           </button>
         )}
-        {view && !morningWins && (
+        {showCloseRow && (
+          <button type="button" className={styles.closeCard} onClick={() => navigate('/close')}>
+            <span className={styles.closeTitle}>Close the day</span>
+            <span className={styles.closeText}>See what you did and set up tomorrow. About 30 seconds.</span>
+          </button>
+        )}
+        {view && !morningWins && !closed && (
           <button
             type="button"
             className={styles.smallerLink}
@@ -279,4 +299,20 @@ function joinTitles(titles: string[]): string {
   const lower = titles.map((t) => t.charAt(0).toLowerCase() + t.slice(1));
   if (lower.length === 1) return lower[0]!;
   return `${lower.slice(0, -1).join(', ')} and ${lower[lower.length - 1]}`;
+}
+
+function DayClosed({ tomorrow, onReopen }: { tomorrow?: string; onReopen: () => void }) {
+  return (
+    <motion.div className={styles.ask} {...enter} transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+      <h1 className={styles.moment}>
+        Done for <i>today.</i>
+      </h1>
+      <p className={styles.support}>{tomorrow ? `Tomorrow: ${tomorrow}` : 'Rest well.'}</p>
+      <div className={styles.stageButtons}>
+        <button type="button" className={styles.stageText} onClick={onReopen}>
+          Open today again
+        </button>
+      </div>
+    </motion.div>
+  );
 }
