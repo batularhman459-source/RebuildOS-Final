@@ -31,6 +31,7 @@ function section(pathname: string): string {
 export function App() {
   const { pathname } = useLocation();
   const fullScreen = FULL_SCREEN.some((p) => pathname.startsWith(p));
+  useStatusBarColour(pathname);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -95,4 +96,26 @@ function StartupRouting() {
   }, [navigate, day]);
 
   return null;
+}
+
+/** Screens whose top edge is a dark stage. */
+const DARK_TOP = ['/focus', '/rebuild', '/welcome', '/close'];
+
+/**
+ * Match the phone's status bar area (behind the time and battery) to the top of the
+ * current screen, so a dark stage doesn't sit under a light strip.
+ */
+function useStatusBarColour(pathname: string) {
+  useEffect(() => {
+    const dark = pathname === '/' || DARK_TOP.some((p) => pathname.startsWith(p));
+    const colour = dark ? '#121110' : '#F7F6F4';
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = colour;
+    document.documentElement.style.backgroundColor = colour;
+  }, [pathname]);
 }
