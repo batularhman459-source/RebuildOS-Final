@@ -27,6 +27,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered from src/data/updates.ts, which also re-checks whenever the app returns to the front.
+      injectRegister: false,
       includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'RebuildOS',
@@ -48,6 +50,11 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg}', '**/*-latin-*.woff2'],
         navigateFallback: '/index.html',
+        // A new version takes over open screens straight away (then the page reloads into it),
+        // and caches from older versions are removed.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
