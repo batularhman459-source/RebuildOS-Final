@@ -118,10 +118,36 @@
 /* ── Below the stage ──────────────────────────────────────── */
 
 .below {
-  padding: var(--space-3) max(var(--gutter), var(--safe-right)) 0 max(var(--gutter), var(--safe-left));
+  padding: var(--space-6) max(16px, var(--safe-right)) 0 max(16px, var(--safe-left));
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-6);
+}
+
+/* ── Stage header: mark + greeting, date ─────────────── */
+
+.stageHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: -20px;
+  margin-bottom: var(--space-6);
+}
+
+.greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-stage);
+}
+
+.headerDate {
+  font-size: 14px;
+  color: var(--on-stage-muted);
 }
 
 .list {

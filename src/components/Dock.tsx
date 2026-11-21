@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useSheets } from '../app/sheets';
+import { Icon } from './Icon';
 import styles from './Dock.module.css';
 
 const TABS = [
-  { to: '/', label: 'Today', end: true },
-  { to: '/plan', label: 'Plan', end: false },
-  { to: '/progress', label: 'Progress', end: false },
+  { to: '/', label: 'Today', end: true, icon: 'today' },
+  { to: '/plan', label: 'Plan', end: false, icon: 'plan' },
+  { to: '/progress', label: 'Progress', end: false, icon: 'progress' },
 ] as const;
 
 /** Floating frosted dock: three tabs plus Add. Hidden on full-screen moments. See DESIGN.md §6 Dock. */
@@ -25,7 +26,8 @@ export function Dock() {
               `${styles.tab} ${isActive || (tab.to === '/plan' && pathname.startsWith('/goal/')) ? styles.active : ''}`
             }
           >
-            {tab.label}
+            <Icon name={tab.icon} size={20} />
+            <span>{tab.label}</span>
           </NavLink>
         ))}
       </div>

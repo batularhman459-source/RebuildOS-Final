@@ -29,12 +29,15 @@
 }
 
 .tab {
-  display: grid;
-  place-items: center;
-  height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 50px;
   border-radius: var(--radius-pill);
   color: var(--ink-secondary);
-  font-size: 14px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0;
   transition:

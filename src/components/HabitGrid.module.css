@@ -1,0 +1,45 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.head,
+.row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.head span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.cell {
+  height: 16px;
+  border-radius: 5px;
+}
+
+.done {
+  background: var(--ink);
+}
+
+.missed {
+  background: var(--surface-muted);
+}
+
+.future {
+  border: 1px dashed var(--hairline);
+}
+
+.before {
+  background: transparent;
+}
+
+.today {
+  outline: 2px solid var(--apricot);
+  outline-offset: 1px;
+}

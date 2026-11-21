@@ -14,6 +14,8 @@ import { useDay } from '../app/day';
 import { scheduleLabel } from '../core/habits';
 import { goalProgress } from '../core/goals';
 import { GoalProgressBar } from '../components/GoalProgressBar';
+import { Card, EmptyState, Section } from '../components/Section';
+import { Icon } from '../components/Icon';
 import { getMinimum } from '../data/minimum';
 import type { Action, FocusSession, Mission } from '../core/types';
 import { moveToToday } from '../data/actions';
@@ -45,6 +47,7 @@ export function Plan() {
   const minimumSummary = minimum
     ? [minimum.includeGoalStep ? 'One goal step' : undefined, ...minimum.items].filter(Boolean).join(' · ')
     : '';
+  const goalTitle = (a: Action) => (a.missionId ? missionById.get(a.missionId)?.title : undefined);
   const later = laterList(data.actions).filter((a) => {
     const m = a.missionId ? missionById.get(a.missionId) : undefined;
     return !m || m.deletedAt !== undefined || m.status === 'complete';
@@ -64,117 +67,116 @@ export function Plan() {
         )}
       </header>
 
-      {active.length === 0 ? (
-        <div className={styles.empty}>
-          <h2 className={styles.emptyTitle}>No goals yet</h2>
-          <p className={styles.emptyText}>
-            A goal is something bigger you’re working towards, like passing an exam or getting fit. Each one always shows its next step.
-          </p>
-          <button type="button" className={own.newMission} onClick={openNewMission}>
-            New goal
-          </button>
-        </div>
-      ) : (
-        <section aria-label="Goals">
-          {active.map((m) => (
-            <MissionSection key={m.id} mission={m} actions={data.actions} sessions={data.sessions} />
-          ))}
-          <button type="button" className={own.addRow} onClick={openNewMission}>
-            <PlusIcon />
-            New goal
-          </button>
-        </section>
-      )}
-
-      <section className={own.section} aria-labelledby="habits-heading">
-        <h2 id="habits-heading" className={own.heading}>
-          Habits
-        </h2>
-        {habits.length > 0 ? (
-          <ul className={own.list}>
-            {habits.map((h) => (
-              <li key={h.id} className={own.otherRow}>
-                <button type="button" className={own.otherLink} onClick={() => openHabit(h.id)}>
-                  <span className={own.otherTitle}>{h.title}</span>
-                  <span className={own.otherMeta}>{h.pausedAt ? 'Paused' : scheduleLabel(h.schedule)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+      <Section title="Goals" action={active.length > 0 ? { label: 'New goal', onClick: openNewMission } : undefined}>
+        {active.length === 0 ? (
+          <EmptyState
+            icon="plan"
+            title="No goals yet"
+            text="A goal is something bigger you’re working towards, like passing an exam or getting fit. Each one always shows its next step."
+            action={{ label: 'New goal', onClick: openNewMission }}
+          />
         ) : (
-          <p className={own.hint}>Things you want to keep doing, like reading or the gym. They show up on Today.</p>
+          <div className={own.goalCards}>
+            {active.map((m) => (
+              <Card key={m.id} className={own.goalCard}>
+                <MissionSection mission={m} actions={data.actions} sessions={data.sessions} />
+              </Card>
+            ))}
+          </div>
         )}
-        <button type="button" className={own.addRow} onClick={openNewHabit}>
-          <PlusIcon />
-          New habit
-        </button>
-      </section>
+      </Section>
 
-      <section className={own.section} aria-labelledby="minimum-heading">
-        <h2 id="minimum-heading" className={own.heading}>
-          For bad days
-        </h2>
-        <Link to="/minimum" className={own.minimumRow}>
-          <span className={own.minimumTitle}>My minimum day</span>
-          <span className={own.minimumText}>{minimumSummary}</span>
+      <Section title="Habits" action={habits.length > 0 ? { label: 'New habit', onClick: openNewHabit } : undefined}>
+        {habits.length > 0 ? (
+          <Card>
+            <ul className={own.cardList}>
+              {habits.map((h) => (
+                <li key={h.id} className={own.otherRow}>
+                  <button type="button" className={own.otherLink} onClick={() => openHabit(h.id)}>
+                    <span className={own.rowIcon}>
+                      <Icon name="repeat" size={16} />
+                    </span>
+                    <span className={own.otherTitle}>{h.title}</span>
+                    <span className={own.otherMeta}>{h.pausedAt ? 'Paused' : scheduleLabel(h.schedule)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : (
+          <EmptyState
+            icon="repeat"
+            title="No habits yet"
+            text="Things you want to keep doing, like reading or the gym. They show up on Today."
+            action={{ label: 'New habit', onClick: openNewHabit }}
+          />
+        )}
+      </Section>
+
+      <Section title="For bad days">
+        <Link to="/minimum" className={own.minimumCard}>
+          <span className={own.rowIcon}>
+            <Icon name="leaf" size={16} />
+          </span>
+          <span className={own.minimumBody}>
+            <span className={own.minimumTitle}>My minimum day</span>
+            <span className={own.minimumText}>{minimumSummary}</span>
+          </span>
+          <Icon name="chevron" size={16} className={own.chevron} />
         </Link>
-      </section>
+      </Section>
 
       {soon.length > 0 && (
-        <section className={own.section} aria-labelledby="upcoming-heading">
-          <h2 id="upcoming-heading" className={own.heading}>
-            Upcoming
-          </h2>
+        <Section title="Upcoming">
           {groupByDay(soon).map(([d, tasks]) => (
             <div key={d} className={own.dayGroup}>
-              <h3 className={own.dayLabel}>{dayLabel(d, today, (k) => longDay.format(new Date(`${k}T12:00:00`)))}</h3>
-              <ul className={own.list}>
-                {tasks.map((a) => (
-                  <ActionRow key={a.id} action={a} meta={a.time} />
-                ))}
-              </ul>
+              <h3 className={own.dayLabel}>
+                <Icon name="calendar" size={15} />
+                {dayLabel(d, today, (k) => longDay.format(new Date(`${k}T12:00:00`)))}
+              </h3>
+              <Card>
+                <ul className={own.cardList}>
+                  {tasks.map((a) => (
+                    <ActionRow key={a.id} action={a} meta={a.time} goal={goalTitle(a)} />
+                  ))}
+                </ul>
+              </Card>
             </div>
           ))}
-        </section>
+        </Section>
       )}
 
-      <section className={own.section} aria-labelledby="later-heading">
-        <h2 id="later-heading" className={own.heading}>
-          Someday
-        </h2>
+      <Section title="Someday" subtitle="Tasks without a date" action={{ label: 'Add a task', onClick: () => openAdd('later') }}>
         {later.length > 0 ? (
-          <ul className={own.list}>
-            {later.map((a) => (
-              <ActionRow key={a.id} action={a} meta={a.estimateMinutes ? `${a.estimateMinutes} min` : undefined} />
-            ))}
-          </ul>
+          <Card>
+            <ul className={own.cardList}>
+              {later.map((a) => (
+                <ActionRow key={a.id} action={a} goal={goalTitle(a)} meta={a.estimateMinutes ? `${a.estimateMinutes} min` : undefined} />
+              ))}
+            </ul>
+          </Card>
         ) : (
-          <p className={own.hint}>Tasks without a date. Do them whenever suits you.</p>
+          <p className={own.hint}>Nothing here. Tasks you want to do whenever suits you go here.</p>
         )}
-        <button type="button" className={own.addRow} onClick={() => openAdd('later')}>
-          <PlusIcon />
-          Add a task
-        </button>
-      </section>
+      </Section>
 
       {others.length > 0 && (
-        <section className={own.section} aria-labelledby="others-heading">
-          <h2 id="others-heading" className={own.heading}>
-            Paused and completed
-          </h2>
-          <ul className={own.list}>
-            {others.map((m) => (
-              <li key={m.id} className={own.otherRow}>
-                <Link to={`/goal/${m.id}`} className={own.otherLink}>
-                  <span className={own.otherTitle}>{m.title}</span>
-                  <span className={own.otherMeta}>
-                    {m.status === 'complete' && m.completedAt ? `Completed ${formatShortDay(dayKey(new Date(m.completedAt)))}` : 'Paused'}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Section title="Paused and completed">
+          <Card>
+            <ul className={own.cardList}>
+              {others.map((m) => (
+                <li key={m.id} className={own.otherRow}>
+                  <Link to={`/goal/${m.id}`} className={own.otherLink}>
+                    <span className={own.otherTitle}>{m.title}</span>
+                    <span className={own.otherMeta}>
+                      {m.status === 'complete' && m.completedAt ? `Completed ${formatShortDay(dayKey(new Date(m.completedAt)))}` : 'Paused'}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </Section>
       )}
     </div>
   );

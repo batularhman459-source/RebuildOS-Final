@@ -243,6 +243,14 @@ Bottom sheet for quick add, swap and install prompts. `surface`, top radius 28px
 ### Quiet notice
 One-line, non-blocking info such as "2 Actions moved to Later · Undo": `surface-muted` pill-shaped row, `secondary` text, trailing text button. Never more than one at a time, never red.
 
+### Sections, cards and icons (polish pass)
+
+- **Section pattern:** a 19px display title on the left, an optional muted subtitle under it, and one optional action on the right (e.g. "New", "Add"). Use `Section` from `src/components/Section.tsx`; pass `card` to wrap the content.
+- **Cards:** surface background, 1px `--hairline-frosted` border, `--radius-lg`, 16px side padding. Rows inside a card are divided by hairlines. Don't nest cards.
+- **Icons:** one line set (`src/components/Icon.tsx`), 1.8 stroke, always decorative (`aria-hidden`) next to a text label. Tab bar icons are 20px; row icons (repeat, goal, clock, calendar) are 13–15px in muted ink.
+- **Empty states:** an icon, one short title, one sentence, and one button that does the obvious next thing (`EmptyState`).
+- **Charts on Progress:** one series in ink, thin bars with 4px rounded tops, a recessive grid, a tap/hover/focus readout and a hidden table. The habit calendar fills done days and leaves missed days plain, never as a broken streak.
+
 ## 7. Motion
 
 - **Press:** every tappable element scales to 0.96 over 120ms.

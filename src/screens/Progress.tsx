@@ -7,7 +7,12 @@ import { dayKey } from '../core/day';
 import { formatDuration } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
 import { activeMissions, missionStats } from '../core/missions';
-import { allTime, lastSevenDays } from '../core/progress';
+import { allTime, focusMinutesByDay, lastSevenDays } from '../core/progress';
+import { lastDays } from '../core/day';
+import { FocusChart } from '../components/FocusChart';
+import { GoalsRing } from '../components/GoalsRing';
+import { HabitGrid } from '../components/HabitGrid';
+import { Section } from '../components/Section';
 import { habitWeek, isActive, recentWeeks } from '../core/habits';
 import { goalProgress } from '../core/goals';
 import { GoalProgressBar } from '../components/GoalProgressBar';
@@ -39,9 +44,12 @@ export function Progress() {
 
   if (!data) return <div className={styles.screen} />;
   const week = lastSevenDays(today, data.actions, data.sessions, dayOf, data.checks);
-  const habits = data.habits.filter(isActive).sort((a, b) => a.sortOrder - b.sortOrder);
   const record = allTime(data.actions, data.sessions);
-  const missions = activeMissions(data.missions).map((m) => ({ m, stats: missionStats(m.id, data.actions, data.sessions) }));
+  const focus = focusMinutesByDay(lastDays(today, 14), data.sessions, dayOf);
+  const habits = data.habits.filter(isActive).sort((a, b) => a.sortOrder - b.sortOrder);
+  const goals = activeMissions(data.missions).map((m) => ({ m, stats: missionStats(m.id, data.actions, data.sessions), progress: goalProgress(m, data.actions) }));
+  const measured = goals.filter((g) => g.progress.kind !== 'none');
+  const average = measured.length ? measured.reduce((t, g) => t + g.progress.fraction, 0) / measured.length : 0;
 
   return (
     <div className={styles.screen}>
@@ -49,10 +57,7 @@ export function Progress() {
         <h1 className={styles.title}>Progress</h1>
       </header>
 
-      <section aria-labelledby="week-heading" className={own.section}>
-        <h2 id="week-heading" className={own.heading}>
-          Last 7 days
-        </h2>
+      <Section title="Last 7 days" card>
         <ol className={own.week}>
           {week.days.map(({ day, active }) => {
             const date = new Date(`${day}T12:00:00`);
@@ -73,7 +78,7 @@ export function Progress() {
         </ol>
         <p className={own.caption}>
           {week.activeCount === 0
-            ? 'Each day you finish something or focus, a star fills in.'
+            ? 'Each day you finish a task, tick a habit or focus, a star fills in.'
             : `Active on ${week.activeCount} of the last 7 days.`}
         </p>
         <dl className={own.stats}>
@@ -86,12 +91,59 @@ export function Progress() {
             <dd>{focusText(week.focusMs)}</dd>
           </div>
         </dl>
-      </section>
+      </Section>
 
-      <section aria-labelledby="record-heading" className={own.section}>
-        <h2 id="record-heading" className={own.heading}>
-          All time
-        </h2>
+      <Section title="Focus" subtitle="Last 14 days" card>
+        <FocusChart data={focus} today={today} />
+      </Section>
+
+      {goals.length > 0 && (
+        <Section title="Goals" card>
+          {measured.length > 0 && <GoalsRing fraction={average} goals={measured.length} />}
+          <ul className={own.missions}>
+            {goals.map(({ m, stats, progress }) => (
+              <li key={m.id}>
+                <Link to={`/goal/${m.id}`} className={own.goalRow}>
+                  <span className={own.missionRow}>
+                    <span className={own.missionTitle}>{m.title}</span>
+                    {stats.focusMs >= 60_000 && <span className={own.missionMeta}>{focusText(stats.focusMs)} focused</span>}
+                  </span>
+                  <GoalProgressBar progress={progress} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {habits.length > 0 && (
+        <Section title="Habits this week" subtitle="Last 5 weeks, this week at the bottom" card>
+          <ul className={own.habits}>
+            {habits.map((h) => {
+              const wk = habitWeek(h, today, data.checks);
+              const lately = recentWeeks(h, today, data.checks);
+              return (
+                <li key={h.id} className={own.habit}>
+                  <div className={own.habitHead}>
+                    <span className={own.habitTitle}>{h.title}</span>
+                    <span className={own.habitCount} aria-label={`${h.title}: ${wk.done} of ${wk.target} this week`}>
+                      {wk.done >= wk.target ? `Done this week · ${wk.done}×` : `${wk.done} of ${wk.target} this week`}
+                    </span>
+                  </div>
+                  <HabitGrid habitId={h.id} title={h.title} today={today} checks={data.checks} since={dayKey(new Date(h.createdAt))} />
+                  {lately.possible > 0 && (
+                    <span className={own.lately}>
+                      Last 4 weeks: {lately.done} of {lately.possible}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
+      )}
+
+      <Section title="All time" subtitle="Your record only ever grows" card>
         <dl className={own.record}>
           <div>
             <dt>focused</dt>
@@ -102,69 +154,7 @@ export function Progress() {
             <dd>{record.actionsDone}</dd>
           </div>
         </dl>
-        <p className={own.caption}>Your record only ever grows.</p>
-      </section>
-
-      {habits.length > 0 && (
-        <section aria-labelledby="habits-heading" className={own.section}>
-          <h2 id="habits-heading" className={own.heading}>
-            Habits this week
-          </h2>
-          <ul className={own.habits}>
-            {habits.map((h) => {
-              const wk = habitWeek(h, today, data.checks);
-              const lately = recentWeeks(h, today, data.checks);
-              return (
-                <li key={h.id} className={own.habit}>
-                  <div className={own.habitHead}>
-                    <span className={own.habitTitle}>{h.title}</span>
-                    <span className={own.habitCount}>
-                      {wk.done} of {wk.target}
-                    </span>
-                  </div>
-                  <ol className={own.dots} aria-label={`${h.title}: ${wk.done} of ${wk.target} this week`}>
-                    {wk.dots.map((d) => (
-                      <li
-                        key={d.day}
-                        className={`${own.dot} ${d.done ? own.dotDone : ''} ${d.done === null ? own.dotFuture : ''} ${d.day === today ? own.dotToday : ''}`}
-                        aria-hidden="true"
-                      >
-                        <span>{weekday.format(new Date(`${d.day}T12:00:00`))}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  {lately.possible > 0 && (
-                    <span className={own.lately}>
-                      Last 4 weeks: {lately.done} of {lately.possible}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      {missions.length > 0 && (
-        <section aria-labelledby="missions-heading" className={own.section}>
-          <h2 id="missions-heading" className={own.heading}>
-            Goals
-          </h2>
-          <ul className={own.missions}>
-            {missions.map(({ m, stats }) => (
-              <li key={m.id}>
-                <Link to={`/goal/${m.id}`} className={own.goalRow}>
-                  <span className={own.missionRow}>
-                    <span className={own.missionTitle}>{m.title}</span>
-                    <span className={own.missionMeta}>{focusText(stats.focusMs)} focused</span>
-                  </span>
-                  <GoalProgressBar progress={goalProgress(m, data.actions)} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      </Section>
 
       <YourData />
     </div>

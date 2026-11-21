@@ -3,15 +3,18 @@ import { useRef } from 'react';
 import type { Action } from '../core/types';
 import { completeAction, reopenAction } from '../data/actions';
 import { useSheets } from '../app/sheets';
+import { Icon } from './Icon';
 import styles from './ActionRow.module.css';
 
 interface ActionRowProps {
   action: Action;
   meta?: string;
+  /** Show the goal this task belongs to, under the title. */
+  goal?: string;
 }
 
 /** A plain list row: check circle, title, optional meta. Tapping the title opens the Action. See DESIGN.md §6 List row. */
-export function ActionRow({ action, meta }: ActionRowProps) {
+export function ActionRow({ action, meta, goal }: ActionRowProps) {
   const { openAction } = useSheets();
   const done = action.state === 'done';
   // Only celebrate a tick the person just made, not rows that were already done.
@@ -45,8 +48,21 @@ export function ActionRow({ action, meta }: ActionRowProps) {
         </motion.span>
       </button>
       <button type="button" className={`${styles.title} ${done ? styles.titleDone : ''}`} onClick={() => openAction(action.id)}>
-        <span className={styles.text}>{action.title}</span>
-        {meta && <span className={styles.meta}>{meta}</span>}
+        <span className={styles.textCol}>
+          <span className={styles.text}>{action.title}</span>
+          {goal && (
+            <span className={styles.sub}>
+              <Icon name="goal" size={12} />
+              {goal}
+            </span>
+          )}
+        </span>
+        {meta && (
+          <span className={styles.meta}>
+            {action.time && meta === action.time && <Icon name="clock" size={13} />}
+            {meta}
+          </span>
+        )}
       </button>
     </motion.li>
   );

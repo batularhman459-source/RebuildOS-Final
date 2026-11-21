@@ -51,3 +51,18 @@ describe('habits count towards active days', () => {
     expect([...days]).toEqual(['2026-11-05']);
   });
 });
+
+describe('focus chart data', () => {
+  it('totals focused minutes per day, oldest first, with empty days at zero', async () => {
+    const { focusMinutesByDay, niceMinutesMax } = await import('./progress');
+    const data = focusMinutesByDay(['2026-11-01', '2026-11-02', '2026-11-03'], [session(2, 25), session(2, 20), session(3, 50)], dayOf);
+    expect(data).toEqual([
+      { day: '2026-11-01', minutes: 0 },
+      { day: '2026-11-02', minutes: 45 },
+      { day: '2026-11-03', minutes: 50 },
+    ]);
+    expect(niceMinutesMax(50)).toBe(60);
+    expect(niceMinutesMax(0)).toBe(30);
+    expect(niceMinutesMax(800)).toBe(840);
+  });
+});

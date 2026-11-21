@@ -216,3 +216,29 @@
 .goalRow .missionRow {
   min-height: 40px;
 }
+
+/* ── Polish pass: inside cards ───────────────────────── */
+
+.week {
+  padding-top: var(--space-4);
+}
+
+.caption {
+  padding: var(--space-2) 0 0;
+}
+
+.stats {
+  padding: var(--space-3) 0 var(--space-4);
+}
+
+.record {
+  padding: var(--space-4) 0;
+}
+
+.habits .habit:first-child {
+  padding-top: var(--space-4);
+}
+
+.habits .habit:last-child {
+  padding-bottom: var(--space-4);
+}

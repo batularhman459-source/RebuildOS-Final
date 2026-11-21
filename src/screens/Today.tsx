@@ -7,6 +7,7 @@ import { useSheets } from '../app/sheets';
 import { ActionRow } from '../components/ActionRow';
 import { QuietNotice } from '../components/QuietNotice';
 import { Stage } from '../components/Stage';
+import { Star } from '../components/Star';
 import { dayKey } from '../core/day';
 import { elapsedMs, formatEstimate, formatSpent } from '../core/focus';
 import { APP_LOCALE } from '../core/locale';
@@ -18,18 +19,27 @@ import { getDayRecord, needsMorningChoice, setDayMode, yesterdayWins } from '../
 import { startMinimumDay } from '../data/minimum';
 import { doneThisWeek, isDoneOn, showsToday, weekStart } from '../core/habits';
 import { HabitRow } from '../components/HabitRow';
+import { Section } from '../components/Section';
+import { Icon } from '../components/Icon';
 import { reopenDay } from '../data/closeDay';
 import { db } from '../data/db';
 import { getActiveSession, startFocus } from '../data/focus';
 import styles from './Today.module.css';
 
-const dateFormat = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
+const shortDate = new Intl.DateTimeFormat(APP_LOCALE, { weekday: 'short', day: 'numeric', month: 'short' });
+
+/** Morning until noon, afternoon until 18:00, evening after; late night still counts as evening. */
+function greeting(hour: number): string {
+  if (hour >= 4 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 const dayOf = (t: number) => dayKey(new Date(t));
 const enter = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 } };
 
 export function Today() {
   const day = useDay();
-  const { openAdd } = useSheets();
+  const { openAdd, openNewHabit } = useSheets();
   const actions = useLiveQuery(() => db.actions.toArray(), []);
   const missions = useLiveQuery(() => db.missions.toArray(), []);
   const notice = useLiveQuery(() => getRolloverNotice(day), [day]);
@@ -87,7 +97,13 @@ export function Today() {
   return (
     <>
       <Stage height="max(420px, 58vh)" aria-label="Up next">
-        <span className={styles.date}>{dateFormat.format(new Date())}</span>
+        <div className={styles.stageHeader}>
+          <span className={styles.greeting}>
+            <Star size={18} variant="gradient" />
+            {greeting(new Date().getHours())}
+          </span>
+          <span className={styles.headerDate}>{shortDate.format(new Date())}</span>
+        </div>
         <div className={styles.spacer} />
         {view && morningWins !== undefined && (
           <AnimatePresence mode="wait" initial={false}>
@@ -143,33 +159,37 @@ export function Today() {
           )
         )}
         {todaysHabits.length > 0 && (
-          <>
-            <h2 className={styles.listHeading}>Habits today</h2>
+          <Section title="Habits today" card action={{ label: 'New', onClick: openNewHabit }}>
             <ul className={styles.list} aria-label="Habits today">
               {todaysHabits.map(({ habit, done, meta }) => (
                 <HabitRow key={habit.id} habit={habit} day={day} done={done} meta={meta} />
               ))}
             </ul>
-          </>
+          </Section>
         )}
-        {listOpen.length > 0 && <h2 className={styles.listHeading}>Also today</h2>}
-        {hasList && (
-          <ul className={styles.list}>
-            {listOpen.map((a) => (
-              <ActionRow key={a.id} action={a} meta={a.time ?? (a.estimateMinutes ? `${a.estimateMinutes} min` : undefined)} />
-            ))}
-            {view.doneToday.map((a) => (
-              <ActionRow key={a.id} action={a} />
-            ))}
-          </ul>
-        )}
-        {view?.main && !small && !closed && (
-          <button type="button" className={styles.addRow} onClick={() => openAdd('today')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Add a task
-          </button>
+        {view && (hasList || (view.main && !small && !closed)) && (
+          <Section title={small ? 'Your minimum' : 'Tasks'} card action={small || closed ? undefined : { label: 'Add', onClick: () => openAdd('today') }}>
+            {hasList ? (
+              <ul className={styles.list}>
+                {listOpen.map((a) => (
+                  <ActionRow
+                    key={a.id}
+                    action={a}
+                    goal={small ? undefined : missionOf(a)?.title}
+                    meta={a.time ?? (a.estimateMinutes ? `${a.estimateMinutes} min` : undefined)}
+                  />
+                ))}
+                {view.doneToday.map((a) => (
+                  <ActionRow key={a.id} action={a} />
+                ))}
+              </ul>
+            ) : (
+              <button type="button" className={styles.addRow} onClick={() => openAdd('today')}>
+                <Icon name="plus" size={20} />
+                Add another task for today
+              </button>
+            )}
+          </Section>
         )}
         {showCloseRow && (
           <button type="button" className={styles.closeCard} onClick={() => navigate('/close')}>

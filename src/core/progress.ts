@@ -72,3 +72,19 @@ export function allTime(actions: readonly Action[], sessions: readonly FocusSess
     focusMs: finished(sessions).reduce((t, s) => t + elapsedMs(s.segments, s.finishedAt!), 0),
   };
 }
+
+/** Focused minutes on each of the given days (by the day a session finished), oldest first. */
+export function focusMinutesByDay(days: readonly DayKey[], sessions: readonly FocusSession[], dayOf: DayOf): { day: DayKey; minutes: number }[] {
+  const totals = new Map<DayKey, number>(days.map((d) => [d, 0]));
+  for (const s of finished(sessions)) {
+    const d = dayOf(s.finishedAt!);
+    if (totals.has(d)) totals.set(d, totals.get(d)! + elapsedMs(s.segments, s.finishedAt!));
+  }
+  return days.map((day) => ({ day, minutes: Math.round((totals.get(day) ?? 0) / 60_000) }));
+}
+
+/** A tidy top for a bar chart's axis: 30, 60, 90, 120, 180, 240… minutes. */
+export function niceMinutesMax(maxMinutes: number): number {
+  const steps = [30, 60, 90, 120, 180, 240, 360, 480, 600, 720];
+  return steps.find((s) => s >= maxMinutes) ?? Math.ceil(maxMinutes / 60) * 60;
+}

@@ -3,6 +3,8 @@ import { useRef } from 'react';
 import { useSheets } from '../app/sheets';
 import type { DayKey, Habit } from '../core/types';
 import { toggleHabit } from '../data/habits';
+import { scheduleLabel } from '../core/habits';
+import { Icon } from './Icon';
 import styles from './ActionRow.module.css';
 
 interface HabitRowProps {
@@ -45,8 +47,13 @@ export function HabitRow({ habit, day, done, meta }: HabitRowProps) {
         </motion.span>
       </button>
       <button type="button" className={`${styles.title} ${done ? styles.titleDone : ''}`} onClick={() => openHabit(habit.id)}>
-        <span className={styles.text}>{habit.title}</span>
-        {meta && <span className={styles.meta}>{meta}</span>}
+        <span className={styles.textCol}>
+          <span className={styles.text}>{habit.title}</span>
+          <span className={styles.sub}>
+            <Icon name="repeat" size={12} />
+            {meta ?? scheduleLabel(habit.schedule)}
+          </span>
+        </span>
       </button>
     </li>
   );
