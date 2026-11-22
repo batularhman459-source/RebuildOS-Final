@@ -111,3 +111,10 @@ export function stageTitle(page: Page) {
 export function alsoToday(page: Page) {
   return page.getByRole('region', { name: 'Also today' });
 }
+
+/** Your plan lives under Progress. */
+export async function openPlan(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Progress' }).click();
+  await page.getByRole('link', { name: /^Your plan/ }).click();
+  await expect(page.getByRole('heading', { name: 'Your plan' })).toBeVisible();
+}

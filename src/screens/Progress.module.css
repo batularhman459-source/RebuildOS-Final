@@ -242,3 +242,63 @@
 .habits .habit:last-child {
   padding-bottom: var(--space-4);
 }
+
+/* ── Your plan entry ─────────────────────────────────── */
+
+.planCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 72px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-frosted);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.planCard:active {
+  transform: none;
+  opacity: 0.6;
+}
+
+.planIcon {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--apricot);
+  color: var(--stage);
+}
+
+.planBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planTitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.planText {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.planChevron {
+  color: var(--ink-muted);
+}
+
+.feelings {
+  font-size: 14px;
+  color: var(--ink-muted);
+  padding-top: var(--space-1);
+}

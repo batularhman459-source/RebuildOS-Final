@@ -36,7 +36,7 @@ src/
                day.ts (04:00 day start), focus.ts (timer maths), … + *.test.ts
   data/        Dexie database, queries and mutations; storage persistence.
   components/  Reusable UI parts from DESIGN.md (Stage, Dock, Star, …).
-  screens/     One file per screen (Today, Plan, Progress, Focus, …).
+  screens/     One file per screen (CheckIn, Today, DayCounted, Progress, Plan = Your plan, Focus, …).
   styles/      tokens.css (mirror of DESIGN.md) and global.css.
 public/icons/  App icons and favicon.
 docs/          Product brief, architecture, wireframes.

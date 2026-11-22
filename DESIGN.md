@@ -90,7 +90,7 @@ Reference designs: the "v4" row of the RebuildOS Visual Direction canvas (Today,
 
 **Light for planning, dark for doing.**
 
-- **Light screens** (Plan, Progress, lists, forms) are quiet overviews: warm off-white canvas, plain lists, thin hairlines, no boxes.
+- **Light screens** (Progress, Your plan, lists, forms) are quiet overviews: warm off-white canvas, plain lists, thin hairlines, no boxes.
 - **Dark stages** (the top of Today, Focus, A smaller day, Welcome back) are the moments that matter: one large centred message on deep charcoal, lit from within by the Apricot glow.
 
 **The user's Action is the product.** Apple puts an iPhone on a stage; RebuildOS puts *"Write landing page copy"* there. On any stage, the user's own words are the largest thing on screen, not a label like "Today" or "Main action".
@@ -235,7 +235,7 @@ No card. Top hairline, 18px vertical padding. Row 1: name (`section-title`) with
 Plain row. Small label (`label`, `ink-muted`; first slot uses `apricot-text`), then the Action. The first slot ("One step forward") uses `section-title` and may carry one supporting line; the other two use `body`. Trailing "Swap" text button.
 
 ### Dock
-Floating at the bottom, 20px from each side. A frosted pill with three equal tabs (Today, Plan, Progress) and, beside it, a 58px frosted circle with "+" (Add). Active tab: `ink` pill, white text. Inactive: `ink-secondary`. Hidden on Focus, A smaller day and Welcome back.
+Floating at the bottom, 20px from each side. A frosted pill with two equal tabs (Today, Progress; each an icon over its label) and, beside it, a 58px frosted circle with "+" (Add). Your plan (`/plan`) and goal pages count as Progress. Active tab: `ink` pill, white text. Inactive: `ink-secondary`. Hidden on full-screen moments: Check-in, Focus, Day counted, My minimum day, Welcome back, Setup.
 
 ### Sheet
 Bottom sheet for quick add, swap and install prompts. `surface`, top radius 28px, grab handle, scrim `rgba(18,17,16,0.38)`. No shadow.

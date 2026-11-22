@@ -109,14 +109,7 @@ export function Today() {
       : [];
   const hasList = view && (listOpen.length > 0 || view.doneToday.length > 0);
   const tomorrowMain = closed ? actions?.find((a) => !a.deletedAt && a.state === 'today' && a.isMain && (a.todayDay ?? '') > day) : undefined;
-  const hour = new Date().getHours();
   const [stageHidden, setStageHidden] = useState(false);
-  const showCloseRow =
-    view !== undefined &&
-    !closed &&
-    !small &&
-    (view.main !== undefined || view.open.length > 0 || view.doneToday.length > 0) &&
-    (hour >= 18 || hour < 4 || (!view.main && view.open.length === 0 && view.doneToday.length > 0));
   const missionOf = (a: Action) => (a.missionId ? missions?.find((m) => m.id === a.missionId && !m.deletedAt) : undefined);
   // Other things the main thing could be (for Swap, and when Today has no main thing).
   const mainKey = view?.main ? keyOfAction(view.main) : undefined;
@@ -188,7 +181,7 @@ export function Today() {
       <section className={styles.below} aria-label="Also today">
         {notice && notice.movedIds.length > 0 && !small && !closed && (
           <QuietNotice
-            text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'task' : 'tasks'} moved to Someday`}
+            text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'task' : 'tasks'} from yesterday moved off Today`}
             actionLabel="Undo"
             onAction={() => void undoRollover(day)}
             onDismiss={() => void dismissRolloverNotice(day)}
@@ -226,12 +219,6 @@ export function Today() {
               </button>
             )}
           </Section>
-        )}
-        {showCloseRow && (
-          <button type="button" className={styles.closeCard} onClick={() => navigate('/close')}>
-            <span className={styles.closeTitle}>Close the day</span>
-            <span className={styles.closeText}>See what you did and set up tomorrow. About 30 seconds.</span>
-          </button>
         )}
         {view && small && !closed && (
           <div className={styles.smallerLinks}>

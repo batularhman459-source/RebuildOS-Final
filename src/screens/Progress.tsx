@@ -13,6 +13,7 @@ import { FocusChart } from '../components/FocusChart';
 import { GoalsRing } from '../components/GoalsRing';
 import { HabitGrid } from '../components/HabitGrid';
 import { Section } from '../components/Section';
+import { Icon } from '../components/Icon';
 import { habitWeek, isActive, recentWeeks } from '../core/habits';
 import { goalProgress } from '../core/goals';
 import { GoalProgressBar } from '../components/GoalProgressBar';
@@ -40,7 +41,7 @@ export function Progress() {
       db.habitChecks.toArray(),
       db.days.toArray(),
     ]);
-    return { actions, sessions, missions, habits, checks, wins: days.filter((d) => d.smallWin).map((d) => d.day) };
+    return { actions, sessions, missions, habits, checks, days, wins: days.filter((d) => d.smallWin).map((d) => d.day) };
   }, []);
 
   if (!data) return <div className={styles.screen} />;
@@ -50,6 +51,18 @@ export function Progress() {
   const habits = data.habits.filter(isActive).sort((a, b) => a.sortOrder - b.sortOrder);
   const goals = activeMissions(data.missions).map((m) => ({ m, stats: missionStats(m.id, data.actions, data.sessions), progress: goalProgress(m, data.actions) }));
   const measured = goals.filter((g) => g.progress.kind !== 'none');
+  const weekKeys = new Set(week.days.map((d) => d.day));
+  const feelings = { good: 0, okay: 0, rough: 0 };
+  for (const d of data.days) if (weekKeys.has(d.day) && d.feeling) feelings[d.feeling] += 1;
+  const feelingLine = (['good', 'okay', 'rough'] as const)
+    .filter((f) => feelings[f] > 0)
+    .map((f) => `${feelings[f]} ${f}`)
+    .join(' · ');
+  const planCount = [
+    `${activeMissions(data.missions).length} ${activeMissions(data.missions).length === 1 ? 'goal' : 'goals'}`,
+    `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`,
+    'rough-day minimum',
+  ].join(' · ');
   const average = measured.length ? measured.reduce((t, g) => t + g.progress.fraction, 0) / measured.length : 0;
 
   return (
@@ -57,6 +70,17 @@ export function Progress() {
       <header className={styles.header}>
         <h1 className={styles.title}>Progress</h1>
       </header>
+
+      <Link to="/plan" className={own.planCard}>
+        <span className={own.planIcon}>
+          <Icon name="plan" size={18} />
+        </span>
+        <span className={own.planBody}>
+          <span className={own.planTitle}>Your plan</span>
+          <span className={own.planText}>{planCount}</span>
+        </span>
+        <Icon name="chevron" size={16} className={own.planChevron} />
+      </Link>
 
       <Section title="Last 7 days" card>
         <ol className={own.week}>
@@ -82,6 +106,7 @@ export function Progress() {
             ? 'Each day you finish a task, tick a habit or focus, a star fills in.'
             : `Active on ${week.activeCount} of the last 7 days.`}
         </p>
+        {feelingLine && <p className={own.feelings}>Days: {feelingLine}</p>}
         <dl className={own.stats}>
           <div>
             <dt>tasks done</dt>

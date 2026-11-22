@@ -5,11 +5,13 @@ import styles from './Dock.module.css';
 
 const TABS = [
   { to: '/', label: 'Today', end: true, icon: 'today' },
-  { to: '/plan', label: 'Plan', end: false, icon: 'plan' },
   { to: '/progress', label: 'Progress', end: false, icon: 'progress' },
 ] as const;
 
-/** Floating frosted dock: three tabs plus Add. Hidden on full-screen moments. See DESIGN.md §6 Dock. */
+/** Your plan and goal pages live under Progress. */
+const UNDER_PROGRESS = ['/plan', '/goal/'];
+
+/** Floating frosted dock: two tabs plus Add. Hidden on full-screen moments. See DESIGN.md §6 Dock. */
 export function Dock() {
   const { openAdd } = useSheets();
   const { pathname } = useLocation();
@@ -23,7 +25,7 @@ export function Dock() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `${styles.tab} ${isActive || (tab.to === '/plan' && pathname.startsWith('/goal/')) ? styles.active : ''}`
+              `${styles.tab} ${isActive || (tab.to === '/progress' && UNDER_PROGRESS.some((p) => pathname.startsWith(p))) ? styles.active : ''}`
             }
           >
             <Icon name={tab.icon} size={20} />

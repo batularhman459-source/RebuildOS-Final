@@ -289,3 +289,25 @@ a.otherLink {
   gap: 6px;
   margin-bottom: var(--space-2);
 }
+
+/* ── Your plan header (reached from Progress) ───────── */
+
+.planHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: calc(-1 * var(--space-4));
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--touch-min);
+  margin-left: -6px;
+  padding: 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}

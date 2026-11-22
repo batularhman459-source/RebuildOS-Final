@@ -3,7 +3,8 @@ import type { DayKey } from '../core/types';
 import { db, newId } from './db';
 
 /**
- * Close the day: an optional ~30-second evening ritual. See docs/product-brief.md §4.6.
+ * Closing the day ("Close for today" on Day counted). Originally a separate evening ritual
+ * (docs/product-brief.md §4.6); in V2 the check-in and suggestions set up the next day.
  * Decides where unfinished Actions go and sets tomorrow's Main Action, so the overnight
  * rule has nothing left to move.
  */

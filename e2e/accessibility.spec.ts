@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { addFirstAction, changeFeeling, openApp, quickAdd } from './helpers';
+import { addFirstAction, changeFeeling, openApp, openPlan, quickAdd } from './helpers';
 
 /** Automated accessibility checks (axe) on every screen. Fails on serious or critical issues. */
 
@@ -40,8 +40,8 @@ test('screens have no serious accessibility issues', async ({ page }) => {
   await check(page, 'Add sheet');
   await page.keyboard.press('Escape');
 
-  await page.getByRole('link', { name: 'Plan' }).click();
-  await check(page, 'Plan');
+  await openPlan(page);
+  await check(page, 'Your plan');
 
   await page.getByRole('button', { name: 'New goal' }).click();
   await page.locator('#mission-title').fill('Launch my app');
@@ -64,9 +64,6 @@ test('screens have no serious accessibility issues', async ({ page }) => {
   await page.goto('/minimum');
   await check(page, 'My minimum day');
   await page.getByRole('button', { name: 'Close' }).click();
-
-  await page.goto('/close');
-  await check(page, 'Close the day');
 
   await page.goto('/welcome');
   await check(page, 'Welcome back');

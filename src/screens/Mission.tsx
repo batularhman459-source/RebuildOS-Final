@@ -59,7 +59,7 @@ export function Mission() {
   return (
     <div className={styles.screen}>
       <div className={own.topBar}>
-        <button type="button" className={own.round} aria-label="Back to Plan" onClick={() => navigate('/plan')}>
+        <button type="button" className={own.round} aria-label="Back to your plan" onClick={() => navigate('/plan')}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>

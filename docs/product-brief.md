@@ -20,7 +20,7 @@ _Status: V1.1 built, V2 in progress. **The V2 direction below supersedes everyth
 
 **The main thing is always a step on a goal**, suggested in this order (`src/core/suggest.ts`, no AI): the goal's open tasks → tasks you've done on it again and again (2+ times in 60 days) → ready-made ideas for the goal's life area (`src/core/areas.ts`). Goals take turns. **Something else** swaps it with one tap; what the app picked goes back where it came from.
 
-**Phases:** A — check-in, adaptive Today, suggestions, Day counted, motion ✅. B — setup by life areas (pick up to 3 → suggested goal with alternatives, tasks with smaller versions, a habit, a rough-day minimum; ~30 seconds) ✅. C — slim to Today + Progress; Plan, Someday, Upcoming and times move behind goal pages.
+**Phases:** A — check-in, adaptive Today, suggestions, Day counted, motion ✅. B — setup by life areas (pick up to 3 → suggested goal with alternatives, tasks with smaller versions, a habit, a rough-day minimum; ~30 seconds) ✅. C — two tabs (Today, Progress). **Your plan** (goals, habits, rough-day minimum, tasks without a goal) opens from Progress; a goal's tasks (dated or not) live on its page. "Close the day" is gone: **Close for today** on Day counted ends the day, and the check-in plus suggestions set up the next one. Progress shows this week's good / okay / rough days ✅.
 
 ## V1.1 direction (after testing V1 on an iPhone 15 Pro)
 

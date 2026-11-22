@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, quickAdd, seed, stageTitle } from './helpers';
+import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, openPlan, quickAdd, seed, stageTitle } from './helpers';
 
 /** The five V1 journeys from docs/product-brief.md §5, plus Close the day, backup and install. */
 
@@ -46,15 +46,15 @@ test('2 · a normal day: add, complete, Later, and the overnight rule', async ({
   `);
   await page.reload();
   await expect(stageTitle(page)).toHaveText('Write landing page copy');
-  await expect(page.getByRole('status')).toContainText('1 task moved to Someday');
+  await expect(page.getByRole('status')).toContainText('1 task from yesterday moved off Today');
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(alsoToday(page).getByText('Gym: legs')).toBeVisible();
 
   await alsoToday(page).getByText('Gym: legs').click();
   await page.getByRole('dialog', { name: 'Edit task' }).getByRole('button', { name: 'Someday' }).click();
   await page.keyboard.press('Escape');
-  await page.getByRole('link', { name: 'Plan' }).click();
-  await expect(page.getByRole('region', { name: 'Someday' }).getByText('Gym: legs')).toBeVisible();
+  await openPlan(page);
+  await expect(page.getByRole('region', { name: 'Other tasks' }).getByText('Gym: legs')).toBeVisible();
 });
 
 test('3 · a rough day: just my minimum, and it still counts', async ({ page }) => {
@@ -155,7 +155,7 @@ test('habits: your own, every day or some days a week', async ({ page }) => {
   await page.getByRole('dialog', { name: 'New habit' }).getByRole('button', { name: 'Add habit' }).click();
 
   // A weekly habit, from Plan → New habit.
-  await page.getByRole('link', { name: 'Plan' }).click();
+  await openPlan(page);
   await page.getByRole('button', { name: 'New habit' }).click();
   dialog = page.getByRole('dialog', { name: 'New habit' });
   await dialog.getByPlaceholder('e.g. Read for 20 minutes').fill('Gym');
@@ -231,27 +231,34 @@ test('5 · creating a Mission', async ({ page }) => {
   await expect(page.getByRole('region', { name: 'Up next' })).toContainText('Launch my app');
   await expect(stageTitle(page)).toHaveText('Write landing page copy');
 
-  await page.getByRole('link', { name: 'Plan' }).click();
+  await openPlan(page);
   await page.getByRole('link', { name: /Launch my app/ }).click();
   await page.getByRole('button', { name: 'Mark goal complete' }).click();
   await expect(page.getByRole('heading', { name: 'Goal complete.' })).toBeVisible();
 });
 
-test('close the day sets up tomorrow', async ({ page }) => {
-  await page.clock.install({ time: new Date(2026, 10, 3, 19, 0) });
-  await page.clock.resume();
+test('close for today from Day counted, and open it again', async ({ page }) => {
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
-  await quickAdd(page, 'Gym: legs');
-  await page.getByRole('button', { name: /Close the day/ }).click();
-
-  await expect(page.getByRole('heading', { name: 'Your day.' })).toBeVisible();
-  await page.getByRole('group', { name: 'Where should Gym: legs go?' }).getByRole('button', { name: 'Tomorrow' }).click();
-  await page.getByRole('radio', { name: '3 of 5' }).click();
-  await page.getByRole('main').getByRole('button', { name: 'Close the day' }).click();
-
+  await page.getByRole('button', { name: 'Mark as done' }).click();
+  await expect(page.getByRole('heading', { name: 'Day counted.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close for today' }).click();
   await expect(stageTitle(page)).toHaveText('Done for today.');
-  await expect(page.getByText('Tomorrow: Write landing page copy')).toBeVisible();
+  // A closed day doesn't ask "How's today?" again.
+  await page.reload();
+  await expect(stageTitle(page)).toHaveText('Done for today.');
+  await page.getByRole('button', { name: 'Open today again' }).click();
+  await expect(stageTitle(page)).toHaveText('That’s done.');
+});
+
+test('two tabs: Your plan and goals live under Progress', async ({ page }) => {
+  await openApp(page);
+  const nav = page.getByRole('navigation', { name: 'Main' });
+  await expect(nav.getByRole('link')).toHaveText(['Today', 'Progress']);
+  await openPlan(page);
+  await expect(nav.getByRole('link', { name: 'Progress' })).toHaveClass(/active/);
+  await page.getByRole('button', { name: 'Progress' }).click();
+  await expect(page).toHaveURL(/\/progress$/);
 });
 
 test('backup: save and restore', async ({ page }) => {
@@ -307,8 +314,8 @@ test('dated tasks: upcoming, then on Today on their day, ordered by time', async
   await dialog.getByRole('button', { name: 'Add task' }).click();
   await expect(page.getByRole('region', { name: 'Up next' })).not.toContainText('Gym');
 
-  await page.getByRole('link', { name: 'Plan' }).click();
-  const upcomingSection = page.getByRole('region', { name: 'Upcoming' });
+  await openPlan(page);
+  const upcomingSection = page.getByRole('region', { name: 'Other tasks' });
   await expect(upcomingSection).toContainText('Tomorrow');
   await expect(upcomingSection).toContainText('Gym: legs');
   await expect(upcomingSection).toContainText('18:00');
@@ -368,7 +375,7 @@ test('first-time setup: pick areas, keep suggestions, go', async ({ page }) => {
   await changeFeeling(page, 'Okay');
   await expect(stageTitle(page)).toHaveText('Run 2 km');
 
-  await page.getByRole('link', { name: 'Plan' }).click();
+  await openPlan(page);
   await expect(page.getByRole('region', { name: 'Goals' })).toContainText('Pass my driving test');
   await expect(page.getByRole('region', { name: 'Goals' })).toContainText('Book 3 driving lessons');
 
@@ -389,6 +396,6 @@ test('goals without a target show steps done', async ({ page }) => {
   await page.getByRole('link', { name: 'Today' }).click();
   await page.getByRole('button', { name: 'Mark as done' }).click();
   await keepGoing(page);
-  await page.getByRole('link', { name: 'Plan' }).click();
+  await openPlan(page);
   await expect(page.getByRole('region', { name: 'Goals' })).toContainText('1 of 1 step done');
 });
