@@ -5,7 +5,7 @@ import { Stage } from '../components/Stage';
 import { Star } from '../components/Star';
 import { elapsedMs, formatDuration } from '../core/focus';
 import { db } from '../data/db';
-import { startMinimumDay } from '../data/minimum';
+import { checkIn } from '../data/checkin';
 import { useDay } from '../app/day';
 import styles from './Welcome.module.css';
 
@@ -57,7 +57,7 @@ export function Welcome() {
           <button
             type="button"
             className={styles.primary}
-            onClick={async () => navigate((await startMinimumDay(day)) ? '/' : '/minimum', { replace: true })}
+            onClick={async () => navigate((await checkIn(day, 'rough')) ? '/' : '/minimum', { replace: true })}
           >
             Start with my minimum day
           </button>

@@ -40,7 +40,9 @@ export interface Action extends BaseRecord {
    * 'rebuild' marks small Actions created for a small day ("10-minute walk").
    * If unfinished when the day ends they are cleared instead of moved to Later.
    */
-  origin?: 'rebuild';
+  origin?: 'rebuild' | 'suggested';
+  /** A smaller version for okay days, e.g. "Run 2 km" for "Run 5 km". */
+  smaller?: string;
 }
 
 export type MissionStatus = 'active' | 'parked' | 'complete';
@@ -54,6 +56,8 @@ export interface Mission extends BaseRecord {
   sortOrder: number;
   /** Optional measurable target, e.g. 21 km or €2,000. Without it, progress is steps done. */
   measure?: GoalMeasure;
+  /** Life area the goal belongs to (see core/areas.ts); used for task ideas. */
+  area?: AreaId;
 }
 
 export interface GoalMeasure {
@@ -79,9 +83,16 @@ export interface FocusSession extends BaseRecord {
   targetMinutes?: number;
   /** Set when the user taps Finish. */
   finishedAt?: Timestamp;
+  /** True when this session was the smaller, okay-day version of the task. */
+  smaller?: boolean;
 }
 
 export type DayMode = 'normal' | 'small';
+
+/** The morning check-in: how today feels. A rough day is a minimum day. */
+export type Feeling = 'good' | 'okay' | 'rough';
+
+export type AreaId = 'fitness' | 'study' | 'money' | 'project' | 'skill' | 'mind' | 'sleep' | 'social';
 
 /** 'custom' is an item from My minimum day. */
 export type RebuildSlotKind = 'forward' | 'body' | 'space' | 'custom';
@@ -104,6 +115,16 @@ export interface DayRecord {
   closedAt?: Timestamp;
   /** Whether the overnight rule already ran for this day. */
   rolledOverAt?: Timestamp;
+  /** The check-in answer. Today asks until it's set. */
+  feeling?: Feeling;
+  /** The okay-day win: the smaller version of a task was done (the task itself stays open). */
+  smallWin?: { actionId: string; title: string; at: Timestamp };
+  /** When the day first counted (shows Day counted once). */
+  countedAt?: Timestamp;
+  /** Suggestion keys swapped away today, so Swap moves on instead of bouncing back. */
+  skipped?: string[];
+  /** The Main Action the app picked today, and whether it came from Later (so Swap can put it back). */
+  mainPick?: { actionId: string; wasLater: boolean };
   updatedAt: Timestamp;
 }
 

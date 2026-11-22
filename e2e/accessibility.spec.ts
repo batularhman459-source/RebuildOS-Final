@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { addFirstAction, openApp, quickAdd } from './helpers';
+import { addFirstAction, changeFeeling, openApp, quickAdd } from './helpers';
 
 /** Automated accessibility checks (axe) on every screen. Fails on serious or critical issues. */
 
@@ -68,4 +68,20 @@ test('screens have no serious accessibility issues', async ({ page }) => {
 
   await page.goto('/welcome');
   await check(page, 'Welcome back');
+});
+
+test('the daily check-in, a rough day and Day counted have no serious accessibility issues', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Write landing page copy');
+  await page.getByRole('button', { name: /day, change$/ }).click();
+  await check(page, 'Check-in');
+  await page.getByRole('button', { name: /^Rough/ }).click();
+  await check(page, 'Today (rough day)');
+  for (const name of ['Write landing page copy', '10-minute walk', 'Clear your desk']) await page.getByRole('button', { name }).click();
+  await expect(page.getByRole('heading', { name: 'Day counted.' })).toBeVisible();
+  await page.waitForTimeout(800);
+  await check(page, 'Day counted');
+  await page.getByRole('button', { name: 'Keep going' }).click();
+  await changeFeeling(page, 'Okay');
+  await check(page, 'Today (okay day)');
 });

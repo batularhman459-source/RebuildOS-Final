@@ -1,0 +1,134 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--stage);
+  overflow-y: auto;
+}
+
+.root > section {
+  flex: 1;
+}
+
+.date {
+  font-size: 15px;
+  color: var(--on-stage-muted);
+}
+
+.spacer {
+  flex: 1;
+  min-height: var(--space-6);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+}
+
+.subtitle {
+  margin-top: 12px;
+  font-size: 17px;
+  color: var(--on-stage-secondary);
+}
+
+.options {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 0 18px 0 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--on-stage);
+  text-align: left;
+  transition:
+    background-color 220ms var(--ease),
+    color 220ms var(--ease),
+    border-color 220ms var(--ease),
+    scale 220ms var(--ease),
+    opacity 220ms var(--ease);
+}
+
+.option:active {
+  scale: 0.98;
+}
+
+.picked {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(255, 255, 255, 0.96);
+  color: var(--stage);
+  scale: 0.98;
+}
+
+.dimmed {
+  opacity: 0.55;
+}
+
+.icon {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background-color 220ms var(--ease);
+}
+
+.picked .icon {
+  background: rgba(18, 17, 16, 0.08);
+}
+
+.text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.optionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.optionText {
+  font-size: 14px;
+  color: var(--on-stage-muted);
+  transition: color 220ms var(--ease);
+}
+
+.picked .optionText {
+  color: rgba(18, 17, 16, 0.72);
+}
+
+.chevron {
+  opacity: 0.6;
+}
+
+.foot {
+  font-size: 14px;
+  color: var(--on-stage-muted);
+}

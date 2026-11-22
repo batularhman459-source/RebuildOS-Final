@@ -107,7 +107,9 @@ export function minimumSlots(
   const slots: RebuildSlot[] = [];
   if (minimum.includeGoalStep) {
     const step = suggestForward(actions, missions, sessions);
-    if (step) slots.push({ kind: 'forward', title: step.title, actionId: step.id, done: false });
+    // A rough day takes the smaller version when there is one; the real task stays open.
+    if (step?.smaller) slots.push({ kind: 'custom', title: step.smaller, done: false });
+    else if (step) slots.push({ kind: 'forward', title: step.title, actionId: step.id, done: false });
   }
   for (const item of minimum.items.map((i) => i.trim()).filter(Boolean).slice(0, MAX_MINIMUM_ITEMS)) {
     slots.push({ kind: 'custom', title: item, done: false });

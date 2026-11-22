@@ -5,7 +5,8 @@ import type { Action, DayKey, FocusSession, HabitCheck, Timestamp } from './type
 /**
  * Honest progress. Only real units, never points. See docs/product-brief.md §4.7.
  *
- * Active day: a day with at least one completed task, one finished Focus session, or one ticked habit.
+ * Active day: a day with at least one completed task, one finished Focus session, one ticked habit,
+ * or an okay-day win (the smaller version of a task done).
  */
 
 type DayOf = (t: Timestamp) => DayKey;
@@ -23,8 +24,9 @@ export function activeDays(
   sessions: readonly FocusSession[],
   dayOf: DayOf,
   checks: readonly HabitCheck[] = [],
+  extra: readonly DayKey[] = [],
 ): Set<DayKey> {
-  const days = new Set<DayKey>(checks.map((c) => c.day));
+  const days = new Set<DayKey>([...checks.map((c) => c.day), ...extra]);
   for (const a of completed(actions)) days.add(dayOf(a.completedAt!));
   for (const s of finished(sessions)) days.add(dayOf(s.finishedAt!));
   return days;
@@ -58,9 +60,10 @@ export function lastSevenDays(
   sessions: readonly FocusSession[],
   dayOf: DayOf,
   checks: readonly HabitCheck[] = [],
+  extra: readonly DayKey[] = [],
 ): WeekSummary {
   const keys = lastDays(today, 7);
-  const active = activeDays(actions, sessions, dayOf, checks);
+  const active = activeDays(actions, sessions, dayOf, checks, extra);
   const days = keys.map((day) => ({ day, active: active.has(day) }));
   return { ...summarise(keys, actions, sessions, dayOf), days, activeCount: days.filter((d) => d.active).length };
 }

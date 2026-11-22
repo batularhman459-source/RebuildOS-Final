@@ -1,8 +1,26 @@
 # RebuildOS — Product Brief (V1 / MVP)
 
-_Status: V1 built. **V1.1 direction below supersedes the rest of this document where they differ.** This document is the reference for user journeys, design, and implementation. If something here turns out to be wrong, change this document first._
+_Status: V1.1 built, V2 in progress. **The V2 direction below supersedes everything else here where they differ; V1.1 supersedes the original V1 text.** This document is the reference for user journeys, design, and implementation. If something here turns out to be wrong, change this document first._
 
 ---
+
+## V2 direction: "Open it, say how you feel, do the thing"
+
+**Why.** V1.1 worked but felt like every other AI-made planner (goals, tasks, habits, charts), and setting it up took longer than doing the tasks. V2 has one opinion: **planning shouldn't take longer than doing**, and the day should fit how you feel.
+
+**Purpose.** RebuildOS helps young people who keep falling off stay consistent: it turns your goals into one clear thing for today and makes coming back after a bad day easy.
+
+**The daily loop**
+1. **Check-in** (`/checkin`, once a day, changeable from the pill on Today): *How's today?*
+   - **Good** → the main thing, plus habits.
+   - **Okay** → the main thing's **smaller version** (e.g. "Run 2 km" for "Run 5 km"; without one, "just 15 minutes of it"), plus habits. Doing it is an okay-day win: the day counts, the real task stays open for a better day.
+   - **Rough** → My minimum day, as a short list on the stage (the goal step uses its smaller version). All ticked = the day counts.
+2. **Do it** (Focus or Mark as done).
+3. **Day counted** (`/done`, once a day): the star fills in the week. Close for today or keep going.
+
+**The main thing is always a step on a goal**, suggested in this order (`src/core/suggest.ts`, no AI): the goal's open tasks → tasks you've done on it again and again (2+ times in 60 days) → ready-made ideas for the goal's life area (`src/core/areas.ts`). Goals take turns. **Something else** swaps it with one tap; what the app picked goes back where it came from.
+
+**Phases:** A — check-in, adaptive Today, suggestions, Day counted, motion ✅. B — setup by life areas (pick what you want to change → suggested goal, tasks with smaller versions, habits, minimum). C — slim to Today + Progress; Plan, Someday, Upcoming and times move behind goal pages.
 
 ## V1.1 direction (after testing V1 on an iPhone 15 Pro)
 

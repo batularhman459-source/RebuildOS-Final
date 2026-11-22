@@ -18,6 +18,8 @@ import {
 } from '../core/focus';
 import type { Action, FocusSession } from '../core/types';
 import { completeAction } from '../data/actions';
+import { markCounted, recordSmallWin } from '../data/checkin';
+import { dayKey } from '../core/day';
 import { db } from '../data/db';
 import { adjustSession, finishFocus, getActiveSession, pauseFocus, resumeFocus, setTarget } from '../data/focus';
 import { markInstallPromptDue } from '../data/install';
@@ -44,7 +46,8 @@ export function Focus() {
   const [finished, setFinished] = useState<Finished | null>(null);
   const [finishing, setFinishing] = useState(false);
 
-  if (finished) return <FinishView finished={finished} onDone={() => navigate('/', { replace: true })} />;
+  if (finished)
+    return <FinishView finished={finished} onDone={(counted) => navigate(counted ? '/done' : '/', { replace: true })} />;
   if (current === undefined || finishing) return <div className={styles.root} />;
   if (current === null) return <Navigate to="/" replace />;
   const { session, action } = current;
@@ -105,7 +108,7 @@ function RunningView({ session, action, onLeave, onFinish }: RunningProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.42, ease }}
         >
-          {action.title}
+          {session.smaller && action.smaller ? action.smaller : action.title}
         </motion.p>
         <motion.p
           className={`${styles.timer} ${running ? '' : styles.paused}`}
@@ -188,7 +191,7 @@ function RunningView({ session, action, onLeave, onFinish }: RunningProps) {
 
 // ── Finished ────────────────────────────────────────────────────────────────
 
-function FinishView({ finished, onDone }: { finished: Finished; onDone: () => void }) {
+function FinishView({ finished, onDone }: { finished: Finished; onDone: (counted: boolean) => void }) {
   const { session, action } = finished;
   // The first finished session is a good moment to suggest the home screen (shown back on Today).
   useEffect(() => {
@@ -198,8 +201,11 @@ function FinishView({ finished, onDone }: { finished: Finished; onDone: () => vo
   const [checkedLong, setCheckedLong] = useState(ms < LONG_SESSION_MS);
 
   async function done() {
-    await completeAction(action.id);
-    onDone();
+    const day = dayKey(new Date());
+    // The smaller version done: an okay-day win; the task itself stays open for a better day.
+    if (session.smaller) await recordSmallWin(day, action.id, action.smaller ?? action.title);
+    else await completeAction(action.id);
+    onDone(await markCounted(day));
   }
 
   return (
@@ -213,7 +219,7 @@ function FinishView({ finished, onDone }: { finished: Finished; onDone: () => vo
               <h1 className={styles.finishTitle}>
                 {formatSpent(ms)} on
                 <br />
-                {action.title}
+                {session.smaller && action.smaller ? action.smaller : action.title}
               </h1>
               <p className={styles.question}>Is this task done?</p>
             </motion.div>
@@ -236,7 +242,7 @@ function FinishView({ finished, onDone }: { finished: Finished; onDone: () => vo
             <button type="button" className={styles.finishPrimary} onClick={() => void done()}>
               Done
             </button>
-            <button type="button" className={styles.finishSecondary} onClick={onDone}>
+            <button type="button" className={styles.finishSecondary} onClick={() => onDone(false)}>
               More to do
             </button>
             <p className={styles.note}>Your time is saved either way.</p>

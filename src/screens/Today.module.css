@@ -145,9 +145,30 @@
   color: var(--on-stage);
 }
 
+.greeting > span {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.25;
+}
+
 .headerDate {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--on-stage-muted);
+}
+
+.feelingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-min);
+  padding: 0 14px 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--on-stage-control);
+  color: var(--on-stage);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .list {
@@ -171,11 +192,135 @@
 }
 
 .stageText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: var(--touch-min);
   padding: 0 var(--space-4);
   font-size: 15px;
   font-weight: 600;
   color: var(--on-stage-secondary);
+}
+
+.stageRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.askFields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Rough day: the minimum on the stage ─────────────── */
+
+.rough {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.roughTitle {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.06;
+}
+
+.roughTitle i {
+  font-family: var(--font-moment);
+  font-weight: 400;
+}
+
+.rough .support {
+  margin-top: 12px;
+}
+
+.roughList {
+  width: 100%;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roughItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--on-stage);
+  text-align: left;
+  transition: background-color 240ms var(--ease);
+}
+
+.roughDone {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.roughCheck {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  display: grid;
+  place-items: center;
+  color: var(--stage);
+  transition:
+    background-color 220ms var(--ease),
+    border-color 220ms var(--ease);
+}
+
+.roughCheck svg {
+  opacity: 0;
+  scale: 0.4;
+  transition:
+    opacity 200ms var(--ease),
+    scale 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.roughDone .roughCheck {
+  background: var(--on-stage);
+  border-color: var(--on-stage);
+}
+
+.roughDone .roughCheck svg {
+  opacity: 1;
+  scale: 1;
+}
+
+.roughText {
+  flex: 1;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  transition: color 220ms var(--ease);
+}
+
+.roughDone .roughText {
+  color: var(--on-stage-muted);
+}
+
+.roughCount {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--on-stage-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .context {

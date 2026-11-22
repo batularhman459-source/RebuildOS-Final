@@ -32,18 +32,19 @@ function focusText(ms: number): string {
 export function Progress() {
   const today = useDay();
   const data = useLiveQuery(async () => {
-    const [actions, sessions, missions, habits, checks] = await Promise.all([
+    const [actions, sessions, missions, habits, checks, days] = await Promise.all([
       db.actions.toArray(),
       db.focusSessions.toArray(),
       db.missions.toArray(),
       db.habits.toArray(),
       db.habitChecks.toArray(),
+      db.days.toArray(),
     ]);
-    return { actions, sessions, missions, habits, checks };
+    return { actions, sessions, missions, habits, checks, wins: days.filter((d) => d.smallWin).map((d) => d.day) };
   }, []);
 
   if (!data) return <div className={styles.screen} />;
-  const week = lastSevenDays(today, data.actions, data.sessions, dayOf, data.checks);
+  const week = lastSevenDays(today, data.actions, data.sessions, dayOf, data.checks, data.wins);
   const record = allTime(data.actions, data.sessions);
   const focus = focusMinutesByDay(lastDays(today, 14), data.sessions, dayOf);
   const habits = data.habits.filter(isActive).sort((a, b) => a.sortOrder - b.sortOrder);

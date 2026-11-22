@@ -77,6 +77,13 @@ describe('My minimum day', () => {
     expect(slots.map((s) => s.title)).toEqual(['Stretch']);
   });
 
+  it('uses the smaller version of the goal step, leaving the real task alone', () => {
+    const main = action({ id: 'main', title: 'Run 5 km', smaller: 'Run 2 km', state: 'today', isMain: true });
+    const [first] = minimumSlots(DEFAULT_MINIMUM, [main], [], []);
+    expect(first).toMatchObject({ kind: 'custom', title: 'Run 2 km' });
+    expect(first?.actionId).toBeUndefined();
+  });
+
   it('can leave out the goal step entirely', () => {
     const slots = minimumSlots({ includeGoalStep: false, items: ['Walk'] }, [action({ state: 'today', isMain: true })], [], []);
     expect(slots.map((s) => s.kind)).toEqual(['custom']);

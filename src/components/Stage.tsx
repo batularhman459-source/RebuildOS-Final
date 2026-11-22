@@ -7,7 +7,7 @@ interface StageProps {
   height?: CSSProperties['height'];
   /** Where the Apricot glow sits, as a percentage from the top of the stage. */
   glowTop?: string;
-  /** Size of the glow (1 = default). Grows gently during Focus; never pulses. */
+  /** Size of the glow (1 = default). Grows gently during Focus; the glow also breathes slowly (CSS). */
   glowScale?: number;
   className?: string;
   'aria-label'?: string;

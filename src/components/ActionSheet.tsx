@@ -22,14 +22,19 @@ interface ActionSheetProps {
 export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
   const action = useLiveQuery(() => (actionId ? db.actions.get(actionId) : undefined), [actionId]);
   const [title, setTitle] = useState('');
+  const [smaller, setSmaller] = useState('');
+  const [showSmaller, setShowSmaller] = useState(false);
   const inputId = useId();
+  const smallerId = useId();
   const navigate = useNavigate();
   const today = useDay();
   const [more, setMore] = useState(false);
 
   useEffect(() => {
     if (action) setTitle(action.title);
+    if (action) setSmaller(action.smaller ?? '');
     setMore(false);
+    setShowSmaller(false);
   }, [action?.id]);
 
   const open = actionId !== undefined && action !== undefined;
@@ -42,6 +47,7 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
 
   async function saveTitle() {
     if (action && title.trim() && title.trim() !== action.title) await updateAction(action.id, { title });
+    if (action && smaller.trim() !== (action.smaller ?? '')) await updateAction(action.id, { smaller });
   }
 
   return (
@@ -83,6 +89,29 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
             ) : (
               <button type="button" className={forms.moreLink} onClick={() => setMore(true)}>
                 + How long it takes
+              </button>
+            ))}
+          {action.state !== 'done' &&
+            (action.smaller || showSmaller ? (
+              <div className={forms.field}>
+                <label htmlFor={smallerId} className={forms.label}>
+                  Smaller version for okay days
+                </label>
+                <input
+                  id={smallerId}
+                  className={forms.input}
+                  value={smaller}
+                  onChange={(e) => setSmaller(e.target.value)}
+                  onBlur={() => void saveTitle()}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+                  placeholder="e.g. Run 2 km instead of 5"
+                  maxLength={140}
+                  enterKeyHint="done"
+                />
+              </div>
+            ) : (
+              <button type="button" className={forms.moreLink} onClick={() => setShowSmaller(true)}>
+                + Smaller version for okay days
               </button>
             ))}
           <div className={forms.list}>

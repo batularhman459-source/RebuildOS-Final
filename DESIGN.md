@@ -17,7 +17,7 @@ colors:
   ink: "#1D1C1B"
   ink-secondary: "#4F4B46"
   ink-muted: "#6E6A64"
-  ink-done: "#8F8A83"
+  ink-done: "#736E68"
 
   # Dark (doing) stages
   stage: "#121110"
@@ -122,7 +122,7 @@ Reference designs: the "v4" row of the RebuildOS Visual Direction canvas (Today,
 | `ink` | #1D1C1B | Titles, body, primary buttons (as fill) | 16:1 |
 | `ink-secondary` | #4F4B46 | Secondary body, tertiary buttons | 8:1 |
 | `ink-muted` | #6E6A64 | Meta, captions, labels | 5:1 |
-| `ink-done` | #8F8A83 | Completed Actions only, always with strikethrough | 3.2:1 (state is also shown by the filled check) |
+| `ink-done` | #736E68 | Completed Actions only, always with strikethrough | 4.7:1 on canvas (AA, measured) |
 
 ### Dark stages
 | Token | Value | Use |
@@ -200,7 +200,7 @@ Three families, each with one job.
 - A **radial gradient** (`effects.apricot-glow`) placed behind the stage's main message, usually centred horizontally and slightly below the title.
 - Always paired with **grain** (`effects.grain`). Grain is what stops the gradient looking flat and computer-made. Never ship the glow without it.
 - Only on `stage` backgrounds. Never on light surfaces, buttons, cards or text.
-- Its size may grow subtly while Focus runs; it never pulses or loops.
+- It breathes slowly (scale 1 → 1.07 and opacity, 3.2 s, alternating; off with reduced motion) so the stage feels alive. Its size may also grow subtly while Focus runs. Never a fast pulse.
 
 ### The Rebuild star
 The four-point star is the only brand mark.

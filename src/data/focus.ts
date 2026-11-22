@@ -26,7 +26,7 @@ async function close(session: FocusSession, at: number): Promise<void> {
  * Start (or resume) Focus on an Action. Resumes an unfinished session for the same Action;
  * closes any other unfinished session first. Later Actions move to Today.
  */
-export async function startFocus(actionId: string): Promise<void> {
+export async function startFocus(actionId: string, opts: { smaller?: boolean; targetMinutes?: number } = {}): Promise<void> {
   const action = await db.actions.get(actionId);
   if (!action || action.deletedAt) return;
   if (action.state === 'later') await moveToToday(actionId);
@@ -43,7 +43,8 @@ export async function startFocus(actionId: string): Promise<void> {
       id: newId(),
       actionId,
       segments: start(t),
-      targetMinutes: action.estimateMinutes,
+      targetMinutes: opts.targetMinutes ?? action.estimateMinutes,
+      ...(opts.smaller ? { smaller: true } : {}),
       createdAt: t,
       updatedAt: t,
     });

@@ -18,6 +18,25 @@
   pointer-events: none;
   will-change: transform;
   transition: transform 2s var(--ease);
+  /* A slow breath so the stage feels alive. Composited (scale + opacity only). */
+  animation: breathe 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+  from {
+    scale: 1;
+    opacity: 0.86;
+  }
+  to {
+    scale: 1.07;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    animation: none;
+  }
 }
 
 .grain {

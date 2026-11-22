@@ -88,8 +88,9 @@ export async function scheduleAction(id: string, when: When, time?: string): Pro
   });
 }
 
-export async function updateAction(id: string, changes: Partial<Pick<Action, 'title' | 'estimateMinutes'>>): Promise<void> {
+export async function updateAction(id: string, changes: Partial<Pick<Action, 'title' | 'estimateMinutes' | 'smaller'>>): Promise<void> {
   const patch: Partial<Action> = { ...changes, updatedAt: now() };
+  if (changes.smaller !== undefined) patch.smaller = changes.smaller.trim() || undefined;
   if (changes.title !== undefined) {
     const title = changes.title.trim();
     if (!title) return;

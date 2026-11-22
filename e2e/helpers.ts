@@ -45,15 +45,44 @@ export async function seed(page: Page, body: string): Promise<unknown> {
  * Open the app and wait until it's ready. A brand-new person is sent to the
  * first-time setup; unless `setup` is true, skip it the way a person would.
  */
-export async function openApp(page: Page, path = '/', opts: { setup?: boolean } = {}): Promise<void> {
-  await page.goto(path);
+export async function openApp(page: Page, path = '/', opts: { setup?: boolean; feeling?: 'Good' | 'Okay' | 'Rough' } = {}): Promise<void> {
+  // Every visit starts on Today (setup, then the check-in); then go where the test wants.
+  await page.goto(opts.setup ? path : '/');
   await expect(page.locator('main')).toBeVisible();
-  if (path !== '/' || opts.setup) return;
+  if (opts.setup) return;
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(400);
   if (page.url().endsWith('/setup')) {
     await page.getByRole('button', { name: 'Skip for now' }).click();
-    await expect(page).toHaveURL(/\/$/);
+  }
+  await checkInIfAsked(page, opts.feeling ?? 'Good');
+  if (path !== '/') {
+    await page.goto(path);
+    await expect(page.locator('main')).toBeVisible();
+  }
+}
+
+/** Change today's check-in answer from the pill on Today. */
+export async function changeFeeling(page: Page, feeling: 'Good' | 'Okay' | 'Rough'): Promise<void> {
+  await page.getByRole('button', { name: /day, change$/ }).click();
+  await expect(page).toHaveURL(/\/checkin$/);
+  await page.getByRole('button', { name: new RegExp(`^${feeling}`) }).click();
+  await expect(page).not.toHaveURL(/checkin/);
+}
+
+/** After the day counts: leave the Day counted moment and go back to Today. */
+export async function keepGoing(page: Page): Promise<void> {
+  await expect(page.getByRole('heading', { name: 'Day counted.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Keep going' }).click();
+  await expect(page).toHaveURL(/\/$/);
+}
+
+/** Answer "How's today?" when the app asks it. */
+export async function checkInIfAsked(page: Page, feeling: 'Good' | 'Okay' | 'Rough' = 'Good'): Promise<void> {
+  await page.waitForTimeout(300);
+  if (page.url().endsWith('/checkin')) {
+    await page.getByRole('button', { name: new RegExp(`^${feeling}`) }).click();
+    await expect(page).not.toHaveURL(/checkin/);
   }
 }
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addFirstAction, alsoToday, openApp, quickAdd, seed, stageTitle } from './helpers';
+import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, quickAdd, seed, stageTitle } from './helpers';
 
 /** The five V1 journeys from docs/product-brief.md §5, plus Close the day, backup and install. */
 
@@ -16,6 +16,7 @@ test('1 · first run: one Action, Focus, done', async ({ page }) => {
   await page.getByRole('button', { name: 'Finish' }).click();
   await expect(page.getByText('Is this task done?')).toBeVisible();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await keepGoing(page);
 
   // The first finished Focus session suggests the home screen, once.
   const install = page.getByRole('dialog', { name: 'Add RebuildOS to your home screen' });
@@ -56,26 +57,72 @@ test('2 · a normal day: add, complete, Later, and the overnight rule', async ({
   await expect(page.getByRole('region', { name: 'Someday' }).getByText('Gym: legs')).toBeVisible();
 });
 
-test('3 · a hard day: one tap to my minimum', async ({ page }) => {
+test('3 · a rough day: just my minimum, and it still counts', async ({ page }) => {
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
   await quickAdd(page, 'Gym: legs');
 
-  // One tap, no choosing: the saved minimum (goal step + 10-minute walk + clear your desk).
-  await page.getByRole('button', { name: 'Bad day? Just do my minimum' }).click();
-  await expect(page.getByText('Minimum day', { exact: true })).toBeVisible();
-  await expect(stageTitle(page)).toHaveText('Write landing page copy');
-  await expect(alsoToday(page)).toContainText('10-minute walk');
-  await expect(alsoToday(page)).toContainText('Clear your desk');
-  await expect(alsoToday(page)).not.toContainText('Gym: legs');
+  // No choosing: the saved minimum (goal step + 10-minute walk + clear your desk).
+  await changeFeeling(page, 'Rough');
+  const minimum = page.getByRole('list', { name: 'Your minimum' });
+  await expect(stageTitle(page)).toContainText('Rough day.');
+  await expect(minimum).toContainText('Write landing page copy');
+  await expect(minimum).toContainText('10-minute walk');
+  await expect(minimum).toContainText('Clear your desk');
+  await expect(page.getByRole('main')).not.toContainText('Gym: legs');
 
-  await page.getByRole('button', { name: 'Mark 10-minute walk as done' }).click();
-  await page.getByRole('button', { name: 'Mark as done' }).click();
-  await page.getByRole('button', { name: 'Mark as done' }).click();
-  await expect(stageTitle(page)).toHaveText('Good day.');
+  await page.getByRole('button', { name: '10-minute walk' }).click();
+  await page.getByRole('button', { name: 'Clear your desk' }).click();
+  await expect(page.getByText('2 of 3 done')).toBeVisible();
+  await page.getByRole('button', { name: 'Write landing page copy' }).click();
+  await keepGoing(page);
+  await expect(stageTitle(page)).toHaveText('That’s enough.');
 
-  await page.getByRole('button', { name: 'Back to full Today' }).click();
+  // Feeling better later: switch to a good day and the rest of Today is back.
+  await changeFeeling(page, 'Good');
   await expect(stageTitle(page)).toHaveText('Gym: legs');
+});
+
+test('an okay day: the smaller version, and the task waits for a better day', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Run 5 km');
+  await page.getByRole('button', { name: 'Run 5 km', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Edit task' });
+  await sheet.getByRole('button', { name: '+ Smaller version for okay days' }).click();
+  await sheet.getByLabel('Smaller version for okay days').fill('Run 2 km');
+  await page.keyboard.press('Escape');
+
+  await changeFeeling(page, 'Okay');
+  await expect(stageTitle(page)).toHaveText('Run 2 km');
+  await expect(page.getByText('Instead of “Run 5 km”')).toBeVisible();
+  await page.getByRole('button', { name: 'Mark as done' }).click();
+  await keepGoing(page);
+  await expect(stageTitle(page)).toHaveText('Done. Nice.');
+
+  await page.getByRole('button', { name: 'Feeling good? Do the full thing' }).click();
+  await expect(stageTitle(page)).toHaveText('Run 5 km');
+  await page.getByRole('link', { name: 'Progress' }).click();
+  await expect(page.getByText('Active on 1 of the last 7 days.')).toBeVisible();
+});
+
+test('the main thing is suggested from your goals and can be swapped', async ({ page }) => {
+  await openApp(page);
+  await seed(page, `
+    const t = Date.now();
+    stores.missions.put({ id: 'g1', title: 'Get fit', area: 'fitness', status: 'active', sortOrder: 0, createdAt: t, updatedAt: t });
+    for (let i = 1; i <= 3; i++) stores.actions.put({ id: 'd' + i, title: 'Swim 1 km', missionId: 'g1', state: 'done', isMain: false, sortOrder: i, completedAt: t - i * 86400000, createdAt: t, updatedAt: t });
+    stores.days.delete(u.today);
+  `);
+  await page.goto('/');
+  await checkInIfAsked(page, 'Good');
+  // Done three times lately: the app noticed and suggests it again.
+  await expect(stageTitle(page)).toHaveText('Swim 1 km');
+  await expect(page.getByRole('region', { name: 'Up next' })).toContainText('Get fit');
+
+  await page.getByRole('button', { name: 'Something else' }).click();
+  await expect(stageTitle(page)).toHaveText('Run 5 km');
+  await changeFeeling(page, 'Okay');
+  await expect(stageTitle(page)).toHaveText('Run 2 km');
 });
 
 test('my minimum day can be edited once and then used', async ({ page }) => {
@@ -89,9 +136,11 @@ test('my minimum day can be edited once and then used', async ({ page }) => {
   await expect(page.getByRole('link', { name: /My minimum day/ })).toContainText('10-minute walk · Stretch for 5 minutes');
 
   await page.getByRole('link', { name: 'Today' }).click();
-  await page.getByRole('button', { name: 'Bad day? Just do my minimum' }).click();
-  await expect(stageTitle(page)).toHaveText('10-minute walk');
-  await expect(alsoToday(page)).toContainText('Stretch for 5 minutes');
+  await changeFeeling(page, 'Rough');
+  const minimum = page.getByRole('list', { name: 'Your minimum' });
+  await expect(minimum.getByRole('listitem')).toHaveCount(2);
+  await expect(minimum).toContainText('10-minute walk');
+  await expect(minimum).toContainText('Stretch for 5 minutes');
 });
 
 test('habits: your own, every day or some days a week', async ({ page }) => {
@@ -158,8 +207,8 @@ test('4 · coming back after three weeks', async ({ page }) => {
   await expect(page.getByText('Everything is where you left it.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Start with my minimum day' }).click();
-  await expect(page.getByText('Minimum day', { exact: true })).toBeVisible();
-  await expect(stageTitle(page)).toHaveText('Write landing page copy');
+  await expect(stageTitle(page)).toContainText('Rough day.');
+  await expect(page.getByRole('list', { name: 'Your minimum' })).toContainText('Write landing page copy');
 
   // Once seen, Welcome back doesn't repeat the same day.
   await page.goto('/');
@@ -217,6 +266,7 @@ test('backup: save and restore', async ({ page }) => {
   // Change something, then restore the backup over it.
   await page.getByRole('link', { name: 'Today' }).click();
   await page.getByRole('button', { name: 'Mark as done' }).click();
+  await keepGoing(page);
   await expect(stageTitle(page)).toHaveText('That’s done.');
 
   await page.getByRole('link', { name: 'Progress' }).click();
@@ -299,6 +349,7 @@ test('first-time setup: from a template to a full Today in about a minute', asyn
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByRole('heading', { name: 'On a bad day…' })).toBeVisible();
   await page.getByRole('button', { name: 'Done — show me Today' }).click();
+  await checkInIfAsked(page, 'Good');
 
   // Never empty: the goal's first step is up next, the habit is on Today.
   await expect(page).toHaveURL(/\/$/);
@@ -331,6 +382,7 @@ test('goals without a target show steps done', async ({ page }) => {
   await expect(page.getByRole('progressbar', { name: '0 of 1 step done' })).toBeVisible();
   await page.getByRole('link', { name: 'Today' }).click();
   await page.getByRole('button', { name: 'Mark as done' }).click();
+  await keepGoing(page);
   await page.getByRole('link', { name: 'Plan' }).click();
   await expect(page.getByRole('region', { name: 'Goals' })).toContainText('1 of 1 step done');
 });

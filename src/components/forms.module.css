@@ -111,3 +111,9 @@
   font-weight: 600;
   color: var(--ink-secondary);
 }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
