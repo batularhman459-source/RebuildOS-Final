@@ -2,6 +2,7 @@ import { keyOfAction, mainSuggestions, nextSwap, type MainSuggestion } from '../
 import type { DayKey, DayRecord, Feeling } from '../core/types';
 import { db, newId } from './db';
 import { startMinimumDay } from './minimum';
+import { getFocusGoalId } from './week';
 
 /**
  * The morning check-in and everything that hangs off it: picking the main thing,
@@ -35,9 +36,9 @@ export async function checkIn(day: DayKey, feeling: Feeling): Promise<boolean> {
 
 /** If Today has no main thing, put the best suggestion there. */
 export async function ensureSuggestedMain(day: DayKey): Promise<void> {
-  const [actions, missions, record] = await Promise.all([db.actions.toArray(), db.missions.toArray(), db.days.get(day)]);
+  const [actions, missions, record, focus] = await Promise.all([db.actions.toArray(), db.missions.toArray(), db.days.get(day), getFocusGoalId(day)]);
   if (actions.some((a) => !a.deletedAt && a.state === 'today' && a.isMain)) return;
-  const best = mainSuggestions(actions, missions, day, now(), record?.skipped ?? [])[0];
+  const best = mainSuggestions(actions, missions, day, now(), record?.skipped ?? [], focus)[0];
   if (best) await acceptSuggestion(day, best);
 }
 
@@ -81,16 +82,17 @@ export async function acceptSuggestion(day: DayKey, s: MainSuggestion): Promise<
  * Returns false when there's nothing else to suggest.
  */
 export async function swapMain(day: DayKey): Promise<boolean> {
-  const [actions, missions, record, sessions] = await Promise.all([
+  const [actions, missions, record, sessions, focus] = await Promise.all([
     db.actions.toArray(),
     db.missions.toArray(),
     db.days.get(day),
     db.focusSessions.toArray(),
+    getFocusGoalId(day),
   ]);
   const main = actions.find((a) => !a.deletedAt && a.state === 'today' && a.isMain);
   const currentKey = main ? keyOfAction(main) : undefined;
   const skip = record?.skipped ?? [];
-  const next = nextSwap(actions, missions, day, now(), currentKey, skip);
+  const next = nextSwap(actions, missions, day, now(), currentKey, skip, focus);
   if (!next) return false;
 
   const t = now();

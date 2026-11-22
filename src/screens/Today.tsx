@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { useDay } from '../app/day';
 import { useSheets } from '../app/sheets';
 import { startupReady } from '../app/startup';
+import { weekReviewDue } from '../core/week';
+import { getFocusGoalId, getWeekReviews } from '../data/week';
 import { ActionRow } from '../components/ActionRow';
 import { QuietNotice } from '../components/QuietNotice';
 import { Stage } from '../components/Stage';
@@ -63,6 +65,10 @@ export function Today() {
   const { openAdd, openNewHabit } = useSheets();
   const actions = useLiveQuery(() => db.actions.toArray(), []);
   const missions = useLiveQuery(() => db.missions.toArray(), []);
+  const weekInfo = useLiveQuery(async () => {
+    const reviews = await getWeekReviews();
+    return { due: weekReviewDue(day, new Set(reviews.map((r) => r.week))), focus: await getFocusGoalId(day) };
+  }, [day]);
   const notice = useLiveQuery(() => getRolloverNotice(day), [day]);
   const navigate = useNavigate();
   const record = useLiveQuery(async () => (await getDayRecord(day)) ?? null, [day]);
@@ -114,7 +120,7 @@ export function Today() {
   // Other things the main thing could be (for Swap, and when Today has no main thing).
   const mainKey = view?.main ? keyOfAction(view.main) : undefined;
   const suggestions =
-    actions && missions ? mainSuggestions(actions, missions, day, Date.now(), mainKey ? [mainKey] : []) : [];
+    actions && missions ? mainSuggestions(actions, missions, day, Date.now(), mainKey ? [mainKey] : [], weekInfo?.focus) : [];
   const goalTitle = (id: string) => missions?.find((m) => m.id === id)?.title ?? '';
 
   return (
@@ -186,6 +192,18 @@ export function Today() {
             onAction={() => void undoRollover(day)}
             onDismiss={() => void dismissRolloverNotice(day)}
           />
+        )}
+        {weekInfo?.due && !small && (
+          <button type="button" className={styles.weekCard} onClick={() => navigate('/week')}>
+            <span className={styles.weekIcon}>
+              <Star size={18} variant="gradient" />
+            </span>
+            <span className={styles.weekBody}>
+              <span className={styles.weekTitle}>Your week, in 2 minutes</span>
+              <span className={styles.weekText}>Look back, then pick what comes first next week.</span>
+            </span>
+            <Icon name="chevron" size={16} />
+          </button>
         )}
         {todaysHabits.length > 0 && (
           <Section title="Habits today" card action={{ label: 'New', onClick: openNewHabit }}>

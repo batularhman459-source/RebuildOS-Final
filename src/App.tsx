@@ -17,6 +17,7 @@ import { Progress } from './screens/Progress';
 import { Rebuild } from './screens/Rebuild';
 import { CheckIn } from './screens/CheckIn';
 import { DayCounted } from './screens/DayCounted';
+import { WeekReview } from './screens/WeekReview';
 import { Welcome } from './screens/Welcome';
 import { Setup } from './screens/Setup';
 import { needsSetup } from './data/setup';
@@ -25,7 +26,7 @@ import { Today } from './screens/Today';
 import styles from './App.module.css';
 
 /** Full-screen moments hide the dock. */
-const FULL_SCREEN = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done'];
+const FULL_SCREEN = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done', '/week'];
 
 /** Tabs fade in; opacity only, because a transform would break fixed overlays (Focus, compact bar). */
 function section(pathname: string): string {
@@ -65,6 +66,7 @@ export function App() {
                 <Route path="/close" element={<Navigate to="/" replace />} />
                 <Route path="/checkin" element={<CheckIn />} />
                 <Route path="/done" element={<DayCounted />} />
+                <Route path="/week" element={<WeekReview />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               </motion.div>
@@ -111,7 +113,7 @@ function StartupRouting() {
 }
 
 /** Screens whose top edge is a dark stage. */
-const DARK_TOP = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done'];
+const DARK_TOP = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done', '/week'];
 
 /**
  * Match the phone's status bar area (behind the time and battery) to the top of the

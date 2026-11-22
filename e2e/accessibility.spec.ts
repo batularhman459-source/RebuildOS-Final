@@ -83,4 +83,12 @@ test('the daily check-in, a rough day and Day counted have no serious accessibil
   await page.getByRole('button', { name: 'Keep going' }).click();
   await changeFeeling(page, 'Okay');
   await check(page, 'Today (okay day)');
+
+  await page.goto('/week');
+  await check(page, 'Weekly check-in: your week');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: 'Busy' }).click();
+  await check(page, 'Weekly check-in: what got in the way');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await check(page, 'Weekly check-in: next week');
 });

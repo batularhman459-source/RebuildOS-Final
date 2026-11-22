@@ -399,3 +399,44 @@ test('goals without a target show steps done', async ({ page }) => {
   await openPlan(page);
   await expect(page.getByRole('region', { name: 'Goals' })).toContainText('1 of 1 step done');
 });
+
+test('weekly check-in: look back, name what got in the way, choose what comes first', async ({ page }) => {
+  // A Sunday: Today offers the check-in.
+  await page.clock.install({ time: new Date(2026, 10, 22, 10, 0) });
+  await page.clock.resume();
+  await openApp(page);
+  await seed(page, `
+    const t = Date.now();
+    stores.missions.put({ id: 'g1', title: 'Get fit', area: 'fitness', status: 'active', sortOrder: 1, createdAt: t, updatedAt: t });
+    stores.missions.put({ id: 'g2', title: 'Pass my exams', area: 'study', status: 'active', sortOrder: 2, createdAt: t, updatedAt: t });
+    stores.actions.put({ id: 'w1', title: 'Run 3 km', missionId: 'g1', state: 'done', isMain: false, sortOrder: 1, completedAt: t - 86400000, createdAt: t, updatedAt: t });
+    stores.actions.put({ id: 'n2', title: 'Do a past paper', missionId: 'g2', state: 'later', isMain: false, sortOrder: 2, createdAt: t, updatedAt: t });
+  `);
+  await page.reload();
+  await page.getByRole('button', { name: /Your week, in 2 minutes/ }).click();
+
+  await expect(page.getByRole('heading', { name: 'Your week' })).toBeVisible();
+  await expect(page.getByText('Active on 1 of 7 days')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Done this week' })).toContainText('Run 3 km');
+  await page.getByRole('button', { name: 'Next' }).click();
+
+  await page.getByRole('button', { name: 'Tired' }).click();
+  await expect(page.getByText('On tired days, answer “Okay”')).toBeVisible();
+  await page.getByRole('button', { name: 'Next' }).click();
+
+  await page.getByRole('radio', { name: /Pass my exams/ }).click();
+  await page.getByRole('button', { name: 'Save my week' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('button', { name: /Your week, in 2 minutes/ })).toBeHidden();
+
+  // Next morning: the focus goal's task is suggested first.
+  await seed(page, `
+    const req = stores.actions.getAll();
+    req.onsuccess = () => { for (const a of req.result) if (a.isMain) { a.isMain = false; a.state = 'later'; stores.actions.put(a); } };
+    stores.days.delete(u.today);
+  `);
+  await page.reload();
+  await checkInIfAsked(page, 'Good');
+  await expect(stageTitle(page)).toHaveText('Do a past paper');
+});
+

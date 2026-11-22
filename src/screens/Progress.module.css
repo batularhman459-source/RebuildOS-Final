@@ -302,3 +302,7 @@
   color: var(--ink-muted);
   padding-top: var(--space-1);
 }
+
+.planIconDark {
+  background: var(--stage);
+}

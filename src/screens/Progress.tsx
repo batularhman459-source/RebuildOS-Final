@@ -81,6 +81,16 @@ export function Progress() {
         </span>
         <Icon name="chevron" size={16} className={own.planChevron} />
       </Link>
+      <Link to="/week" className={own.planCard}>
+        <span className={`${own.planIcon} ${own.planIconDark}`}>
+          <Star size={18} variant="gradient" />
+        </span>
+        <span className={own.planBody}>
+          <span className={own.planTitle}>Weekly check-in</span>
+          <span className={own.planText}>Look back and choose what comes first. 2 minutes.</span>
+        </span>
+        <Icon name="chevron" size={16} className={own.planChevron} />
+      </Link>
 
       <Section title="Last 7 days" card>
         <ol className={own.week}>

@@ -1,5 +1,6 @@
 import { areaOf } from './areas';
 import { activeMissions } from './missions';
+import { orderGoals } from './week';
 import { isLive } from './today';
 import type { Action, DayKey, Mission, Timestamp } from './types';
 
@@ -98,7 +99,8 @@ function forGoal(goal: Mission, actions: readonly Action[], today: DayKey, now: 
 
 /**
  * Every suggestion for today's main thing, best first. Goals take turns: each goal's
- * best suggestion, then each goal's second, and so on. Suggestions in `skip` are left out.
+ * best suggestion, then each goal's second, and so on; the week's focus goal goes first.
+ * Suggestions in `skip` are left out.
  */
 export function mainSuggestions(
   actions: readonly Action[],
@@ -106,9 +108,10 @@ export function mainSuggestions(
   today: DayKey,
   now: Timestamp,
   skip: readonly string[] = [],
+  focusGoalId?: string,
 ): MainSuggestion[] {
   const skipped = new Set(skip);
-  const lists = activeMissions(missions).map((g) => forGoal(g, actions, today, now).filter((s) => !skipped.has(s.key)));
+  const lists = orderGoals(activeMissions(missions), focusGoalId).map((g) => forGoal(g, actions, today, now).filter((s) => !skipped.has(s.key)));
   const out: MainSuggestion[] = [];
   for (let i = 0; lists.some((l) => i < l.length); i++) {
     for (const l of lists) if (i < l.length) out.push(l[i]!);
@@ -127,10 +130,11 @@ export function nextSwap(
   now: Timestamp,
   currentKey: string | undefined,
   skip: readonly string[],
+  focusGoalId?: string,
 ): { suggestion: MainSuggestion; resetSkip: boolean } | undefined {
   const withCurrent = currentKey ? [...skip, currentKey] : [...skip];
-  const fresh = mainSuggestions(actions, missions, today, now, withCurrent)[0];
+  const fresh = mainSuggestions(actions, missions, today, now, withCurrent, focusGoalId)[0];
   if (fresh) return { suggestion: fresh, resetSkip: false };
-  const again = mainSuggestions(actions, missions, today, now, currentKey ? [currentKey] : [])[0];
+  const again = mainSuggestions(actions, missions, today, now, currentKey ? [currentKey] : [], focusGoalId)[0];
   return again ? { suggestion: again, resetSkip: true } : undefined;
 }
