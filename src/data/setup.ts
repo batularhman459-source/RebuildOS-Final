@@ -1,11 +1,10 @@
 import type { MinimumDay } from '../core/rebuild';
-import type { HabitSchedule } from '../core/types';
-import { addAction } from './actions';
+import type { AreaId, HabitSchedule } from '../core/types';
 import { db, newId } from './db';
 import { addHabit } from './habits';
 import { saveMinimum } from './minimum';
 
-/** The ~60-second first-time setup, so nobody starts in front of an empty app. */
+/** The ~30-second first-time setup: pick life areas, keep the suggestions you like. */
 
 const SETUP_KEY = 'setupDone';
 
@@ -19,38 +18,47 @@ export async function markSetupDone(): Promise<void> {
   await db.meta.put({ key: SETUP_KEY, value: true });
 }
 
-export interface SetupInput {
-  goal: string;
-  doneWhen?: string;
-  measure?: { target: number; unit: string };
-  /** In order; the first goes on Today as "Up next", the rest wait under the goal. */
-  steps: string[];
+export interface SetupGoal {
+  title: string;
+  area?: AreaId;
+  /** In order of preference; they wait under the goal and the check-in suggests them. */
+  tasks: { title: string; smaller?: string; minutes?: number }[];
   habits: { title: string; schedule: HabitSchedule }[];
+}
+
+export interface SetupInput {
+  goals: SetupGoal[];
   minimum: MinimumDay;
 }
 
 export async function completeSetup(input: SetupInput): Promise<void> {
   const t = Date.now();
-  const goalTitle = input.goal.trim();
-  let missionId: string | undefined;
-  if (goalTitle) {
-    missionId = newId();
-    await db.missions.add({
-      id: missionId,
-      title: goalTitle,
-      doneWhen: input.doneWhen?.trim() || undefined,
-      measure: input.measure ? { target: input.measure.target, unit: input.measure.unit, current: 0, updatedAt: t } : undefined,
-      status: 'active',
-      createdAt: t,
-      updatedAt: t,
-      sortOrder: t,
-    });
+  let order = 0;
+  for (const goal of input.goals) {
+    const title = goal.title.trim();
+    if (!title) continue;
+    const missionId = newId();
+    order += 1;
+    await db.missions.add({ id: missionId, title, area: goal.area, status: 'active', createdAt: t, updatedAt: t, sortOrder: t + order });
+    for (const task of goal.tasks) {
+      const taskTitle = task.title.trim();
+      if (!taskTitle) continue;
+      order += 1;
+      await db.actions.add({
+        id: newId(),
+        title: taskTitle,
+        smaller: task.smaller?.trim() || undefined,
+        estimateMinutes: task.minutes,
+        missionId,
+        state: 'later',
+        isMain: false,
+        createdAt: t,
+        updatedAt: t,
+        sortOrder: t + order,
+      });
+    }
+    for (const h of goal.habits) if (h.title.trim()) await addHabit({ title: h.title, schedule: h.schedule, missionId });
   }
-  const steps = input.steps.map((s) => s.trim()).filter(Boolean);
-  for (const [i, step] of steps.entries()) {
-    await addAction({ title: step, when: i === 0 ? 'today' : 'later', missionId });
-  }
-  for (const h of input.habits) if (h.title.trim()) await addHabit({ title: h.title, schedule: h.schedule, missionId });
   await saveMinimum(input.minimum);
   await markSetupDone();
 }

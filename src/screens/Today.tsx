@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDay } from '../app/day';
 import { useSheets } from '../app/sheets';
+import { startupReady } from '../app/startup';
 import { ActionRow } from '../components/ActionRow';
 import { QuietNotice } from '../components/QuietNotice';
 import { Stage } from '../components/Stage';
@@ -75,7 +76,14 @@ export function Today() {
   const closed = record?.closedAt !== undefined;
   // Each day starts with the check-in; a closed day doesn't ask again.
   useEffect(() => {
-    if (record !== undefined && !record?.feeling && !closed) navigate('/checkin', { replace: true });
+    if (record === undefined || record?.feeling || closed) return;
+    let cancelled = false;
+    void startupReady.then(() => {
+      if (!cancelled && window.location.pathname === '/') navigate('/checkin', { replace: true });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [record, closed, navigate]);
 
   /** After the main thing (or its smaller version) is done: the day counts, once. */

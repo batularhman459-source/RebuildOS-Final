@@ -285,3 +285,150 @@
   color: var(--ink-done);
   cursor: default;
 }
+
+/* ── Areas (step 1) ──────────────────────────────────── */
+
+.areaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.areaCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 112px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-frosted);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  transition:
+    background-color 200ms var(--ease),
+    color 200ms var(--ease),
+    border-color 200ms var(--ease),
+    opacity 200ms var(--ease);
+}
+
+.areaCard[aria-disabled='true'] {
+  opacity: 0.45;
+}
+
+.areaOn {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+.areaIcon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-muted);
+  color: var(--ink);
+  transition:
+    background-color 200ms var(--ease),
+    color 200ms var(--ease);
+}
+
+.areaOn .areaIcon {
+  background: var(--apricot);
+  color: var(--stage);
+}
+
+.areaLabel {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.areaHint {
+  font-size: 13px;
+  color: var(--ink-muted);
+  transition: color 200ms var(--ease);
+}
+
+.areaOn .areaHint {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* ── Plan (step 2) ───────────────────────────────────── */
+
+.planCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-frosted);
+  background: var(--surface);
+}
+
+.planCard + .planCard {
+  margin-top: var(--space-2);
+}
+
+.planArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.planIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--apricot);
+  color: var(--stage);
+}
+
+.planIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.planCard .label {
+  margin-top: var(--space-2);
+}
+
+.chipSmall {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--ink-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chipSmall[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.pickText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+}
+
+.smaller {
+  font-size: 13px;
+  color: var(--ink-muted);
+}

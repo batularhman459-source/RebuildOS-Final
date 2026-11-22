@@ -21,6 +21,7 @@ import { DayCounted } from './screens/DayCounted';
 import { Welcome } from './screens/Welcome';
 import { Setup } from './screens/Setup';
 import { needsSetup } from './data/setup';
+import { markStartupReady } from './app/startup';
 import { Today } from './screens/Today';
 import styles from './App.module.css';
 
@@ -102,6 +103,7 @@ function StartupRouting() {
       } else if (path === '/' && (await needsSetup())) {
         navigate('/setup', { replace: true });
       }
+      markStartupReady();
       await setLastSeenDay(day);
     })();
   }, [navigate, day]);

@@ -47,16 +47,3 @@ describe('numbers', () => {
     expect(parseAmount('abc')).toBeUndefined();
   });
 });
-
-describe('templates', () => {
-  it('each have a label, and real ones have steps to start from', async () => {
-    const { GOAL_TEMPLATES } = await import('./templates');
-    for (const t of GOAL_TEMPLATES) {
-      expect(t.label).not.toBe('');
-      if (t.id !== 'own') {
-        expect(t.goal).not.toBe('');
-        expect(t.steps.length).toBeGreaterThanOrEqual(3);
-      }
-    }
-  });
-});

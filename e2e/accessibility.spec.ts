@@ -20,10 +20,12 @@ test('first-time setup has no serious accessibility issues', async ({ page }) =>
   await expect(page).toHaveURL(/\/setup$/);
   await check(page, 'Setup intro');
   await page.getByRole('button', { name: 'Start' }).click();
-  await page.getByRole('button', { name: 'Get fit' }).click();
-  await check(page, 'Setup: goal');
+  await page.getByRole('button', { name: /^Fitness/ }).click();
+  await check(page, 'Setup: areas');
   await page.getByRole('button', { name: 'Next' }).click();
-  await check(page, 'Setup: steps');
+  await check(page, 'Setup: plan');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await check(page, 'Setup: minimum');
 });
 
 test('screens have no serious accessibility issues', async ({ page }) => {

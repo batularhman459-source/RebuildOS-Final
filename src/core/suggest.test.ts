@@ -87,6 +87,19 @@ describe('nextSwap', () => {
   });
 });
 
+describe('AREAS', () => {
+  it('each bring goals, task ideas with smaller versions, a habit and minimum items', async () => {
+    const { AREAS } = await import('./areas');
+    for (const a of AREAS) {
+      expect(a.goals.length).toBeGreaterThan(0);
+      expect(a.ideas.length).toBeGreaterThanOrEqual(3);
+      for (const i of a.ideas) expect(i.smaller).toBeTruthy();
+      expect(a.habits.length).toBeGreaterThan(0);
+      expect(a.minimum.length).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('areaOf', () => {
   it('uses the saved area, else guesses from the goal name', () => {
     expect(areaOf({ title: 'Anything', area: 'money' })?.id).toBe('money');
