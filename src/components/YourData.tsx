@@ -1,3 +1,4 @@
+import { setTheme, useDarkMode, type ThemeChoice } from '../app/theme';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { parseBackup, type Backup } from '../core/backup';
 import { formatShortDay } from '../core/locale';
@@ -72,6 +73,8 @@ export function YourData() {
         </p>
       )}
 
+      <Appearance />
+
       <p className={styles.version}>RebuildOS version {__APP_VERSION__}</p>
 
       <Sheet open={installOpen} onClose={() => setInstallOpen(false)} label="Add to home screen">
@@ -97,5 +100,31 @@ export function YourData() {
         )}
       </Sheet>
     </section>
+  );
+}
+
+const THEME_OPTIONS: { value: ThemeChoice; label: string }[] = [
+  { value: 'system', label: 'Automatic' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+];
+
+/** Light, dark, or follow the phone. */
+function Appearance() {
+  const { choice } = useDarkMode();
+  return (
+    <div className={styles.appearance}>
+      <h2 id="appearance-heading" className={styles.heading}>
+        Appearance
+      </h2>
+      <div className={styles.segmented} role="radiogroup" aria-labelledby="appearance-heading">
+        {THEME_OPTIONS.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={choice === o.value} className={styles.segment} onClick={() => setTheme(o.value)}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className={styles.caption}>Automatic follows your phone’s setting.</p>
+    </div>
   );
 }

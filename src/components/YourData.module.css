@@ -74,3 +74,36 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+
+.appearance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.segmented {
+  margin-top: var(--space-1);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+}
+
+.segment {
+  min-height: var(--touch-min);
+  border-radius: var(--radius-pill);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  transition:
+    background-color 200ms var(--ease),
+    color 200ms var(--ease);
+}
+
+.segment[aria-checked='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}

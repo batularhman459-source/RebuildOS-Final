@@ -267,7 +267,7 @@
   margin-top: auto;
   padding: var(--space-6) max(var(--gutter), var(--safe-right)) calc(var(--space-6) + var(--safe-bottom))
     max(var(--gutter), var(--safe-left));
-  background: linear-gradient(to bottom, rgba(247, 246, 244, 0), var(--canvas) 35%);
+  background: linear-gradient(to bottom, transparent, var(--canvas) 35%);
 }
 
 .primary {
@@ -355,7 +355,8 @@
 }
 
 .areaOn .areaHint {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--surface);
+  opacity: 0.8;
 }
 
 /* ── Plan (step 2) ───────────────────────────────────── */

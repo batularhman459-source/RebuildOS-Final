@@ -447,6 +447,7 @@
 /* ── Weekly check-in card ────────────────────────────── */
 
 .weekCard {
+  border: 1px solid var(--hairline-frosted);
   display: flex;
   align-items: center;
   gap: var(--space-3);

@@ -92,3 +92,34 @@ test('the daily check-in, a rough day and Day counted have no serious accessibil
   await page.getByRole('button', { name: 'Next' }).click();
   await check(page, 'Weekly check-in: next week');
 });
+
+test.describe('dark mode', () => {
+  test.use({ colorScheme: 'dark' });
+
+  test('light screens have no serious accessibility issues in dark mode', async ({ page }) => {
+    await openApp(page);
+    await addFirstAction(page, 'Write landing page copy');
+    await quickAdd(page, 'Gym: legs');
+    await page.getByRole('button', { name: 'Mark Gym: legs as done' }).click();
+    await check(page, 'Today (dark)');
+    await page.getByRole('link', { name: 'Progress' }).click();
+    await check(page, 'Progress (dark)');
+    await openPlan(page);
+    await check(page, 'Your plan (dark)');
+    await page.goto('/week');
+    await check(page, 'Weekly check-in (dark)');
+  });
+
+  test('Appearance can force light or dark', async ({ page }) => {
+    await openApp(page, '/progress');
+    const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    expect(await bg()).toBe('rgb(26, 25, 24)');
+    await page.getByRole('radio', { name: 'Light' }).click();
+    expect(await bg()).toBe('rgb(247, 246, 244)');
+    await page.reload();
+    expect(await bg()).toBe('rgb(247, 246, 244)');
+    await page.getByRole('radio', { name: 'Automatic' }).click();
+    expect(await bg()).toBe('rgb(26, 25, 24)');
+  });
+});
+

@@ -22,6 +22,7 @@ import { Welcome } from './screens/Welcome';
 import { Setup } from './screens/Setup';
 import { needsSetup } from './data/setup';
 import { markStartupReady } from './app/startup';
+import { useDarkMode } from './app/theme';
 import { Today } from './screens/Today';
 import styles from './App.module.css';
 
@@ -120,9 +121,10 @@ const DARK_TOP = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done
  * current screen, so a dark stage doesn't sit under a light strip.
  */
 function useStatusBarColour(pathname: string) {
+  const { dark: darkMode } = useDarkMode();
   useEffect(() => {
     const dark = pathname === '/' || DARK_TOP.some((p) => pathname.startsWith(p));
-    const colour = dark ? '#121110' : '#F7F6F4';
+    const colour = dark ? '#121110' : darkMode ? '#1A1918' : '#F7F6F4';
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) {
       meta = document.createElement('meta');
@@ -130,7 +132,7 @@ function useStatusBarColour(pathname: string) {
       document.head.appendChild(meta);
     }
     meta.content = colour;
-  }, [pathname]);
+  }, [pathname, darkMode]);
 }
 
 /** Goals used to live at /mission/:id. */

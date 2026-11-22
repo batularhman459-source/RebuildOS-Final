@@ -292,6 +292,10 @@ Tested on an iPhone 15 Pro, live effects made motion choppy. Keep to these:
 
 V1 ships one theme: light screens with dark stages. A full system dark mode is postponed. When it comes, light screens move to a dark canvas and stages stay as they are, so the stage must remain distinguishable (the glow carries that).
 
+### Dark mode
+
+Light (planning) screens have a dark version; stages are dark in both and don't change. It follows the phone by default; Progress → Appearance can force Light or Dark (stored per device in localStorage, applied before first paint by a script in `index.html`). Dark tokens (all measured AA): `canvas` #1A1918, `surface` #242220, `surface-muted` #2E2C29, `hairline` #34312E, `ink` #F4F2EF, `ink-secondary` #CFCAC3, `ink-muted` #A9A39C, `ink-done` #948E87, `apricot-text` #F49A70, `star-empty` #45413D. Rules: never hard-code a light colour on a light screen; use tokens, so dark mode comes for free.
+
 ## 11. Do and don't
 
 **Do**

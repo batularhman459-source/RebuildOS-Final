@@ -305,7 +305,7 @@ span.round {
   margin-top: auto;
   padding: var(--space-6) max(var(--gutter), var(--safe-right)) calc(var(--space-6) + var(--safe-bottom))
     max(var(--gutter), var(--safe-left));
-  background: linear-gradient(to bottom, rgba(247, 246, 244, 0), var(--canvas) 35%);
+  background: linear-gradient(to bottom, transparent, var(--canvas) 35%);
 }
 
 .primary {

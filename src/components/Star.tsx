@@ -14,7 +14,7 @@ interface StarProps {
 export function Star({ size = 16, variant = 'solid', label }: StarProps) {
   const gradientId = useId();
   const fill =
-    variant === 'gradient' ? `url(#${gradientId})` : variant === 'empty' ? '#D9D5CF' : 'var(--apricot)';
+    variant === 'gradient' ? `url(#${gradientId})` : variant === 'empty' ? 'var(--star-empty)' : 'var(--apricot)';
 
   return (
     <svg
