@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, openPlan, quickAdd, seed, stageTitle } from './helpers';
+import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, openPlan, quickAdd, seed, stageTitle, openDetails } from './helpers';
 
 /** The five V1 journeys from docs/product-brief.md §5, plus Close the day, backup and install. */
 
@@ -25,7 +25,7 @@ test('1 · first run: one Action, Focus, done', async ({ page }) => {
   await expect(install).toBeHidden();
 
   await expect(stageTitle(page)).toHaveText('That’s done.');
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await openDetails(page);
   await expect(page.getByText('Active on 1 of the last 7 days.')).toBeVisible();
 });
 
@@ -45,14 +45,9 @@ test('2 · a normal day: add, complete, Later, and the overnight rule', async ({
     req.onsuccess = () => { for (const a of req.result) { if (a.state === 'today') { a.todayDay = u.ago(1); stores.actions.put(a); } } };
   `);
   await page.reload();
+  // The main thing carries over; the rest quietly moves off Today (no overdue, no guilt).
   await expect(stageTitle(page)).toHaveText('Write landing page copy');
-  await expect(page.getByRole('status')).toContainText('1 task from yesterday moved off Today');
-  await page.getByRole('button', { name: 'Undo' }).click();
-  await expect(alsoToday(page).getByText('Gym: legs')).toBeVisible();
-
-  await alsoToday(page).getByText('Gym: legs').click();
-  await page.getByRole('dialog', { name: 'Edit task' }).getByRole('button', { name: 'Someday' }).click();
-  await page.keyboard.press('Escape');
+  await expect(page.getByRole('main')).not.toContainText('Gym: legs');
   await openPlan(page);
   await expect(page.getByRole('region', { name: 'Other tasks' }).getByText('Gym: legs')).toBeVisible();
 });
@@ -95,13 +90,13 @@ test('an okay day: the smaller version, and the task waits for a better day', as
   await changeFeeling(page, 'Okay');
   await expect(stageTitle(page)).toHaveText('Run 2 km');
   await expect(page.getByText('Instead of “Run 5 km”')).toBeVisible();
-  await page.getByRole('button', { name: 'Mark as done' }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   await keepGoing(page);
   await expect(stageTitle(page)).toHaveText('Done. Nice.');
 
   await page.getByRole('button', { name: 'Feeling good? Do the full thing' }).click();
   await expect(stageTitle(page)).toHaveText('Run 5 km');
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await openDetails(page);
   await expect(page.getByText('Active on 1 of the last 7 days.')).toBeVisible();
 });
 
@@ -192,7 +187,7 @@ test('habits: your own, every day or some days a week', async ({ page }) => {
   await expect(page.getByRole('list', { name: 'Habits today' })).not.toContainText('Gym');
   await expect(page.getByRole('list', { name: 'Habits today' })).toContainText('Read for 20 minutes');
 
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await openDetails(page);
   await expect(page.getByRole('region', { name: 'Habits this week' })).toContainText('Gym');
   await expect(page.getByLabel(/^Gym: [0-2] of 2 this week$/)).toBeVisible();
 });
@@ -240,9 +235,11 @@ test('5 · creating a Mission', async ({ page }) => {
 test('close for today from Day counted, and open it again', async ({ page }) => {
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
-  await page.getByRole('button', { name: 'Mark as done' }).click();
-  await expect(page.getByRole('heading', { name: 'Day counted.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /^Day \d+ counted\.$/ })).toBeVisible();
   await page.getByRole('button', { name: 'Close for today' }).click();
+  await expect(page).toHaveURL(/\/sky$/);
+  await page.getByRole('link', { name: 'Today' }).click();
   await expect(stageTitle(page)).toHaveText('Done for today.');
   // A closed day doesn't ask "How's today?" again.
   await page.reload();
@@ -251,20 +248,48 @@ test('close for today from Day counted, and open it again', async ({ page }) => 
   await expect(stageTitle(page)).toHaveText('That’s done.');
 });
 
-test('two tabs: Your plan and goals live under Progress', async ({ page }) => {
+test('two tabs: Today and Sky; Your plan and Details open from the sky', async ({ page }) => {
   await openApp(page);
   const nav = page.getByRole('navigation', { name: 'Main' });
-  await expect(nav.getByRole('link')).toHaveText(['Today', 'Progress']);
+  await expect(nav.getByRole('link')).toHaveText(['Today', 'Sky']);
   await openPlan(page);
-  await expect(nav.getByRole('link', { name: 'Progress' })).toHaveClass(/active/);
-  await page.getByRole('button', { name: 'Progress' }).click();
-  await expect(page).toHaveURL(/\/progress$/);
+  await expect(nav.getByRole('link', { name: 'Sky' })).toHaveClass(/active/);
+  await page.getByRole('button', { name: 'Sky' }).click();
+  await expect(page).toHaveURL(/\/sky$/);
+  await openDetails(page);
+  await page.getByRole('link', { name: 'Sky', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/sky$/);
+});
+
+test('your sky: a star for every day that counted, and you can drag it', async ({ page }) => {
+  await openApp(page);
+  await seed(page, `
+    const t = Date.now();
+    for (let i = 1; i <= 12; i++) {
+      if (i % 4 === 0) continue;
+      const d = u.ago(i);
+      stores.days.put({ day: d, mode: i % 3 ? 'normal' : 'small', feeling: i % 3 ? 'good' : 'rough', updatedAt: t });
+      stores.actions.put({ id: 'p' + i, title: 'Past ' + i, state: 'done', isMain: false, sortOrder: i, completedAt: t - i * 86400000, createdAt: t, updatedAt: t });
+    }
+  `);
+  await page.reload();
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  await expect(page.getByRole('img', { name: 'Your sky: 9 days counted' })).toBeVisible();
+  const sky = page.getByRole('img', { name: /Your sky/ });
+  const box = (await sky.boundingBox())!;
+  await page.waitForTimeout(3000);
+  // Grab the star nearest the middle and drag it to a corner.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 20, box.y + 20, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.getByText('9', { exact: true })).toBeVisible();
 });
 
 test('backup: save and restore', async ({ page }) => {
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await openDetails(page);
 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save a backup' }).click();
@@ -272,11 +297,11 @@ test('backup: save and restore', async ({ page }) => {
 
   // Change something, then restore the backup over it.
   await page.getByRole('link', { name: 'Today' }).click();
-  await page.getByRole('button', { name: 'Mark as done' }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   await keepGoing(page);
   await expect(stageTitle(page)).toHaveText('That’s done.');
 
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await openDetails(page);
   await page.locator('input[type=file]').setInputFiles(file);
   await page.getByRole('button', { name: 'Replace with backup' }).click();
   await expect(page.getByText('Backup restored.')).toBeVisible();
@@ -338,34 +363,21 @@ test('dated tasks: upcoming, then on Today on their day, ordered by time', async
   await expect(rows.nth(1)).toContainText('18:00');
 });
 
-test('first-time setup: pick areas, keep suggestions, go', async ({ page }) => {
+test('first-time setup: one question, one goal, go', async ({ page }) => {
   await openApp(page, '/', { setup: true });
   await expect(page).toHaveURL(/\/setup$/);
-  await expect(page.getByRole('heading', { name: 'Let’s set you up.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Start' }).click();
-
   await expect(page.getByRole('heading', { name: 'What do you want to change?' })).toBeVisible();
-  await page.getByRole('button', { name: /^Fitness/ }).click();
-  await page.getByRole('button', { name: /^Something else/ }).click();
-  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: 'Fitness' }).click();
 
-  // Suggested goal (with alternatives one tap away), ideas with smaller versions, a habit.
-  await expect(page.getByRole('heading', { name: 'Your plan' })).toBeVisible();
-  await expect(page.locator('#setup-goal-fitness')).toHaveValue('Get fit');
+  // A suggested goal (alternatives one tap away) and a preview of the daily thing.
+  await expect(page.getByRole('heading', { name: 'Your goal' })).toBeVisible();
+  await expect(page.locator('#setup-goal')).toHaveValue('Get fit');
   await page.getByRole('button', { name: 'Run 5 km without stopping' }).click();
-  await expect(page.locator('#setup-goal-fitness')).toHaveValue('Run 5 km without stopping');
-  await expect(page.getByText('Okay day: Run 2 km')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
-  await page.locator('#setup-goal-own').fill('Pass my driving test');
-  await page.getByLabel('Add a task for your goal').fill('Book 3 driving lessons');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.locator('#setup-goal')).toHaveValue('Run 5 km without stopping');
+  await expect(page.getByText('On an okay day: Run 2 km')).toBeVisible();
+  await page.getByRole('button', { name: 'Let’s go' }).click();
 
-  await expect(page.getByRole('heading', { name: 'On a rough day…' })).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: '10-minute walk' })).toBeChecked();
-  await page.getByRole('button', { name: 'Done — let’s go' }).click();
-
-  // Straight into the check-in; the main thing comes from the first goal.
+  // Straight into the check-in; the one thing comes from the goal.
   await checkInIfAsked(page, 'Good');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('region', { name: 'Up next' })).toContainText('Run 5 km without stopping');
@@ -374,10 +386,6 @@ test('first-time setup: pick areas, keep suggestions, go', async ({ page }) => {
 
   await changeFeeling(page, 'Okay');
   await expect(stageTitle(page)).toHaveText('Run 2 km');
-
-  await openPlan(page);
-  await expect(page.getByRole('region', { name: 'Goals' })).toContainText('Pass my driving test');
-  await expect(page.getByRole('region', { name: 'Goals' })).toContainText('Book 3 driving lessons');
 
   // Setup doesn't come back.
   await page.goto('/');
@@ -394,7 +402,7 @@ test('goals without a target show steps done', async ({ page }) => {
   await page.getByRole('button', { name: 'Create goal' }).click();
   await expect(page.getByRole('progressbar', { name: '0 of 1 step done' })).toBeVisible();
   await page.getByRole('link', { name: 'Today' }).click();
-  await page.getByRole('button', { name: 'Mark as done' }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   await keepGoing(page);
   await openPlan(page);
   await expect(page.getByRole('region', { name: 'Goals' })).toContainText('1 of 1 step done');

@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { addFirstAction, changeFeeling, openApp, openPlan, quickAdd } from './helpers';
+import { addFirstAction, changeFeeling, openApp, openPlan, quickAdd, openDetails } from './helpers';
 
 /** Automated accessibility checks (axe) on every screen. Fails on serious or critical issues. */
 
@@ -18,14 +18,10 @@ async function check(page: Page, name: string) {
 test('first-time setup has no serious accessibility issues', async ({ page }) => {
   await openApp(page, '/', { setup: true });
   await expect(page).toHaveURL(/\/setup$/);
-  await check(page, 'Setup intro');
-  await page.getByRole('button', { name: 'Start' }).click();
-  await page.getByRole('button', { name: /^Fitness/ }).click();
   await check(page, 'Setup: areas');
-  await page.getByRole('button', { name: 'Next' }).click();
-  await check(page, 'Setup: plan');
-  await page.getByRole('button', { name: 'Next' }).click();
-  await check(page, 'Setup: minimum');
+  await page.getByRole('button', { name: 'Fitness' }).click();
+  await expect(page.getByRole('heading', { name: 'Your goal' })).toBeVisible();
+  await check(page, 'Setup: goal');
 });
 
 test('screens have no serious accessibility issues', async ({ page }) => {
@@ -50,8 +46,8 @@ test('screens have no serious accessibility issues', async ({ page }) => {
   await page.getByRole('button', { name: 'Create goal' }).click();
   await check(page, 'Mission');
 
-  await page.getByRole('link', { name: 'Progress' }).click();
-  await check(page, 'Progress');
+  await openDetails(page);
+  await check(page, 'Details');
 
   await page.getByRole('link', { name: 'Today' }).click();
   await page.getByRole('button', { name: 'Start focus' }).click();
@@ -77,10 +73,12 @@ test('the daily check-in, a rough day and Day counted have no serious accessibil
   await page.getByRole('button', { name: /^Rough/ }).click();
   await check(page, 'Today (rough day)');
   for (const name of ['Write landing page copy', '10-minute walk', 'Clear your desk']) await page.getByRole('button', { name }).click();
-  await expect(page.getByRole('heading', { name: 'Day counted.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Day \d+ counted\.$/ })).toBeVisible();
   await page.waitForTimeout(800);
   await check(page, 'Day counted');
-  await page.getByRole('button', { name: 'Keep going' }).click();
+  await page.getByRole('button', { name: 'Add it to your sky' }).click();
+  await check(page, 'Sky');
+  await page.getByRole('link', { name: 'Today' }).click();
   await changeFeeling(page, 'Okay');
   await check(page, 'Today (okay day)');
 
@@ -102,7 +100,7 @@ test.describe('dark mode', () => {
     await quickAdd(page, 'Gym: legs');
     await page.getByRole('button', { name: 'Mark Gym: legs as done' }).click();
     await check(page, 'Today (dark)');
-    await page.getByRole('link', { name: 'Progress' }).click();
+    await openDetails(page);
     await check(page, 'Progress (dark)');
     await openPlan(page);
     await check(page, 'Your plan (dark)');

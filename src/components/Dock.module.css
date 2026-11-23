@@ -3,8 +3,7 @@
   left: 50%;
   bottom: calc(26px + var(--safe-bottom));
   transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 520px;
+  width: min(260px, calc(100% - 40px));
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -49,18 +48,16 @@
   color: var(--surface);
 }
 
-.add {
-  composes: frosted;
-  width: 58px;
-  height: 58px;
-  flex: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: var(--ink);
+.dark .tabs {
+  background: #23211f;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.add:disabled {
-  color: var(--control-outline);
-  cursor: default;
+.dark .tab {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .active {
+  background: var(--on-stage);
+  color: var(--stage);
 }

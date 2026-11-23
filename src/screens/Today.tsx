@@ -8,7 +8,6 @@ import { startupReady } from '../app/startup';
 import { weekReviewDue } from '../core/week';
 import { getFocusGoalId, getWeekReviews } from '../data/week';
 import { ActionRow } from '../components/ActionRow';
-import { QuietNotice } from '../components/QuietNotice';
 import { Stage } from '../components/Stage';
 import { Star } from '../components/Star';
 import { dayKey } from '../core/day';
@@ -17,12 +16,12 @@ import { APP_LOCALE } from '../core/locale';
 import { todayView, type TodayView } from '../core/today';
 import { keyOfAction, mainSuggestions, type MainSuggestion } from '../core/suggest';
 import type { Action, DayRecord, Feeling } from '../core/types';
-import { addAction, completeAction, dismissRolloverNotice, getRolloverNotice, reopenAction, undoRollover } from '../data/actions';
+import { addAction, completeAction, reopenAction } from '../data/actions';
 import { getDayRecord } from '../data/days';
+import { activeDays } from '../core/progress';
+import { toggleHabit } from '../data/habits';
 import { acceptSuggestion, checkIn, markCounted, recordSmallWin, swapMain } from '../data/checkin';
 import { doneThisWeek, isDoneOn, showsToday, weekStart } from '../core/habits';
-import { HabitRow } from '../components/HabitRow';
-import { Section } from '../components/Section';
 import { Icon } from '../components/Icon';
 import { reopenDay } from '../data/closeDay';
 import { db } from '../data/db';
@@ -62,14 +61,18 @@ const OKAY_MINUTES = 15;
 
 export function Today() {
   const day = useDay();
-  const { openAdd, openNewHabit } = useSheets();
+  const { openAdd } = useSheets();
   const actions = useLiveQuery(() => db.actions.toArray(), []);
   const missions = useLiveQuery(() => db.missions.toArray(), []);
   const weekInfo = useLiveQuery(async () => {
     const reviews = await getWeekReviews();
     return { due: weekReviewDue(day, new Set(reviews.map((r) => r.week))), focus: await getFocusGoalId(day) };
   }, [day]);
-  const notice = useLiveQuery(() => getRolloverNotice(day), [day]);
+  const dayNumber = useLiveQuery(async () => {
+    const [all, sessions, checks, days] = await Promise.all([db.actions.toArray(), db.focusSessions.toArray(), db.habitChecks.toArray(), db.days.toArray()]);
+    const active = activeDays(all, sessions, dayOf, checks, days.filter((d) => d.smallWin).map((d) => d.day));
+    return active.size + (active.has(day) ? 0 : 1);
+  }, [day]);
   const navigate = useNavigate();
   const record = useLiveQuery(async () => (await getDayRecord(day)) ?? null, [day]);
   const small = record?.mode === 'small';
@@ -113,9 +116,9 @@ export function Today() {
             return { habit: h, done, meta };
           })
       : [];
-  const hasList = view && (listOpen.length > 0 || view.doneToday.length > 0);
+  // Tasks you added yourself and ticked today stay visible (struck through), so the tick lands.
+  const doneExtras = view && !small ? view.doneToday.filter((a) => !a.missionId) : [];
   const tomorrowMain = closed ? actions?.find((a) => !a.deletedAt && a.state === 'today' && a.isMain && (a.todayDay ?? '') > day) : undefined;
-  const [stageHidden, setStageHidden] = useState(false);
   const missionOf = (a: Action) => (a.missionId ? missions?.find((m) => m.id === a.missionId && !m.deletedAt) : undefined);
   // Other things the main thing could be (for Swap, and when Today has no main thing).
   const mainKey = view?.main ? keyOfAction(view.main) : undefined;
@@ -124,129 +127,116 @@ export function Today() {
   const goalTitle = (id: string) => missions?.find((m) => m.id === id)?.title ?? '';
 
   return (
-    <>
-      <Stage height="max(420px, 58vh)" aria-label="Up next">
-        <div className={styles.stageHeader}>
-          <span className={styles.greeting}>
-            <Star size={18} variant="gradient" />
-            <span>
-              {greeting(new Date().getHours())}
-              <span className={styles.headerDate}>{shortDate.format(new Date())}</span>
-            </span>
+    <Stage height="100svh" aria-label="Up next" className={styles.full}>
+      <div className={styles.stageHeader}>
+        <span className={styles.greeting}>
+          <Star size={18} variant="gradient" />
+          <span>
+            {dayNumber ? `Day ${dayNumber}` : greeting(new Date().getHours())}
+            <span className={styles.headerDate}>{shortDate.format(new Date())}</span>
           </span>
-          {feeling && !closed && (
-            <button type="button" className={styles.feelingPill} onClick={() => navigate('/checkin')} aria-label={`${FEELING_LABEL[feeling]}, change`}>
-              {FEELING_LABEL[feeling]}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
+        </span>
+        {feeling && !closed && (
+          <button type="button" className={styles.feelingPill} onClick={() => navigate('/checkin')} aria-label={`${FEELING_LABEL[feeling]}, change`}>
+            {FEELING_LABEL[feeling]}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+        )}
+      </div>
+      <div className={styles.spacer} />
+      {view && record !== undefined && (
+        <AnimatePresence mode="wait" initial={false}>
+          {closed ? (
+            <DayClosed key="closed" tomorrow={tomorrowMain?.title} onReopen={() => void reopenDay(day)} />
+          ) : small && record ? (
+            <RoughDay key="rough" record={record} actions={actions ?? []} onAllDone={() => void counted()} />
+          ) : feeling === 'okay' && record?.smallWin ? (
+            <SmallWin key="small-win" title={record.smallWin.title} next={view.main} onMore={() => void checkIn(day, 'good')} />
+          ) : view.main ? (
+            <MainAction
+              key={`${view.main.id}-${feeling}`}
+              action={view.main}
+              missionTitle={missionOf(view.main)?.title}
+              okay={feeling === 'okay'}
+              canSwap={suggestions.length > 0}
+              onSwap={() => void swapMain(day)}
+              onDone={async () => {
+                if (feeling === 'okay') await recordSmallWin(day, view.main!.id, view.main!.smaller ?? view.main!.title);
+                else await completeAction(view.main!.id);
+                await counted();
+              }}
+            />
+          ) : (
+            <AskForAction
+              key={view.doneToday.length > 0 ? 'again' : 'first'}
+              again={view.doneToday.length > 0}
+              suggestions={suggestions}
+              goalTitle={goalTitle}
+              onPick={(s) => void acceptSuggestion(day, s)}
+            />
           )}
-        </div>
-        <div className={styles.spacer} />
-        {view && record !== undefined && (
-          <AnimatePresence mode="wait" initial={false}>
-            {closed ? (
-              <DayClosed key="closed" tomorrow={tomorrowMain?.title} onReopen={() => void reopenDay(day)} />
-            ) : small && record ? (
-              <RoughDay key="rough" record={record} actions={actions ?? []} onAllDone={() => void counted()} />
-            ) : feeling === 'okay' && record?.smallWin ? (
-              <SmallWin key="small-win" title={record.smallWin.title} next={view.main} onMore={() => void checkIn(day, 'good')} />
-            ) : view.main ? (
-              <MainAction
-                key={`${view.main.id}-${feeling}`}
-                action={view.main}
-                missionTitle={missionOf(view.main)?.title}
-                okay={feeling === 'okay'}
-                canSwap={suggestions.length > 0}
-                onSwap={() => void swapMain(day)}
-                onDone={async () => {
-                  if (feeling === 'okay') await recordSmallWin(day, view.main!.id, view.main!.smaller ?? view.main!.title);
-                  else await completeAction(view.main!.id);
-                  await counted();
-                }}
-              />
-            ) : (
-              <AskForAction
-                key={view.doneToday.length > 0 ? 'again' : 'first'}
-                again={view.doneToday.length > 0}
-                suggestions={suggestions}
-                goalTitle={goalTitle}
-                onPick={(s) => void acceptSuggestion(day, s)}
-              />
-            )}
-          </AnimatePresence>
-        )}
-        <div className={styles.spacer} />
-      </Stage>
-      <StageSentinel onChange={setStageHidden} />
-      <AnimatePresence>
-        {stageHidden && view?.main && !closed && !small && <CompactMain key="compact" action={view.main} okay={feeling === 'okay'} />}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
+      <div className={styles.spacerLarge} />
 
-      <section className={styles.below} aria-label="Also today">
-        {notice && notice.movedIds.length > 0 && !small && !closed && (
-          <QuietNotice
-            text={`${notice.movedIds.length} ${notice.movedIds.length === 1 ? 'task' : 'tasks'} from yesterday moved off Today`}
-            actionLabel="Undo"
-            onAction={() => void undoRollover(day)}
-            onDismiss={() => void dismissRolloverNotice(day)}
-          />
-        )}
+      <section className={styles.extras} aria-label="Also today">
         {weekInfo?.due && !small && (
           <button type="button" className={styles.weekCard} onClick={() => navigate('/week')}>
-            <span className={styles.weekIcon}>
-              <Star size={18} variant="gradient" />
-            </span>
-            <span className={styles.weekBody}>
-              <span className={styles.weekTitle}>Your week, in 2 minutes</span>
-              <span className={styles.weekText}>Look back, then pick what comes first next week.</span>
-            </span>
+            <Star size={16} variant="gradient" />
+            <span className={styles.weekTitle}>Your week, in 2 minutes</span>
             <Icon name="chevron" size={16} />
           </button>
         )}
         {todaysHabits.length > 0 && (
-          <Section title="Habits today" card action={{ label: 'New', onClick: openNewHabit }}>
-            <ul className={styles.list} aria-label="Habits today">
-              {todaysHabits.map(({ habit, done, meta }) => (
-                <HabitRow key={habit.id} habit={habit} day={day} done={done} meta={meta} />
-              ))}
-            </ul>
-          </Section>
+          <ul className={styles.habitChips} aria-label="Habits today">
+            {todaysHabits.map(({ habit, done, meta }) => (
+              <li key={habit.id}>
+                <button
+                  type="button"
+                  className={`${styles.habitChip} ${done ? styles.habitDone : ''}`}
+                  aria-pressed={done}
+                  aria-label={`${done ? 'Untick' : 'Tick'} ${habit.title}${meta ? `, ${meta}` : ''}`}
+                  onClick={() => void toggleHabit(habit.id, day)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d={done ? 'M5 12.5l4.5 4.5L19 7.5' : 'M12 5v14M5 12h14'} />
+                  </svg>
+                  {habit.title}
+                  {meta && <span className={styles.habitMeta}>{meta}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
-        {view && !small && (hasList || (view.main && !closed)) && (
-          <Section title={small ? 'Your minimum' : 'Tasks'} card action={small || closed ? undefined : { label: 'Add', onClick: () => openAdd('today') }}>
-            {hasList ? (
-              <ul className={styles.list}>
-                {listOpen.map((a) => (
-                  <ActionRow
-                    key={a.id}
-                    action={a}
-                    goal={small ? undefined : missionOf(a)?.title}
-                    meta={a.time ?? (a.estimateMinutes ? `${a.estimateMinutes} min` : undefined)}
-                  />
-                ))}
-                {view.doneToday.map((a) => (
-                  <ActionRow key={a.id} action={a} />
-                ))}
-              </ul>
-            ) : (
-              <button type="button" className={styles.addRow} onClick={() => openAdd('today')}>
-                <Icon name="plus" size={20} />
-                Add another task for today
+        {view && !small && !closed && listOpen.length + doneExtras.length > 0 && (
+          <ul className={styles.moreList}>
+            {listOpen.map((a) => (
+              <ActionRow key={a.id} action={a} goal={missionOf(a)?.title} meta={a.time ?? (a.estimateMinutes ? `${a.estimateMinutes} min` : undefined)} />
+            ))}
+            {doneExtras.map((a) => (
+              <ActionRow key={a.id} action={a} />
+            ))}
+          </ul>
+        )}
+        {view && !closed && (
+          <div className={styles.extraLinks}>
+            {!small && (
+              <button type="button" className={styles.extraLink} onClick={() => openAdd('today')} aria-label="Add a task">
+                <Icon name="plus" size={15} />
+                Add a task
               </button>
             )}
-          </Section>
-        )}
-        {view && small && !closed && (
-          <div className={styles.smallerLinks}>
-            <button type="button" className={styles.editMinimum} onClick={() => navigate('/minimum')}>
-              Edit my minimum
-            </button>
+            {small && (
+              <button type="button" className={styles.extraLink} onClick={() => navigate('/minimum')}>
+                Edit my minimum
+              </button>
+            )}
           </div>
         )}
       </section>
-    </>
+    </Stage>
   );
 }
 
@@ -298,28 +288,27 @@ function MainAction({ action, missionTitle, okay, canSwap, onSwap, onDone }: Mai
         </motion.p>
       )}
       <motion.div className={styles.stageButtons} {...line}>
-        <button type="button" className={styles.stagePrimary} onClick={() => void focus()}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M6 3.5v17l14-8.5z" />
+        <button
+          type="button"
+          className={styles.stagePrimary}
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            await onDone();
+            setBusy(false);
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
           </svg>
-          {pausedHere ? 'Resume focus' : 'Start focus'}
+          Done
         </button>
         <div className={styles.stageRow}>
-          <button
-            type="button"
-            className={styles.stageText}
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              await onDone();
-              setBusy(false);
-            }}
-          >
-            Mark as done
+          <button type="button" className={styles.stageText} onClick={() => void focus()}>
+            {pausedHere ? 'Resume focus' : 'Start focus'}
           </button>
           {canSwap && !pausedHere && (
             <button type="button" className={styles.stageText} onClick={onSwap}>
-              <Icon name="repeat" size={15} />
               Something else
             </button>
           )}
@@ -517,50 +506,6 @@ function DayClosed({ tomorrow, onReopen }: { tomorrow?: string; onReopen: () => 
           Open today again
         </button>
       </motion.div>
-    </motion.div>
-  );
-}
-
-/** Reports when the bottom of the stage has scrolled out of view. */
-function StageSentinel({ onChange }: { onChange: (hidden: boolean) => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver(([entry]) => {
-      if (entry) onChange(!entry.isIntersecting && entry.boundingClientRect.top < 0);
-    });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [onChange]);
-  return <div ref={ref} aria-hidden="true" style={{ height: 1, marginTop: -1 }} />;
-}
-
-/** When a long list scrolls the stage away, the Main Action stays one tap from Focus. */
-function CompactMain({ action, okay }: { action: Action; okay: boolean }) {
-  const navigate = useNavigate();
-  return (
-    <motion.div
-      className={styles.compact}
-      initial={{ y: '-100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '-100%' }}
-      transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
-    >
-      <span className={styles.compactTitle}>{okay && action.smaller ? action.smaller : action.title}</span>
-      <button
-        type="button"
-        className={styles.compactButton}
-        onClick={async () => {
-          await startFocus(action.id, okay ? { smaller: true, targetMinutes: action.smaller ? undefined : OKAY_MINUTES } : {});
-          navigate('/focus');
-        }}
-      >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M6 3.5v17l14-8.5z" />
-        </svg>
-        Focus
-      </button>
     </motion.div>
   );
 }

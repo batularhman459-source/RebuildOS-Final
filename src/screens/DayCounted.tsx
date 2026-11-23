@@ -6,7 +6,7 @@ import { Stage } from '../components/Stage';
 import { Star } from '../components/Star';
 import { dayKey } from '../core/day';
 import { APP_LOCALE } from '../core/locale';
-import { lastSevenDays } from '../core/progress';
+import { activeDays, lastSevenDays } from '../core/progress';
 import type { Feeling } from '../core/types';
 import { closeDay } from '../data/closeDay';
 import { db } from '../data/db';
@@ -44,12 +44,13 @@ export function DayCounted() {
     const wins = days.filter((d) => d.smallWin).map((d) => d.day);
     // Today counts here even before anything is saved for it (e.g. straight from a tick).
     const week = lastSevenDays(day, actions, sessions, dayOf, checks, [...wins, day]);
-    return { week, feeling: record?.feeling ?? 'good' };
+    const total = activeDays(actions, sessions, dayOf, checks, [...wins, day]).size;
+    return { week, total, feeling: record?.feeling ?? 'good' };
   }, [day]);
 
   async function close() {
     await closeDay(day, { leftovers: {}, tomorrowMain: undefined });
-    navigate('/', { replace: true });
+    navigate('/sky', { replace: true });
   }
 
   return (
@@ -60,7 +61,7 @@ export function DayCounted() {
           <Star size={104} variant="gradient" />
         </motion.div>
         <motion.h1 className={styles.title} initial="hidden" animate="show" custom={0.3} variants={rise}>
-          Day counted.
+          {data ? `Day ${data.total} counted.` : 'Day counted.'}
         </motion.h1>
         {data && (
           <>
@@ -100,11 +101,11 @@ export function DayCounted() {
         )}
         <div className={styles.spacerLarge} />
         <motion.div className={styles.buttons} initial="hidden" animate="show" custom={0.7} variants={rise}>
-          <button type="button" className={styles.primary} onClick={() => void close()}>
-            Close for today
+          <button type="button" className={styles.primary} onClick={() => navigate('/sky', { replace: true })}>
+            Add it to your sky
           </button>
-          <button type="button" className={styles.secondary} onClick={() => navigate('/', { replace: true })}>
-            Keep going
+          <button type="button" className={styles.secondary} onClick={() => void close()}>
+            Close for today
           </button>
         </motion.div>
       </Stage>

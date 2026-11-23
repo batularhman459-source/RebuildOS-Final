@@ -4,6 +4,17 @@ _Status: V1.1 built, V2 in progress. **The V2 direction below supersedes everyth
 
 ---
 
+## V6: one thing a day, and a sky that only grows
+
+**Why.** After V2 the app still felt like other AI-made planners: too many concepts (goals, tasks, habits, plan, charts, reviews) and nothing that stood out. V6 cuts to four ideas: **your goal, today's one thing, your minimum, your sky.**
+
+- **Setup is one question:** "What do you want to change?" Pick one area, confirm the goal (suggestions one tap away), go. Ideas with smaller versions, one habit and a minimum come as defaults.
+- **Today is one dark screen:** the one thing with a big **Done**, then Start focus / Something else. Habits are a row of tap-to-tick chips. Tasks you add yourself appear in a short list below; nothing else.
+- **Day counted → "Add it to your sky".**
+- **Your sky** (`/sky`, a tab): every day that counted is a star (size by how the day felt), linked to the day before and often the same day a week earlier, laid out by a small force simulation like a graph of linked notes. Stars burst out, settle and stop; drag one and its links light up. Days that didn't count are faint dots. **Nothing is ever taken away.** (`src/core/sky.ts`, `src/screens/Sky.tsx`)
+- **Two tabs: Today · Sky.** Your plan and Details (the numbers, backup, appearance) open from the sky. The weekly check-in card shows on Today and the sky when due.
+- The overnight rule is silent now (no "moved" notice); the main thing carries over.
+
 ## V2 direction: "Open it, say how you feel, do the thing"
 
 **Why.** V1.1 worked but felt like every other AI-made planner (goals, tasks, habits, charts), and setting it up took longer than doing the tasks. V2 has one opinion: **planning shouldn't take longer than doing**, and the day should fit how you feel.

@@ -58,29 +58,20 @@ export function Progress() {
     .filter((f) => feelings[f] > 0)
     .map((f) => `${feelings[f]} ${f}`)
     .join(' · ');
-  const planCount = [
-    `${activeMissions(data.missions).length} ${activeMissions(data.missions).length === 1 ? 'goal' : 'goals'}`,
-    `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`,
-    'rough-day minimum',
-  ].join(' · ');
   const average = measured.length ? measured.reduce((t, g) => t + g.progress.fraction, 0) / measured.length : 0;
 
   return (
     <div className={styles.screen}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Progress</h1>
+      <header className={own.detailsHeader}>
+        <Link to="/sky" className={own.backLink}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+          Sky
+        </Link>
+        <h1 className={styles.title}>Details</h1>
       </header>
 
-      <Link to="/plan" className={own.planCard}>
-        <span className={own.planIcon}>
-          <Icon name="plan" size={18} />
-        </span>
-        <span className={own.planBody}>
-          <span className={own.planTitle}>Your plan</span>
-          <span className={own.planText}>{planCount}</span>
-        </span>
-        <Icon name="chevron" size={16} className={own.planChevron} />
-      </Link>
       <Link to="/week" className={own.planCard}>
         <span className={`${own.planIcon} ${own.planIconDark}`}>
           <Star size={18} variant="gradient" />

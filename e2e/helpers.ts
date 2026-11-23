@@ -70,10 +70,12 @@ export async function changeFeeling(page: Page, feeling: 'Good' | 'Okay' | 'Roug
   await expect(page).not.toHaveURL(/checkin/);
 }
 
-/** After the day counts: leave the Day counted moment and go back to Today. */
+/** After the day counts: add the star to the sky, then go back to Today. */
 export async function keepGoing(page: Page): Promise<void> {
-  await expect(page.getByRole('heading', { name: 'Day counted.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Keep going' }).click();
+  await expect(page.getByRole('heading', { name: /^Day \d+ counted\.$/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Add it to your sky' }).click();
+  await expect(page).toHaveURL(/\/sky$/);
+  await page.getByRole('link', { name: 'Today' }).click();
   await expect(page).toHaveURL(/\/$/);
 }
 
@@ -112,9 +114,16 @@ export function alsoToday(page: Page) {
   return page.getByRole('region', { name: 'Also today' });
 }
 
-/** Your plan lives under Progress. */
+/** Your plan opens from the sky. */
 export async function openPlan(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Progress' }).click();
-  await page.getByRole('link', { name: /^Your plan/ }).click();
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  await page.getByRole('link', { name: 'Your plan' }).click();
   await expect(page.getByRole('heading', { name: 'Your plan' })).toBeVisible();
+}
+
+/** Details (the numbers, backup, appearance) open from the sky. */
+export async function openDetails(page: Page): Promise<void> {
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  await page.getByRole('link', { name: 'Details' }).click();
+  await expect(page.getByRole('heading', { name: 'Details' })).toBeVisible();
 }

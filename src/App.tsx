@@ -18,6 +18,7 @@ import { Rebuild } from './screens/Rebuild';
 import { CheckIn } from './screens/CheckIn';
 import { DayCounted } from './screens/DayCounted';
 import { WeekReview } from './screens/WeekReview';
+import { Sky } from './screens/Sky';
 import { Welcome } from './screens/Welcome';
 import { Setup } from './screens/Setup';
 import { needsSetup } from './data/setup';
@@ -68,6 +69,7 @@ export function App() {
                 <Route path="/checkin" element={<CheckIn />} />
                 <Route path="/done" element={<DayCounted />} />
                 <Route path="/week" element={<WeekReview />} />
+                <Route path="/sky" element={<Sky />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               </motion.div>
@@ -114,7 +116,7 @@ function StartupRouting() {
 }
 
 /** Screens whose top edge is a dark stage. */
-const DARK_TOP = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done', '/week'];
+const DARK_TOP = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done', '/week', '/sky'];
 
 /**
  * Match the phone's status bar area (behind the time and battery) to the top of the

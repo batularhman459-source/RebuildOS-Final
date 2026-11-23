@@ -6,7 +6,7 @@ import { addFirstAction, openApp } from './helpers';
  * iPhone redrawing every frame and makes the app lag after its entrance animations.
  */
 async function framesWhileIdle(page: Page, ms = 2000): Promise<number> {
-  await page.waitForTimeout(2500); // let entrance animations finish
+  await page.waitForTimeout(6000); // let entrance animations (and the sky's layout) finish
   const cdp = await page.context().newCDPSession(page);
   const events: { name: string }[] = [];
   cdp.on('Tracing.dataCollected', (d) => events.push(...(d.value as { name: string }[])));
@@ -20,9 +20,10 @@ async function framesWhileIdle(page: Page, ms = 2000): Promise<number> {
 }
 
 test('idle screens draw no frames', async ({ page }) => {
+  test.setTimeout(120_000);
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
-  for (const path of ['/', '/checkin', '/progress', '/week']) {
+  for (const path of ['/', '/checkin', '/sky', '/progress', '/week']) {
     await page.goto(path);
     expect(await framesWhileIdle(page), `${path} keeps redrawing while idle`).toBeLessThanOrEqual(2);
   }

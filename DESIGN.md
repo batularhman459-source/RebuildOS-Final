@@ -235,7 +235,7 @@ No card. Top hairline, 18px vertical padding. Row 1: name (`section-title`) with
 Plain row. Small label (`label`, `ink-muted`; first slot uses `apricot-text`), then the Action. The first slot ("One step forward") uses `section-title` and may carry one supporting line; the other two use `body`. Trailing "Swap" text button.
 
 ### Dock
-Floating at the bottom, 20px from each side. A frosted pill with two equal tabs (Today, Progress; each an icon over its label) and, beside it, a 58px frosted circle with "+" (Add). Your plan (`/plan`) and goal pages count as Progress. Active tab: `ink` pill, white text. Inactive: `ink-secondary`. Hidden on full-screen moments: Check-in, Focus, Day counted, My minimum day, Welcome back, Setup.
+Floating at the bottom, 20px from each side. A pill with two equal tabs (Today, Sky; each an icon over its label), 260px wide, centred; no Add button (tasks are added from Today's "Add a task" link or Your plan). On the dark Today and Sky screens the dock is dark (#23211F, white active pill); elsewhere it's the light surface. Your plan, Details (`/progress`) and goal pages count as Sky. Active tab: `ink` pill, white text. Inactive: `ink-secondary`. Hidden on full-screen moments: Check-in, Focus, Day counted, My minimum day, Welcome back, Setup.
 
 ### Sheet
 Bottom sheet for quick add, swap and install prompts. `surface`, top radius 28px, grab handle, scrim `rgba(18,17,16,0.38)`. No shadow.

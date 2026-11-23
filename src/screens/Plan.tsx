@@ -71,11 +71,11 @@ export function Plan() {
   return (
     <div className={styles.screen}>
       <header className={own.planHeader}>
-        <button type="button" className={own.backLink} onClick={() => navigate('/progress')}>
+        <button type="button" className={own.backLink} onClick={() => navigate('/sky')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
-          Progress
+          Sky
         </button>
         <h1 className={styles.title}>Your plan</h1>
       </header>
