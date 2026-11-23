@@ -19,6 +19,9 @@ import { CheckIn } from './screens/CheckIn';
 import { DayCounted } from './screens/DayCounted';
 import { WeekReview } from './screens/WeekReview';
 import { Sky } from './screens/Sky';
+import { Journal } from './screens/Journal';
+import { DayView } from './screens/DayView';
+import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 import { Setup } from './screens/Setup';
 import { needsSetup } from './data/setup';
@@ -39,6 +42,10 @@ export function App() {
   const { pathname } = useLocation();
   const fullScreen = FULL_SCREEN.some((p) => pathname.startsWith(p));
   useStatusBarColour(pathname);
+  // A new page starts at the top (the browser would keep the last page's scroll position).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -70,6 +77,9 @@ export function App() {
                 <Route path="/done" element={<DayCounted />} />
                 <Route path="/week" element={<WeekReview />} />
                 <Route path="/sky" element={<Sky />} />
+                <Route path="/journal" element={<Journal />} />
+                <Route path="/day/:day" element={<DayView />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               </motion.div>

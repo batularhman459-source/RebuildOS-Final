@@ -73,9 +73,6 @@ export function YourData() {
         </p>
       )}
 
-      <Appearance />
-
-      <p className={styles.version}>RebuildOS version {__APP_VERSION__}</p>
 
       <Sheet open={installOpen} onClose={() => setInstallOpen(false)} label="Add to home screen">
         <h2 className={forms.title}>Add to home screen</h2>
@@ -110,7 +107,7 @@ const THEME_OPTIONS: { value: ThemeChoice; label: string }[] = [
 ];
 
 /** Light, dark, or follow the phone. */
-function Appearance() {
+export function Appearance() {
   const { choice } = useDarkMode();
   return (
     <div className={styles.appearance}>

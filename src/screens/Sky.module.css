@@ -147,7 +147,7 @@
 
 .links {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -168,4 +168,21 @@
   .todayStar {
     animation: none;
   }
+}
+
+.header {
+  position: relative;
+}
+
+.gear {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--on-stage-control);
+  color: var(--on-stage);
 }

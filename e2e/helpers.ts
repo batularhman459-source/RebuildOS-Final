@@ -13,7 +13,7 @@ export async function seed(page: Page, body: string): Promise<unknown> {
         const open = indexedDB.open('rebuildos');
         open.onsuccess = () => {
           const db = open.result;
-          const names = ['actions', 'missions', 'days', 'meta', 'focusSessions', 'habits', 'habitChecks'];
+          const names = ['actions', 'missions', 'days', 'meta', 'focusSessions', 'habits', 'habitChecks', 'journal'];
           const tx = db.transaction(names, 'readwrite');
           const stores = Object.fromEntries(names.map((n) => [n, tx.objectStore(n)]));
           const pad = (n: number) => String(n).padStart(2, '0');

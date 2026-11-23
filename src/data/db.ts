@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Action, DayRecord, FocusSession, Habit, HabitCheck, MetaEntry, Mission } from '../core/types';
+import type { Action, DayRecord, FocusSession, Habit, HabitCheck, JournalEntry, MetaEntry, Mission } from '../core/types';
 
 /**
  * On-device database (IndexedDB via Dexie).
@@ -13,6 +13,7 @@ export class RebuildDB extends Dexie {
   meta!: Table<MetaEntry, string>;
   habits!: Table<Habit, string>;
   habitChecks!: Table<HabitCheck, string>;
+  journal!: Table<JournalEntry, string>;
 
   constructor() {
     super('rebuildos');
@@ -27,6 +28,10 @@ export class RebuildDB extends Dexie {
     this.version(2).stores({
       habits: 'id, updatedAt',
       habitChecks: 'id, habitId, day',
+    });
+    // V6: the journal, one entry per day.
+    this.version(3).stores({
+      journal: 'id, day, updatedAt',
     });
   }
 }

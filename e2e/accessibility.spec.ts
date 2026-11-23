@@ -63,6 +63,15 @@ test('screens have no serious accessibility issues', async ({ page }) => {
 
   await page.goto('/welcome');
   await check(page, 'Welcome back');
+
+  await page.goto('/journal');
+  await page.getByLabel('Today’s journal').fill('A line about today.');
+  await check(page, 'Journal');
+  const today = await page.evaluate(() => new Date(Date.now() - 4 * 3600_000).toISOString().slice(0, 10));
+  await page.goto(`/day/${today}`);
+  await check(page, 'A day');
+  await page.goto('/settings');
+  await check(page, 'Settings');
 });
 
 test('the daily check-in, a rough day and Day counted have no serious accessibility issues', async ({ page }) => {
@@ -106,10 +115,14 @@ test.describe('dark mode', () => {
     await check(page, 'Your plan (dark)');
     await page.goto('/week');
     await check(page, 'Weekly check-in (dark)');
+    await page.goto('/journal');
+    await check(page, 'Journal (dark)');
+    await page.goto('/settings');
+    await check(page, 'Settings (dark)');
   });
 
   test('Appearance can force light or dark', async ({ page }) => {
-    await openApp(page, '/progress');
+    await openApp(page, '/settings');
     const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     expect(await bg()).toBe('rgb(26, 25, 24)');
     await page.getByRole('radio', { name: 'Light' }).click();

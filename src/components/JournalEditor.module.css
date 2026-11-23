@@ -1,0 +1,60 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.prompt {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--ink-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  transition:
+    background-color 180ms var(--ease),
+    color 180ms var(--ease);
+}
+
+.prompt[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.text {
+  width: 100%;
+  min-height: 160px;
+  box-sizing: border-box;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-frosted);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.text::placeholder {
+  color: var(--ink-muted);
+}
+
+.text:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.status {
+  font-size: 13px;
+  color: var(--ink-muted);
+  text-align: right;
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { backupFileName, makeBackup, parseBackup } from './backup';
 
-const empty = { actions: [], missions: [], focusSessions: [], days: [], meta: [], habits: [], habitChecks: [] };
+const empty = { actions: [], missions: [], focusSessions: [], days: [], meta: [], habits: [], habitChecks: [], journal: [] };
 
 describe('backup', () => {
   it('round-trips through JSON', () => {
@@ -34,5 +34,6 @@ describe('older backups', () => {
     const v1 = { app: 'rebuildos', version: 1, exportedAt: 1, tables: { actions: [], missions: [], focusSessions: [], days: [], meta: [] } };
     const parsed = parseBackup(JSON.stringify(v1));
     expect(parsed.ok && parsed.backup.tables.habits).toEqual([]);
+    expect(parsed.ok && parsed.backup.tables.journal).toEqual([]);
   });
 });

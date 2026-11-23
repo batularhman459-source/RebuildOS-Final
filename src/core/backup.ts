@@ -1,4 +1,4 @@
-import type { Action, DayRecord, FocusSession, Habit, HabitCheck, MetaEntry, Mission } from './types';
+import type { Action, DayRecord, FocusSession, Habit, HabitCheck, JournalEntry, MetaEntry, Mission } from './types';
 
 /**
  * Backup file format. Until accounts exist, this is the safety net that keeps
@@ -6,8 +6,8 @@ import type { Action, DayRecord, FocusSession, Habit, HabitCheck, MetaEntry, Mis
  */
 
 export const BACKUP_APP = 'rebuildos';
-/** 2 adds habits. Version 1 files still restore (with no habits). */
-export const BACKUP_VERSION = 2;
+/** 2 adds habits, 3 the journal. Older files still restore (missing tables are empty). */
+export const BACKUP_VERSION = 3;
 
 export interface BackupTables {
   actions: Action[];
@@ -17,6 +17,7 @@ export interface BackupTables {
   meta: MetaEntry[];
   habits: Habit[];
   habitChecks: HabitCheck[];
+  journal: JournalEntry[];
 }
 
 export interface Backup {
@@ -32,10 +33,10 @@ export function makeBackup(tables: BackupTables, exportedAt: number): Backup {
 
 export type ParseResult = { ok: true; backup: Backup } | { ok: false; reason: string };
 
-const TABLES: (keyof BackupTables)[] = ['actions', 'missions', 'focusSessions', 'days', 'meta', 'habits', 'habitChecks'];
+const TABLES: (keyof BackupTables)[] = ['actions', 'missions', 'focusSessions', 'days', 'meta', 'habits', 'habitChecks', 'journal'];
 /** Tables added after version 1; missing in older files means empty. */
-const OPTIONAL: (keyof BackupTables)[] = ['habits', 'habitChecks'];
-const KEYS: Record<keyof BackupTables, string> = { actions: 'id', missions: 'id', focusSessions: 'id', days: 'day', meta: 'key', habits: 'id', habitChecks: 'id' };
+const OPTIONAL: (keyof BackupTables)[] = ['habits', 'habitChecks', 'journal'];
+const KEYS: Record<keyof BackupTables, string> = { actions: 'id', missions: 'id', focusSessions: 'id', days: 'day', meta: 'key', habits: 'id', habitChecks: 'id', journal: 'id' };
 
 /** Validate a backup file's text before anything on the device is touched. */
 export function parseBackup(text: string): ParseResult {

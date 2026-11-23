@@ -233,6 +233,10 @@ export function Today() {
                 Edit my minimum
               </button>
             )}
+            <button type="button" className={styles.extraLink} onClick={() => navigate(`/day/${day}`)}>
+              <Icon name="sparkle" size={15} />
+              Journal
+            </button>
           </div>
         )}
       </section>

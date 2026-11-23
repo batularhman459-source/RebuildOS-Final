@@ -2,8 +2,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
 import styles from './Dock.module.css';
 
-/** Your plan, Details and goal pages are reached from the sky. */
-const UNDER_SKY = ['/sky', '/progress', '/plan', '/goal/'];
+/** Your plan, Details, the journal, settings and goal pages are reached from the sky. */
+const UNDER_SKY = ['/sky', '/progress', '/plan', '/goal/', '/journal', '/day/', '/settings'];
 /** Screens that are dark all the way down get the dark dock. */
 const DARK = ['/', '/sky'];
 

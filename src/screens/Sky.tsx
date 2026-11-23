@@ -15,6 +15,8 @@ import { getWeekReviews } from '../data/week';
 import styles from './Sky.module.css';
 
 const dayOf = (t: number) => dayKey(new Date(t));
+/** Layout steps per second: calm, and the same on 60 Hz and 120 Hz screens. */
+const STEP_MS = 1000 / 30;
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
 const FILL: Record<StarKind, string> = {
@@ -55,7 +57,13 @@ export function Sky() {
       <div className={styles.content}>
         {data && (
           <>
-            <motion.header initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+            <motion.header className={styles.header} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+              <Link to="/settings" className={styles.gear} aria-label="Settings">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                  <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                </svg>
+              </Link>
               <p className={styles.kicker}>Your sky</p>
               <p className={styles.count}>
                 <span className={styles.number}>{data.active.size}</span>
@@ -67,7 +75,7 @@ export function Sky() {
             <SkyGraph today={today} active={data.active} feelings={data.feelings} since={data.since} />
 
             <p className={styles.legend}>
-              <span>Drag a star · big = good day, small = rough day</span>
+              <span>Tap a star to open that day · drag to move it</span>
             </p>
 
             <div className={styles.spacer} />
@@ -80,6 +88,9 @@ export function Sky() {
               </button>
             )}
             <div className={styles.links}>
+              <Link to="/journal" className={styles.linkButton}>
+                Journal
+              </Link>
               <Link to="/plan" className={styles.linkButton}>
                 Your plan
               </Link>
@@ -107,7 +118,8 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
   const lines = useRef<(SVGLineElement | null)[]>([]);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const { width, height: HEIGHT } = size;
-  const sim = useRef({ alpha: 1, raf: 0, held: undefined as number | undefined });
+  const sim = useRef({ alpha: 1, raf: 0, held: undefined as number | undefined, downAt: 0, downX: 0, downY: 0, moved: false });
+  const navigate = useNavigate();
   const key = [...active].sort().join(',');
 
   useEffect(() => {
@@ -147,12 +159,26 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
     });
   }
 
+  /**
+   * Runs the layout at a fixed 30 steps a second whatever the screen's refresh rate
+   * (an iPhone Pro draws 120 frames a second, which made the sky race), and draws on
+   * each frame. Stops when the sky is still.
+   */
   function run() {
     const s = sky;
     if (!s || sim.current.raf) return;
-    const frame = () => {
-      sim.current.alpha = stepSky(s, sim.current.alpha, width, HEIGHT, sim.current.held !== undefined);
-      paint(s);
+    let last = performance.now();
+    let pending = 0;
+    const frame = (now: number) => {
+      pending = Math.min(pending + (now - last), 200);
+      last = now;
+      let stepped = false;
+      while (pending >= STEP_MS) {
+        sim.current.alpha = stepSky(s, sim.current.alpha, width, HEIGHT, sim.current.held !== undefined);
+        pending -= STEP_MS;
+        stepped = true;
+      }
+      if (stepped || sim.current.held !== undefined) paint(s);
       sim.current.raf = sim.current.alpha > SKY_REST || sim.current.held !== undefined ? requestAnimationFrame(frame) : 0;
     };
     sim.current.raf = requestAnimationFrame(frame);
@@ -186,6 +212,10 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
     if (i === undefined) return;
     e.currentTarget.setPointerCapture?.(e.pointerId);
     sim.current.held = i;
+    sim.current.downAt = performance.now();
+    sim.current.downX = p.x;
+    sim.current.downY = p.y;
+    sim.current.moved = false;
     const n = sky.nodes[i]!;
     n.fixed = true;
     n.x = p.x;
@@ -197,6 +227,7 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
   function move(e: PointerEvent<HTMLDivElement>) {
     if (!sky || sim.current.held === undefined) return;
     const p = point(e);
+    if (Math.hypot(p.x - sim.current.downX, p.y - sim.current.downY) > 6) sim.current.moved = true;
     const n = sky.nodes[sim.current.held]!;
     n.x = Math.min(width - 10, Math.max(10, p.x));
     n.y = Math.min(HEIGHT - 10, Math.max(10, p.y));
@@ -204,6 +235,14 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
 
   function up() {
     if (!sky || sim.current.held === undefined) return;
+    const node = sky.nodes[sim.current.held]!;
+    // A quick tap (no drag) opens that day.
+    if (!sim.current.moved && performance.now() - sim.current.downAt < 350) {
+      node.fixed = false;
+      sim.current.held = undefined;
+      navigate(`/day/${node.day}`);
+      return;
+    }
     sky.nodes[sim.current.held]!.fixed = false;
     sim.current.held = undefined;
     sim.current.alpha = Math.max(sim.current.alpha, 0.3);
@@ -215,7 +254,7 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
       ref={box}
       className={styles.graph}
       role="img"
-      aria-label={`Your sky: ${active.size} ${active.size === 1 ? 'day' : 'days'} counted`}
+      aria-label={`Your sky: ${active.size} ${active.size === 1 ? 'day' : 'days'} counted. Tap a star to open that day.`}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}

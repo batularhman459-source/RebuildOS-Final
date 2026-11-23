@@ -150,6 +150,17 @@ export interface HabitCheck {
   createdAt: Timestamp;
 }
 
+/** A journal entry: free text for one logical day (one entry per day; id = day). */
+export interface JournalEntry {
+  id: DayKey;
+  day: DayKey;
+  text: string;
+  /** The prompt shown while writing, if one was picked. */
+  prompt?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 /** Small key–value store for app-level state (last opened, session count, install state…). */
 export interface MetaEntry {
   key: string;

@@ -106,12 +106,12 @@ export function stepSky(sky: Sky, alpha: number, width: number, height: number, 
     }
     o.vx += (width / 2 - o.x) * 0.008 * alpha;
     o.vy += (height / 2 - o.y) * 0.008 * alpha;
-    o.vx *= 0.6;
-    o.vy *= 0.6;
+    o.vx *= 0.55;
+    o.vy *= 0.55;
     o.x = Math.min(width - 10, Math.max(10, o.x + o.vx));
     o.y = Math.min(height - 10, Math.max(10, o.y + o.vy));
   }
-  return holding ? Math.max(alpha, 0.35) : alpha * 0.972;
+  return holding ? Math.max(alpha, 0.35) : alpha * 0.982;
 }
 
 /** Below this temperature the sky is considered still and the frames stop. */

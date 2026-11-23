@@ -14,6 +14,9 @@ _Status: V1.1 built, V2 in progress. **The V2 direction below supersedes everyth
 - **Your sky** (`/sky`, a tab): every day that counted is a star (size by how the day felt), linked to the day before and often the same day a week earlier, laid out by a small force simulation like a graph of linked notes. Stars burst out, settle and stop; drag one and its links light up. Days that didn't count are faint dots. **Nothing is ever taken away.** (`src/core/sky.ts`, `src/screens/Sky.tsx`)
 - **Two tabs: Today · Sky.** Your plan and Details (the numbers, backup, appearance) open from the sky. The weekly check-in card shows on Today and the sky when due.
 - The overnight rule is silent now (no "moved" notice); the main thing carries over.
+- **Journal** (`/journal`): today's page on top (autosaves; three rotating prompts), earlier entries by month with how the day felt. **Tap a star in the sky to open that day** (`/day/:day`): counted or not, how it felt, what got done, and its journal page. Journal entries live in the `journal` table (one per day) and are in backups (format 3).
+- **Settings** (`/settings`, the gear on the sky): Appearance, your data (backup, restore, add to home screen) and About (what RebuildOS is, version). Sections leave room for reminders and an account later. Details is numbers only.
+- The sky moves at a fixed 30 steps a second (calm on 120 Hz iPhones too), settles in about ten seconds, then stops.
 
 ## V2 direction: "Open it, say how you feel, do the thing"
 

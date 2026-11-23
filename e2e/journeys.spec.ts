@@ -289,7 +289,7 @@ test('your sky: a star for every day that counted, and you can drag it', async (
 test('backup: save and restore', async ({ page }) => {
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
-  await openDetails(page);
+  await page.goto('/settings');
 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save a backup' }).click();
@@ -301,7 +301,7 @@ test('backup: save and restore', async ({ page }) => {
   await keepGoing(page);
   await expect(stageTitle(page)).toHaveText('That’s done.');
 
-  await openDetails(page);
+  await page.goto('/settings');
   await page.locator('input[type=file]').setInputFiles(file);
   await page.getByRole('button', { name: 'Replace with backup' }).click();
   await expect(page.getByText('Backup restored.')).toBeVisible();
@@ -310,7 +310,7 @@ test('backup: save and restore', async ({ page }) => {
 });
 
 test('install help: Safari gets steps, other iPhone browsers are sent to Safari', async ({ page, browser }) => {
-  await openApp(page, '/progress');
+  await openApp(page, '/settings');
   await page.getByRole('button', { name: 'Add to home screen' }).click();
   const sheet = page.getByRole('dialog', { name: 'Add to home screen' });
   await expect(sheet.getByText('Add to Home Screen', { exact: true }).first()).toBeVisible();
@@ -319,7 +319,7 @@ test('install help: Safari gets steps, other iPhone browsers are sent to Safari'
   const ua = (await page.evaluate(() => navigator.userAgent)).replace(/Version\/[\d.]+/, 'CriOS/130.0');
   const other = await browser.newContext({ ...(await import('@playwright/test')).devices['iPhone 13'], userAgent: ua });
   const page2 = await other.newPage();
-  await page2.goto('/progress');
+  await page2.goto('/settings');
   await page2.getByRole('button', { name: 'Add to home screen' }).click();
   await expect(page2.getByText(/open it in Safari/)).toBeVisible();
   await expect(page2.getByRole('button', { name: 'Copy link' })).toBeVisible();
@@ -446,5 +446,48 @@ test('weekly check-in: look back, name what got in the way, choose what comes fi
   await page.reload();
   await checkInIfAsked(page, 'Good');
   await expect(stageTitle(page)).toHaveText('Do a past paper');
+});
+
+test('journal: write about today, find it again, and open a day from a star', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Write landing page copy');
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await keepGoing(page);
+
+  // From the sky: Journal, today's page, with prompts.
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  await page.getByRole('link', { name: 'Journal' }).click();
+  await expect(page.getByRole('heading', { name: 'Journal', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'What went well today?' }).click();
+  await page.getByLabel('Today’s journal').fill('Wrote the landing page before lunch.');
+  await expect(page.getByText('Saved')).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('Today’s journal')).toHaveValue('Wrote the landing page before lunch.');
+
+  // Tap today's star in the sky: that day opens, with what got done and the journal.
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  const sky = page.getByRole('img', { name: /Your sky/ });
+  await page.waitForTimeout(12000); // let the sky settle
+  const star = await page.evaluate(() => {
+    const spans = [...document.querySelectorAll('[role="img"] > span')] as HTMLElement[];
+    const r = spans[spans.length - 1]!.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
+  await sky.isVisible();
+  await page.mouse.click(star.x, star.y);
+  await expect(page).toHaveURL(/\/day\/\d{4}-\d{2}-\d{2}$/);
+  await expect(page.getByText('Counted')).toBeVisible();
+  await expect(page.getByText('Done: Write landing page copy')).toBeVisible();
+  await expect(page.getByLabel(/^Journal for today/)).toHaveValue('Wrote the landing page before lunch.');
+});
+
+test('settings: version, appearance and your data in one place', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  await page.getByRole('link', { name: 'Settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
+  await expect(page.getByRole('radiogroup', { name: 'Appearance' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save a backup' })).toBeVisible();
+  await expect(page.getByText('Version', { exact: true })).toBeVisible();
 });
 

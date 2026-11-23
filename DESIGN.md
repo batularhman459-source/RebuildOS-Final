@@ -200,7 +200,7 @@ Three families, each with one job.
 - A **radial gradient** (`effects.apricot-glow`) placed behind the stage's main message, usually centred horizontally and slightly below the title.
 - Always paired with **grain** (`effects.grain`). Grain is what stops the gradient looking flat and computer-made. Never ship the glow without it.
 - Only on `stage` backgrounds. Never on light surfaces, buttons, cards or text.
-- It swells in once when a stage appears (opacity, 1.6 s), then stays still. Its size may grow subtly while Focus runs. **No endless animations anywhere**: on iPhone a looping animation keeps the whole screen redrawing every frame (measured: ~540 redraws per 3 s on an idle Today) and makes scrolling lag after the entrance animations. Idle screens must draw 0 frames.
+- It swells in once when a stage appears (opacity, 1.6 s), then stays still. Its size may grow subtly while Focus runs. **No endless animations anywhere**: on iPhone a looping animation keeps the whole screen redrawing every frame (measured: ~540 redraws per 3 s on an idle Today) and makes scrolling lag after the entrance animations. Idle screens must draw 0 frames. Physics (the sky) steps on a fixed clock (30 steps/s), never once per frame: iPhone Pro screens run at 120 Hz and would double the speed.
 
 ### The Rebuild star
 The four-point star is the only brand mark.

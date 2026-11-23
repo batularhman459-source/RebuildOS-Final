@@ -3,7 +3,7 @@ import { db } from './db';
 
 /** Everything on this device, as a backup. */
 export async function exportBackup(): Promise<Backup> {
-  const [actions, missions, focusSessions, days, meta, habits, habitChecks] = await Promise.all([
+  const [actions, missions, focusSessions, days, meta, habits, habitChecks, journal] = await Promise.all([
     db.actions.toArray(),
     db.missions.toArray(),
     db.focusSessions.toArray(),
@@ -11,8 +11,9 @@ export async function exportBackup(): Promise<Backup> {
     db.meta.toArray(),
     db.habits.toArray(),
     db.habitChecks.toArray(),
+    db.journal.toArray(),
   ]);
-  return makeBackup({ actions, missions, focusSessions, days, meta, habits, habitChecks }, Date.now());
+  return makeBackup({ actions, missions, focusSessions, days, meta, habits, habitChecks, journal }, Date.now());
 }
 
 /**
@@ -47,8 +48,8 @@ export async function saveBackup(): Promise<'shared' | 'downloaded' | 'cancelled
 
 /** Replace everything on this device with the backup. Callers must validate with parseBackup first. */
 export async function restoreBackup(backup: Backup): Promise<void> {
-  const { actions, missions, focusSessions, days, meta, habits, habitChecks } = backup.tables;
-  const tables = [db.actions, db.missions, db.focusSessions, db.days, db.meta, db.habits, db.habitChecks];
+  const { actions, missions, focusSessions, days, meta, habits, habitChecks, journal } = backup.tables;
+  const tables = [db.actions, db.missions, db.focusSessions, db.days, db.meta, db.habits, db.habitChecks, db.journal];
   await db.transaction('rw', tables, async () => {
     await Promise.all(tables.map((t) => t.clear()));
     await db.habits.bulkPut(habits);
@@ -58,5 +59,6 @@ export async function restoreBackup(backup: Backup): Promise<void> {
     await db.focusSessions.bulkPut(focusSessions);
     await db.days.bulkPut(days);
     await db.meta.bulkPut(meta);
+    await db.journal.bulkPut(journal ?? []);
   });
 }
