@@ -14,8 +14,6 @@
 .frosted {
   /* A light blur only: heavy blur + saturate is costly to redraw while scrolling on iPhone. */
   background: var(--surface-frosted);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--hairline-frosted);
 }
 

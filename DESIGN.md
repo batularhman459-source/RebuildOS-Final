@@ -76,7 +76,7 @@ motion:
 effects:
   apricot-glow: "radial-gradient(closest-side, rgba(238,125,82,0.62) 0%, rgba(238,125,82,0.36) 30%, rgba(255,227,204,0.08) 64%, rgba(18,17,16,0) 100%)"
   grain: "static 128px tiled PNG (src/assets/grain.png): light and dark specks at very low alpha; no SVG filter, no blend mode"
-  frosted: "background rgba(255,255,255,0.86); backdrop-filter: blur(10px); 1px {colors.hairline-frosted} border"
+  frosted: "background {colors.surface-frosted} (96% opaque, no backdrop blur: blur over moving content lags on iPhone); 1px {colors.hairline-frosted} border"
   star-gradient: "linear-gradient(160deg, #FFF6EE 0%, #FFE3CC 55%, #F49A70 100%)"
 ---
 
@@ -190,7 +190,7 @@ Three families, each with one job.
 |---|---|---|
 | Flat | `canvas`, no border | Light screens |
 | Hairline | 1px `hairline` | Between rows and Mission sections |
-| Frosted | `surface-frosted`, blur 20, saturate 180%, 1px `hairline-frosted` | Floating dock and add button; nothing else |
+| Frosted | `surface-frosted` (96% opaque, no blur), 1px `hairline-frosted` | Floating dock and add button; nothing else |
 | Stage | `stage` + Apricot glow + grain | Dark stages only |
 
 **No `box-shadow` anywhere in the product UI.**
@@ -200,7 +200,7 @@ Three families, each with one job.
 - A **radial gradient** (`effects.apricot-glow`) placed behind the stage's main message, usually centred horizontally and slightly below the title.
 - Always paired with **grain** (`effects.grain`). Grain is what stops the gradient looking flat and computer-made. Never ship the glow without it.
 - Only on `stage` backgrounds. Never on light surfaces, buttons, cards or text.
-- It breathes slowly (scale 1 → 1.07 and opacity, 3.2 s, alternating; off with reduced motion) so the stage feels alive. Its size may also grow subtly while Focus runs. Never a fast pulse.
+- It swells in once when a stage appears (opacity, 1.6 s), then stays still. Its size may grow subtly while Focus runs. **No endless animations anywhere**: on iPhone a looping animation keeps the whole screen redrawing every frame (measured: ~540 redraws per 3 s on an idle Today) and makes scrolling lag after the entrance animations. Idle screens must draw 0 frames.
 
 ### The Rebuild star
 The four-point star is the only brand mark.

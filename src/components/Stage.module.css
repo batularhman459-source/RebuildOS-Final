@@ -16,19 +16,20 @@
   border-radius: 50%;
   background: var(--apricot-glow);
   pointer-events: none;
-  will-change: transform;
   transition: transform 2s var(--ease);
-  /* A slow breath so the stage feels alive. Composited (scale + opacity only). */
-  animation: breathe 3.2s ease-in-out infinite alternate;
+  /*
+   * One gentle swell when the stage appears, then still. Never an endless animation:
+   * on iPhone it keeps the screen redrawing (and the dock's backdrop recalculating)
+   * every frame, which is what made scrolling lag after the entrance animations.
+   */
+  animation: swell 1.6s var(--ease) both;
 }
 
-@keyframes breathe {
+@keyframes swell {
   from {
-    scale: 1;
-    opacity: 0.86;
+    opacity: 0.6;
   }
   to {
-    scale: 1.07;
     opacity: 1;
   }
 }

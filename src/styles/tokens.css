@@ -4,7 +4,7 @@
   --canvas: #f7f6f4;
   --surface: #ffffff;
   --surface-muted: #efedea;
-  --surface-frosted: rgba(255, 255, 255, 0.86);
+  --surface-frosted: rgba(255, 255, 255, 0.96);
   --hairline: #e9e7e3;
   --hairline-frosted: rgba(29, 28, 27, 0.07);
   --control-outline: #b5b0a9;
@@ -90,7 +90,7 @@
   --canvas: #1a1918;
   --surface: #242220;
   --surface-muted: #2e2c29;
-  --surface-frosted: rgba(36, 34, 32, 0.8);
+  --surface-frosted: rgba(36, 34, 32, 0.96);
   --hairline: #34312e;
   --hairline-frosted: rgba(255, 255, 255, 0.08);
   --control-outline: #77716a;
@@ -109,7 +109,7 @@
   --canvas: #1a1918;
   --surface: #242220;
   --surface-muted: #2e2c29;
-  --surface-frosted: rgba(36, 34, 32, 0.8);
+  --surface-frosted: rgba(36, 34, 32, 0.96);
   --hairline: #34312e;
   --hairline-frosted: rgba(255, 255, 255, 0.08);
   --control-outline: #77716a;
