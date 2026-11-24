@@ -1,6 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion, type Variants } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { milestoneFor } from '../core/milestones';
+import { markInstallPromptDue } from '../data/install';
+import { isInstalled } from '../data/storage';
+import { undoDone, type DoneInfo } from '../data/checkin';
 import { useDay } from '../app/day';
 import { Stage } from '../components/Stage';
 import { Star } from '../components/Star';
@@ -33,6 +38,7 @@ const rise: Variants = {
 export function DayCounted() {
   const day = useDay();
   const navigate = useNavigate();
+  const done = (useLocation().state as { done?: DoneInfo } | null)?.done;
   const data = useLiveQuery(async () => {
     const [actions, sessions, checks, days] = await Promise.all([
       db.actions.toArray(),
@@ -48,6 +54,11 @@ export function DayCounted() {
     return { week, total, feeling: record?.feeling ?? 'good' };
   }, [day]);
 
+  // A good moment to suggest the home screen (it also keeps the sky safe); shown back on Today.
+  useEffect(() => {
+    if (!isInstalled()) void markInstallPromptDue();
+  }, []);
+
   async function close() {
     await closeDay(day, { leftovers: {}, tomorrowMain: undefined });
     navigate('/sky', { replace: true });
@@ -61,12 +72,12 @@ export function DayCounted() {
           <Star size={104} variant="gradient" />
         </motion.div>
         <motion.h1 className={styles.title} initial="hidden" animate="show" custom={0.3} variants={rise}>
-          {data ? `Day ${data.total} counted.` : 'Day counted.'}
+          {data ? (milestoneFor(data.total)?.title ?? `Day ${data.total} counted.`) : 'Day counted.'}
         </motion.h1>
         {data && (
           <>
             <motion.p className={styles.line} initial="hidden" animate="show" custom={0.38} variants={rise}>
-              {LINES[data.feeling]}
+              {milestoneFor(data.total)?.line ?? LINES[data.feeling]}
             </motion.p>
             <motion.ol className={styles.week} aria-label="Last 7 days" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.5 }}>
               {data.week.days.map(({ day: d, active }) => {
@@ -107,6 +118,18 @@ export function DayCounted() {
           <button type="button" className={styles.secondary} onClick={() => void close()}>
             Close for today
           </button>
+          {done && (
+            <button
+              type="button"
+              className={styles.undo}
+              onClick={async () => {
+                await undoDone(day, done);
+                navigate('/', { replace: true });
+              }}
+            >
+              Tapped Done by mistake? Undo
+            </button>
+          )}
         </motion.div>
       </Stage>
     </div>

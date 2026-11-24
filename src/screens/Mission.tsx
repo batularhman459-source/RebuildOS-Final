@@ -17,10 +17,12 @@ import type { Action, Mission as MissionRecord } from '../core/types';
 import { moveToToday } from '../data/actions';
 import { db } from '../data/db';
 import { startFocus } from '../data/focus';
-import { deleteMission, setGoalMeasure, setMissionStatus, updateGoalProgress, updateMission } from '../data/missions';
+import { deleteMission, restoreMission, setGoalMeasure, setMissionStatus, updateGoalProgress, updateMission } from '../data/missions';
+import { useUndo } from '../app/undo';
 import { goalProgress, parseAmount, withUnit } from '../core/goals';
 import { GoalProgressBar } from '../components/GoalProgressBar';
 import { MeasureFields } from '../components/MeasureFields';
+import { PageHeader } from '../components/PageHeader';
 import styles from './Screen.module.css';
 import own from './Mission.module.css';
 
@@ -58,32 +60,34 @@ export function Mission() {
 
   return (
     <div className={styles.screen}>
-      <div className={own.topBar}>
-        <button type="button" className={own.round} aria-label="Back to your plan" onClick={() => navigate('/plan')}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-        </button>
-        <button type="button" className={own.round} aria-label="Edit goal" onClick={() => setEditing(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <circle cx="5" cy="12" r="1.8" />
-            <circle cx="12" cy="12" r="1.8" />
-            <circle cx="19" cy="12" r="1.8" />
-          </svg>
-        </button>
-      </div>
+      <PageHeader
+        back={{ to: '/plan', label: 'Back' }}
+        title={mission.title}
+        right={
+          <button type="button" className={own.editButton} onClick={() => setEditing(true)}>
+            Edit
+          </button>
+        }
+      />
+      {(mission.status !== 'active' || mission.doneWhen || mission.targetDay) && (
+        <div className={own.subhead}>
+          {mission.status !== 'active' && <span className={own.status}>{mission.status === 'complete' ? 'Completed' : 'Paused'}</span>}
+          {mission.doneWhen && <p className={own.doneWhen}>Done when: {mission.doneWhen}</p>}
+          {mission.targetDay && <p className={own.doneWhen}>By {formatShortDay(mission.targetDay)}</p>}
+        </div>
+      )}
 
-      <header className={own.header}>
-        {mission.status !== 'active' && (
-          <span className={own.status}>{mission.status === 'complete' ? 'Completed' : 'Paused'}</span>
-        )}
-        <h1 className={own.title}>{mission.title}</h1>
-        {mission.doneWhen && <p className={own.doneWhen}>Done when: {mission.doneWhen}</p>}
-        {mission.targetDay && <p className={own.doneWhen}>By {formatShortDay(mission.targetDay)}</p>}
-      </header>
-
-      <section className={own.progress} aria-label="Progress">
+      <section className={own.progressCard} aria-label="Progress">
         <GoalProgressBar progress={goalProgress(mission, actions)} large />
+        <p className={own.statLine}>
+          {[
+            `${stats.done} ${stats.done === 1 ? 'step' : 'steps'} done`,
+            stats.focusMs >= 60_000 ? `${formatDuration(stats.focusMs)} focused` : undefined,
+            stats.lastWorkedAt ? `last worked ${relativeDay(dayKey(new Date(stats.lastWorkedAt)), day).toLowerCase()}` : undefined,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
         {mission.measure ? (
           <button type="button" className={own.progressButton} onClick={() => setUpdating(true)}>
             Update progress
@@ -94,21 +98,6 @@ export function Mission() {
           </button>
         )}
       </section>
-
-      <dl className={own.stats}>
-        <div>
-          <dt>done</dt>
-          <dd>{stats.done}</dd>
-        </div>
-        <div>
-          <dt>focused</dt>
-          <dd>{stats.focusMs >= 60_000 ? formatDuration(stats.focusMs) : '0 min'}</dd>
-        </div>
-        <div>
-          <dt>last worked</dt>
-          <dd>{stats.lastWorkedAt ? capitalise(relativeDay(dayKey(new Date(stats.lastWorkedAt)), day)) : '—'}</dd>
-        </div>
-      </dl>
 
       <section aria-labelledby="next-heading" className={own.section}>
         <h2 id="next-heading" className={own.label}>
@@ -147,7 +136,12 @@ export function Mission() {
       </section>
 
       {(rest.length > 0 || next) && (
-        <section aria-label="Other steps" className={own.section}>
+        <section aria-labelledby="also-heading" className={own.section}>
+          {rest.length > 0 && (
+            <h2 id="also-heading" className={own.label}>
+              After that
+            </h2>
+          )}
           {rest.length > 0 && (
             <ul className={own.list}>
               {rest.map((a) => (
@@ -232,13 +226,11 @@ function NextTitle({ action }: { action: Action }) {
   return (
     <button type="button" className={own.nextTitle} onClick={() => openAction(action.id)}>
       {action.title}
-      {action.estimateMinutes && <span className={own.nextMeta}>{action.estimateMinutes} min</span>}
+      <span className={own.nextMeta}>
+        {[action.estimateMinutes ? `${action.estimateMinutes} min` : undefined, action.smaller ? `Okay day: ${action.smaller}` : undefined].filter(Boolean).join(' · ')}
+      </span>
     </button>
   );
-}
-
-function capitalise(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // ── Edit ────────────────────────────────────────────────────────────────────
@@ -254,6 +246,7 @@ function EditMissionSheet({
   onClose: () => void;
   onDeleted: () => void;
 }) {
+  const undo = useUndo();
   const [title, setTitle] = useState(mission.title);
   const [doneWhen, setDoneWhen] = useState(mission.doneWhen ?? '');
   const [targetDay, setTargetDay] = useState(mission.targetDay ?? '');
@@ -350,7 +343,8 @@ function EditMissionSheet({
               setConfirmDelete(true);
               return;
             }
-            await deleteMission(mission.id);
+            const linked = await deleteMission(mission.id);
+            undo.show('Goal deleted', () => restoreMission(mission.id, linked));
             onClose();
             onDeleted();
           }}

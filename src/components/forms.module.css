@@ -10,6 +10,8 @@
 .input {
   width: 100%;
   height: 52px;
+  /* Never squeezed when a sheet's content is taller than the screen. */
+  flex: none;
   border-radius: var(--radius-md);
   border: 1px solid var(--hairline);
   background: var(--canvas);
@@ -105,6 +107,7 @@
 }
 
 .moreLink {
+  text-align: left;
   align-self: flex-start;
   min-height: var(--touch-min);
   font-size: 15px;
@@ -116,4 +119,12 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.moreHint {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-muted);
 }

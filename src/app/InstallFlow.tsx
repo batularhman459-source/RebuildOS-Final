@@ -24,8 +24,11 @@ export function InstallFlow() {
 
   return (
     <Sheet open={show} onClose={() => void markInstallPromptShown()} label="Add RebuildOS to your home screen">
-      <h2 className={forms.title}>Put RebuildOS on your home screen</h2>
-      <p className={styles.text}>It opens like a normal app, works offline, and keeps your progress safe on this phone.</p>
+      <h2 className={forms.title}>Keep your sky safe</h2>
+      <p className={styles.text}>
+        Safari can clear data from websites you haven’t opened for a while. On your home screen, RebuildOS is an app: your stars stay, it opens
+        faster and works offline.
+      </p>
       <InstallSteps />
       <button type="button" className={styles.later} onClick={() => void markInstallPromptShown()}>
         Maybe later

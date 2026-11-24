@@ -49,6 +49,11 @@ export async function deleteHabit(id: string): Promise<void> {
   await db.habits.update(id, { deletedAt: now(), updatedAt: now() });
 }
 
+/** Undo a delete. */
+export async function restoreHabit(id: string): Promise<void> {
+  await db.habits.update(id, { deletedAt: undefined, updatedAt: now() });
+}
+
 /** Tick or untick a habit for a day. */
 export async function toggleHabit(habitId: string, day: DayKey): Promise<void> {
   const id = checkId(habitId, day);

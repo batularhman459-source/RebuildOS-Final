@@ -114,3 +114,10 @@
   font-weight: 600;
   color: var(--on-stage-secondary);
 }
+
+.undo {
+  min-height: var(--touch-min);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-stage-muted);
+}

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDay } from '../app/day';
 import { useSheets } from '../app/sheets';
 import { startupReady } from '../app/startup';
+import { useNav } from '../app/nav';
 import { weekReviewDue } from '../core/week';
 import { getFocusGoalId, getWeekReviews } from '../data/week';
 import { ActionRow } from '../components/ActionRow';
@@ -20,7 +21,10 @@ import { addAction, completeAction, reopenAction } from '../data/actions';
 import { getDayRecord } from '../data/days';
 import { activeDays } from '../core/progress';
 import { toggleHabit } from '../data/habits';
-import { acceptSuggestion, checkIn, markCounted, recordSmallWin, swapMain } from '../data/checkin';
+import { backupNudgeDue, dismissBackupNudge, getBackupNudgeInputs } from '../data/safety';
+import { saveBackup } from '../data/backup';
+import { acceptSuggestion, checkIn, markCounted, recordSmallWin, swapMain, undoDone, type DoneInfo } from '../data/checkin';
+import { useUndo } from '../app/undo';
 import { doneThisWeek, isDoneOn, showsToday, weekStart } from '../core/habits';
 import { Icon } from '../components/Icon';
 import { reopenDay } from '../data/closeDay';
@@ -68,12 +72,26 @@ export function Today() {
     const reviews = await getWeekReviews();
     return { due: weekReviewDue(day, new Set(reviews.map((r) => r.week))), focus: await getFocusGoalId(day) };
   }, [day]);
-  const dayNumber = useLiveQuery(async () => {
-    const [all, sessions, checks, days] = await Promise.all([db.actions.toArray(), db.focusSessions.toArray(), db.habitChecks.toArray(), db.days.toArray()]);
+  const counts = useLiveQuery(async () => {
+    const [all, sessions, checks, days, nudge] = await Promise.all([
+      db.actions.toArray(),
+      db.focusSessions.toArray(),
+      db.habitChecks.toArray(),
+      db.days.toArray(),
+      getBackupNudgeInputs(),
+    ]);
     const active = activeDays(all, sessions, dayOf, checks, days.filter((d) => d.smallWin).map((d) => d.day));
-    return active.size + (active.has(day) ? 0 : 1);
+    const lastBackupDay = nudge.lastBackup ? dayKey(new Date(nudge.lastBackup)) : undefined;
+    return {
+      dayNumber: active.size + (active.has(day) ? 0 : 1),
+      stars: active.size,
+      backupDue: backupNudgeDue(active.size, lastBackupDay, nudge.dismissed, day),
+    };
   }, [day]);
+  const dayNumber = counts?.dayNumber;
   const navigate = useNavigate();
+  const nav = useNav();
+  const undo = useUndo();
   const record = useLiveQuery(async () => (await getDayRecord(day)) ?? null, [day]);
   const small = record?.mode === 'small';
   const feeling = record?.feeling;
@@ -95,9 +113,14 @@ export function Today() {
     };
   }, [record, closed, navigate]);
 
-  /** After the main thing (or its smaller version) is done: the day counts, once. */
-  async function counted() {
-    if (await markCounted(day)) navigate('/done');
+  /**
+   * After the main thing (or its smaller version) is done: the day counts, once (with
+   * Undo on Day counted). If it already counted today, an Undo bar is enough.
+   */
+  async function counted(done?: Omit<DoneInfo, 'counted'>) {
+    const first = await markCounted(day);
+    if (first) navigate('/done', { state: done ? { done: { ...done, counted: true } } : undefined });
+    else if (done) undo.show('Marked as done', () => undoDone(day, { ...done, counted: false }));
   }
 
   const normalView = actions ? todayView(actions, day, dayOf) : undefined;
@@ -163,9 +186,10 @@ export function Today() {
               canSwap={suggestions.length > 0}
               onSwap={() => void swapMain(day)}
               onDone={async () => {
-                if (feeling === 'okay') await recordSmallWin(day, view.main!.id, view.main!.smaller ?? view.main!.title);
-                else await completeAction(view.main!.id);
-                await counted();
+                const id = view.main!.id;
+                if (feeling === 'okay') await recordSmallWin(day, id, view.main!.smaller ?? view.main!.title);
+                else await completeAction(id);
+                await counted({ actionId: id, kind: feeling === 'okay' ? 'smallWin' : 'complete' });
               }}
             />
           ) : (
@@ -188,6 +212,21 @@ export function Today() {
             <span className={styles.weekTitle}>Your week, in 2 minutes</span>
             <Icon name="chevron" size={16} />
           </button>
+        )}
+        {counts?.backupDue && !small && (
+          <div className={styles.backupCard}>
+            <p className={styles.backupText}>
+              <strong>Back up your sky.</strong> {counts.stars} stars live only on this phone.
+            </p>
+            <div className={styles.backupButtons}>
+              <button type="button" className={styles.backupPrimary} onClick={() => void saveBackup()}>
+                Save a backup
+              </button>
+              <button type="button" className={styles.backupLater} onClick={() => void dismissBackupNudge(day)}>
+                Not now
+              </button>
+            </div>
+          </div>
         )}
         {todaysHabits.length > 0 && (
           <ul className={styles.habitChips} aria-label="Habits today">
@@ -233,8 +272,8 @@ export function Today() {
                 Edit my minimum
               </button>
             )}
-            <button type="button" className={styles.extraLink} onClick={() => navigate(`/day/${day}`)}>
-              <Icon name="sparkle" size={15} />
+            <button type="button" className={styles.extraLink} onClick={() => nav.go(`/day/${day}`)}>
+              <Icon name="pen" size={15} />
               Journal
             </button>
           </div>

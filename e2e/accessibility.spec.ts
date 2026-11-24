@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { addFirstAction, changeFeeling, openApp, openPlan, quickAdd, openDetails } from './helpers';
+import { addFirstAction, changeFeeling, openApp, openPlan, quickAdd, openDetails, countedHeading, dismissInstallPrompt } from './helpers';
 
 /** Automated accessibility checks (axe) on every screen. Fails on serious or critical issues. */
 
@@ -55,7 +55,7 @@ test('screens have no serious accessibility issues', async ({ page }) => {
   await page.getByRole('button', { name: 'Finish' }).click();
   await check(page, 'Focus finished');
   await page.getByRole('button', { name: 'More to do' }).click();
-  await page.getByRole('button', { name: 'Maybe later' }).click();
+  await dismissInstallPrompt(page);
 
   await page.goto('/minimum');
   await check(page, 'My minimum day');
@@ -82,12 +82,14 @@ test('the daily check-in, a rough day and Day counted have no serious accessibil
   await page.getByRole('button', { name: /^Rough/ }).click();
   await check(page, 'Today (rough day)');
   for (const name of ['Write landing page copy', '10-minute walk', 'Clear your desk']) await page.getByRole('button', { name }).click();
-  await expect(page.getByRole('heading', { name: /^Day \d+ counted\.$/ })).toBeVisible();
+  await expect(countedHeading(page)).toBeVisible();
   await page.waitForTimeout(800);
   await check(page, 'Day counted');
   await page.getByRole('button', { name: 'Add it to your sky' }).click();
   await check(page, 'Sky');
   await page.getByRole('link', { name: 'Today' }).click();
+  await page.waitForTimeout(400);
+  await dismissInstallPrompt(page);
   await changeFeeling(page, 'Okay');
   await check(page, 'Today (okay day)');
 
@@ -100,7 +102,7 @@ test('the daily check-in, a rough day and Day counted have no serious accessibil
   await check(page, 'Weekly check-in: next week');
 });
 
-test.describe('dark mode', () => {
+test.describe('phone in dark mode', () => {
   test.use({ colorScheme: 'dark' });
 
   test('light screens have no serious accessibility issues in dark mode', async ({ page }) => {
@@ -121,16 +123,13 @@ test.describe('dark mode', () => {
     await check(page, 'Settings (dark)');
   });
 
-  test('Appearance can force light or dark', async ({ page }) => {
-    await openApp(page, '/settings');
-    const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(await bg()).toBe('rgb(26, 25, 24)');
-    await page.getByRole('radio', { name: 'Light' }).click();
-    expect(await bg()).toBe('rgb(247, 246, 244)');
-    await page.reload();
-    expect(await bg()).toBe('rgb(247, 246, 244)');
-    await page.getByRole('radio', { name: 'Automatic' }).click();
-    expect(await bg()).toBe('rgb(26, 25, 24)');
+  test('the app is one dark design, whatever the phone is set to', async ({ browser }) => {
+    for (const colorScheme of ['light', 'dark'] as const) {
+      const page = await (await browser.newContext({ colorScheme })).newPage();
+      await openApp(page, '/settings');
+      expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(18, 17, 16)');
+      await page.context().close();
+    }
   });
 });
 

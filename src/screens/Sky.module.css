@@ -53,7 +53,7 @@
 
 .number {
   font-family: var(--font-display);
-  font-size: 56px;
+  font-size: clamp(44px, 7vh, 56px);
   font-weight: 300;
   letter-spacing: -0.06em;
   line-height: 1;
@@ -70,7 +70,7 @@
 .graph {
   position: relative;
   flex: 1;
-  min-height: 220px;
+  min-height: 150px;
   margin-top: 16px;
   touch-action: none;
   cursor: grab;
@@ -185,4 +185,35 @@
   place-items: center;
   background: var(--on-stage-control);
   color: var(--on-stage);
+}
+
+/* Short screens (iPhone SE, mini): tighter text so the sky and its buttons fit above the tab bar. */
+@media (max-height: 700px) {
+  .content {
+    padding-top: calc(36px + var(--safe-top));
+  }
+  .lead {
+    display: none;
+  }
+  .graph {
+    margin-top: 8px;
+  }
+}
+
+.share {
+  right: 46px;
+}
+
+.month {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--on-stage-muted);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 400ms var(--ease);
 }

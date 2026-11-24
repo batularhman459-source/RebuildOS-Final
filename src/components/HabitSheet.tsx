@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useId, useState } from 'react';
 import { db } from '../data/db';
-import { deleteHabit, setHabitPaused, updateHabit } from '../data/habits';
+import { deleteHabit, restoreHabit, setHabitPaused, updateHabit } from '../data/habits';
+import { useUndo } from '../app/undo';
 import { MissionPicker } from './MissionPicker';
 import { RepeatPicker } from './RepeatPicker';
 import { Sheet } from './Sheet';
@@ -14,6 +15,7 @@ interface HabitSheetProps {
 
 /** Edit a habit: name, how often, goal; pause or delete. */
 export function HabitSheet({ habitId, onClose }: HabitSheetProps) {
+  const undo = useUndo();
   const habit = useLiveQuery(() => (habitId ? db.habits.get(habitId) : undefined), [habitId]);
   const [title, setTitle] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -77,6 +79,7 @@ export function HabitSheet({ habitId, onClose }: HabitSheetProps) {
                   return;
                 }
                 await deleteHabit(habit.id);
+                undo.show('Habit deleted', () => restoreHabit(habit.id));
                 onClose();
               }}
             >

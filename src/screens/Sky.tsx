@@ -1,20 +1,20 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useNav } from '../app/nav';
 import { useDay } from '../app/day';
-import { Icon } from '../components/Icon';
-import { Star } from '../components/Star';
 import { dayKey } from '../core/day';
 import { activeDays } from '../core/progress';
-import { buildSky, nearestNode, neighbours, SKY_REST, STAR_SIZE, stepSky, type Sky as SkyModel, type StarKind } from '../core/sky';
+import { buildSky, monthCentres, nearestNode, neighbours, SKY_REST, STAR_SIZE, stepSky, type Sky as SkyModel, type StarKind } from '../core/sky';
+import { APP_LOCALE } from '../core/locale';
+import { shareSky } from '../data/shareSky';
 import type { DayKey, Feeling } from '../core/types';
-import { weekReviewDue } from '../core/week';
 import { db } from '../data/db';
-import { getWeekReviews } from '../data/week';
 import styles from './Sky.module.css';
 
 const dayOf = (t: number) => dayKey(new Date(t));
+const monthName = new Intl.DateTimeFormat(APP_LOCALE, { month: 'short' });
 /** Layout steps per second: calm, and the same on 60 Hz and 120 Hz screens. */
 const STEP_MS = 1000 / 30;
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -34,20 +34,19 @@ const STAR_PATH = 'M12 2C12.6 8.2 15.8 11.4 22 12C15.8 12.6 12.6 15.8 12 22C11.4
  */
 export function Sky() {
   const today = useDay();
-  const navigate = useNavigate();
+  const current = useRef<{ sky: SkyModel; width: number; height: number } | null>(null);
   const data = useLiveQuery(async () => {
-    const [actions, sessions, checks, days, reviews] = await Promise.all([
+    const [actions, sessions, checks, days] = await Promise.all([
       db.actions.toArray(),
       db.focusSessions.toArray(),
       db.habitChecks.toArray(),
       db.days.toArray(),
-      getWeekReviews(),
     ]);
     const wins = days.filter((d) => d.smallWin).map((d) => d.day);
     const active = activeDays(actions, sessions, dayOf, checks, wins);
     const feelings = new Map<DayKey, Feeling>(days.filter((d) => d.feeling).map((d) => [d.day, d.feeling!]));
     const since = [...active, ...days.map((d) => d.day)].sort()[0] ?? today;
-    return { active, feelings, since, weekDue: weekReviewDue(today, new Set(reviews.map((r) => r.week))) };
+    return { active, feelings, since };
   }, [today]);
 
   return (
@@ -58,6 +57,19 @@ export function Sky() {
         {data && (
           <>
             <motion.header className={styles.header} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+              <button
+                type="button"
+                className={`${styles.gear} ${styles.share}`}
+                aria-label="Share your sky"
+                onClick={() => {
+                  const s = current.current;
+                  if (s) void shareSky(s.sky, data.active.size, s.width, s.height);
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
+                </svg>
+              </button>
               <Link to="/settings" className={styles.gear} aria-label="Settings">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
@@ -69,10 +81,16 @@ export function Sky() {
                 <span className={styles.number}>{data.active.size}</span>
                 <span>{data.active.size === 1 ? 'day counted' : 'days counted'}</span>
               </p>
-              <p className={styles.lead}>Every day that counts adds a star. None are ever taken away.</p>
+              <p className={styles.lead}>
+                {data.active.size === 0
+                  ? 'Your first star appears the first time a day counts.'
+                  : data.active.size === 1
+                    ? 'Your sky starts here. Every day that counts adds a star.'
+                    : 'Every day that counts adds a star. None are ever taken away.'}
+              </p>
             </motion.header>
 
-            <SkyGraph today={today} active={data.active} feelings={data.feelings} since={data.since} />
+            <SkyGraph today={today} active={data.active} feelings={data.feelings} since={data.since} onReady={(v) => (current.current = v)} />
 
             <p className={styles.legend}>
               <span>Tap a star to open that day · drag to move it</span>
@@ -80,13 +98,6 @@ export function Sky() {
 
             <div className={styles.spacer} />
 
-            {data.weekDue && (
-              <button type="button" className={styles.week} onClick={() => navigate('/week')}>
-                <Star size={16} variant="gradient" />
-                <span>Your week, in 2 minutes</span>
-                <Icon name="chevron" size={16} />
-              </button>
-            )}
             <div className={styles.links}>
               <Link to="/journal" className={styles.linkButton}>
                 Journal
@@ -106,20 +117,22 @@ export function Sky() {
 }
 
 interface GraphProps {
+  onReady: (v: { sky: SkyModel; width: number; height: number }) => void;
   today: DayKey;
   active: ReadonlySet<DayKey>;
   feelings: ReadonlyMap<DayKey, Feeling>;
   since: DayKey;
 }
 
-function SkyGraph({ today, active, feelings, since }: GraphProps) {
+function SkyGraph({ today, active, feelings, since, onReady }: GraphProps) {
   const box = useRef<HTMLDivElement>(null);
   const stars = useRef<(HTMLSpanElement | null)[]>([]);
   const lines = useRef<(SVGLineElement | null)[]>([]);
+  const labels = useRef<Map<string, HTMLSpanElement | null>>(new Map());
   const [size, setSize] = useState({ width: 0, height: 0 });
   const { width, height: HEIGHT } = size;
   const sim = useRef({ alpha: 1, raf: 0, held: undefined as number | undefined, downAt: 0, downX: 0, downY: 0, moved: false });
-  const navigate = useNavigate();
+  const nav = useNav();
   const key = [...active].sort().join(',');
 
   useEffect(() => {
@@ -145,6 +158,12 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
       el.style.transform = `translate3d(${n.x - size / 2}px, ${n.y - size / 2}px, 0)`;
       el.style.opacity = lit && !lit.has(i) ? '0.3' : '1';
     });
+    for (const [key, c] of monthCentres(s)) {
+      const el = labels.current.get(key);
+      if (!el) continue;
+      el.style.transform = `translate3d(${Math.round(c.x)}px, ${Math.round(c.y - 34)}px, 0) translateX(-50%)`;
+      el.style.opacity = lit ? '0.15' : c.count >= 3 ? '1' : '0';
+    }
     s.links.forEach(([a, b], i) => {
       const el = lines.current[i];
       if (!el) return;
@@ -183,6 +202,10 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
     };
     sim.current.raf = requestAnimationFrame(frame);
   }
+
+  useEffect(() => {
+    if (sky) onReady({ sky, width, height: HEIGHT });
+  }, [sky, width, HEIGHT, onReady]);
 
   useEffect(() => {
     if (!sky) return;
@@ -240,7 +263,7 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
     if (!sim.current.moved && performance.now() - sim.current.downAt < 350) {
       node.fixed = false;
       sim.current.held = undefined;
-      navigate(`/day/${node.day}`);
+      nav.go(`/day/${node.day}`);
       return;
     }
     sky.nodes[sim.current.held]!.fixed = false;
@@ -267,6 +290,11 @@ function SkyGraph({ today, active, feelings, since }: GraphProps) {
               <line key={i} ref={(el) => void (lines.current[i] = el)} strokeWidth={1} stroke="rgba(255,227,204,0.18)" />
             ))}
           </svg>
+          {[...new Set(sky.nodes.filter((n) => n.kind !== 'none').map((n) => n.day.slice(0, 7)))].map((m) => (
+            <span key={m} ref={(el) => void labels.current.set(m, el)} className={styles.month} aria-hidden="true">
+              {monthName.format(new Date(`${m}-15T12:00:00`))}
+            </span>
+          ))}
           {sky.nodes.map((n, i) => {
             const size = STAR_SIZE[n.kind] + (n.today && n.kind !== 'none' ? 8 : 0);
             return (

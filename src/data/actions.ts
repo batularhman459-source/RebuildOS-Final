@@ -36,6 +36,8 @@ export interface NewAction {
   time?: string;
   estimateMinutes?: number;
   missionId?: string;
+  /** The okay-day version. */
+  smaller?: string;
 }
 
 /** The stored fields for a When, relative to today. A date that has arrived means Today. */
@@ -61,6 +63,7 @@ export async function addAction(input: NewAction): Promise<string> {
       isMain: false,
       estimateMinutes: input.estimateMinutes,
       missionId: input.missionId,
+      smaller: input.smaller?.trim() || undefined,
       createdAt: t,
       updatedAt: t,
       sortOrder: t,
@@ -140,6 +143,14 @@ export async function makeMain(id: string): Promise<void> {
 export async function deleteAction(id: string): Promise<void> {
   await db.transaction('rw', db.actions, async () => {
     await db.actions.update(id, { deletedAt: now(), isMain: false, updatedAt: now() });
+    await ensureMain();
+  });
+}
+
+/** Undo a delete. */
+export async function restoreAction(id: string): Promise<void> {
+  await db.transaction('rw', db.actions, async () => {
+    await db.actions.update(id, { deletedAt: undefined, updatedAt: now() });
     await ensureMain();
   });
 }

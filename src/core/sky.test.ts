@@ -77,3 +77,37 @@ describe('stepSky', () => {
     expect([...neighbours(sky, 1)].sort()).toEqual([0, 1, 2]);
   });
 });
+
+describe('constellations', () => {
+  it('links stars within a month and bridges months once', () => {
+    const active = new Set(['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']);
+    const sky = buildSky({ today: '2026-11-02', since: '2026-10-30', active, feelings: new Map() }, W, H, rand);
+    // Chain 30→31 (October), 31→1 (the one bridge), 1→2 (November); no other links.
+    expect(sky.links).toEqual([
+      [0, 1],
+      [1, 2],
+      [2, 3],
+    ]);
+  });
+
+  it('finds each month’s centre', async () => {
+    const { monthCentres } = await import('./sky');
+    const sky = buildSky({ today: '2026-11-02', since: '2026-10-31', active: new Set(['2026-10-31', '2026-11-01', '2026-11-02']), feelings: new Map() }, W, H, rand);
+    sky.nodes[0]!.x = 10;
+    sky.nodes[1]!.x = 100;
+    sky.nodes[2]!.x = 200;
+    const c = monthCentres(sky);
+    expect(c.get('2026-10')?.x).toBe(10);
+    expect(c.get('2026-11')?.x).toBe(150);
+    expect(c.get('2026-11')?.count).toBe(2);
+  });
+});
+
+describe('milestones', () => {
+  it('celebrates the first star and a few round numbers, nothing else', async () => {
+    const { milestoneFor } = await import('./milestones');
+    expect(milestoneFor(1)?.title).toBe('Your first star.');
+    expect(milestoneFor(7)?.title).toBe('Seven stars.');
+    expect(milestoneFor(8)).toBeUndefined();
+  });
+});

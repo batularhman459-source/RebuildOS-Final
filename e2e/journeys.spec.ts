@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, openPlan, quickAdd, seed, stageTitle, openDetails } from './helpers';
+import { addFirstAction, alsoToday, changeFeeling, checkInIfAsked, keepGoing, openApp, openPlan, quickAdd, seed, stageTitle, openDetails, countedHeading, dismissInstallPrompt } from './helpers';
 
 /** The five V1 journeys from docs/product-brief.md §5, plus Close the day, backup and install. */
 
@@ -16,11 +16,14 @@ test('1 · first run: one Action, Focus, done', async ({ page }) => {
   await page.getByRole('button', { name: 'Finish' }).click();
   await expect(page.getByText('Is this task done?')).toBeVisible();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
-  await keepGoing(page);
+  await expect(countedHeading(page)).toHaveText('Your first star.');
+  await page.getByRole('button', { name: 'Add it to your sky' }).click();
+  await page.getByRole('link', { name: 'Today' }).click();
 
-  // The first finished Focus session suggests the home screen, once.
+  // The day counting suggests the home screen (it keeps the sky safe), once, back on Today.
   const install = page.getByRole('dialog', { name: 'Add RebuildOS to your home screen' });
   await expect(install).toBeVisible();
+  await expect(install).toContainText('Keep your sky safe');
   await install.getByRole('button', { name: 'Maybe later' }).click();
   await expect(install).toBeHidden();
 
@@ -146,6 +149,7 @@ test('habits: your own, every day or some days a week', async ({ page }) => {
   await page.getByRole('button', { name: 'Add a task' }).last().click();
   let dialog = page.getByRole('dialog', { name: 'New task' });
   await dialog.getByPlaceholder('What do you need to do?').fill('Read for 20 minutes');
+  await dialog.getByRole('button', { name: /^More options/ }).click();
   await dialog.getByRole('button', { name: 'Every day' }).click();
   await page.getByRole('dialog', { name: 'New habit' }).getByRole('button', { name: 'Add habit' }).click();
 
@@ -236,10 +240,12 @@ test('close for today from Day counted, and open it again', async ({ page }) => 
   await openApp(page);
   await addFirstAction(page, 'Write landing page copy');
   await page.getByRole('button', { name: 'Done', exact: true }).click();
-  await expect(page.getByRole('heading', { name: /^Day \d+ counted\.$/ })).toBeVisible();
+  await expect(countedHeading(page)).toBeVisible();
   await page.getByRole('button', { name: 'Close for today' }).click();
   await expect(page).toHaveURL(/\/sky$/);
   await page.getByRole('link', { name: 'Today' }).click();
+  await page.waitForTimeout(400);
+  await dismissInstallPrompt(page);
   await expect(stageTitle(page)).toHaveText('Done for today.');
   // A closed day doesn't ask "How's today?" again.
   await page.reload();
@@ -334,6 +340,7 @@ test('dated tasks: upcoming, then on Today on their day, ordered by time', async
   await page.getByRole('button', { name: 'Add a task' }).last().click();
   const dialog = page.getByRole('dialog', { name: 'New task' });
   await dialog.getByPlaceholder('What do you need to do?').fill('Gym: legs');
+  await dialog.getByRole('button', { name: /^More options/ }).click();
   await dialog.getByRole('button', { name: 'Tomorrow' }).click();
   await dialog.getByLabel(/^Time/).fill('18:00');
   await dialog.getByRole('button', { name: 'Add task' }).click();
@@ -486,8 +493,70 @@ test('settings: version, appearance and your data in one place', async ({ page }
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
   await page.getByRole('link', { name: 'Settings' }).click();
   await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
-  await expect(page.getByRole('radiogroup', { name: 'Appearance' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save a backup' })).toBeVisible();
   await expect(page.getByText('Version', { exact: true })).toBeVisible();
+});
+
+test('undo: a Done tapped by mistake, and deleting a task', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Write landing page copy');
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  // The very first star gets its own moment.
+  await expect(page.getByRole('heading', { name: 'Your first star.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Tapped Done by mistake? Undo' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.waitForTimeout(400);
+  await dismissInstallPrompt(page);
+  await expect(stageTitle(page)).toHaveText('Write landing page copy');
+
+  // Delete, then bring it back.
+  await quickAdd(page, 'Email the tutor');
+  await page.getByRole('button', { name: 'Email the tutor', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Edit task' }).getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByText('Task deleted')).toBeVisible();
+  await expect(alsoToday(page)).not.toContainText('Email the tutor');
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(alsoToday(page)).toContainText('Email the tutor');
+});
+
+test('adding a task is one quick step; the rest waits behind More options', async ({ page }) => {
+  await openApp(page);
+  await addFirstAction(page, 'Write landing page copy');
+  await page.getByRole('button', { name: 'Add a task' }).last().click();
+  const dialog = page.getByRole('dialog', { name: 'New task' });
+  await expect(dialog.getByRole('button', { name: 'Tomorrow' })).toBeHidden();
+  await dialog.getByPlaceholder('What do you need to do?').fill('Run 5 km');
+  await dialog.getByRole('button', { name: /^More options/ }).click();
+  await dialog.getByLabel('Smaller version for okay days').fill('Run 2 km');
+  await dialog.getByRole('button', { name: 'Add task' }).click();
+  await page.getByRole('button', { name: 'Run 5 km', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Edit task' }).getByLabel('Smaller version for okay days')).toHaveValue('Run 2 km');
+});
+
+test('settings: data safety, last backup and feedback', async ({ page }) => {
+  await openApp(page, '/settings');
+  await expect(page.getByText('Not on your home screen yet')).toBeVisible();
+  await expect(page.getByText('Last backup: never')).toBeVisible();
+  await page.getByRole('button', { name: 'Send feedback' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Send feedback' });
+  await sheet.getByLabel('Your feedback').fill('The sky is great.');
+  await expect(sheet.getByRole('button', { name: 'Send' })).toBeEnabled();
+});
+
+test('the sky can be shared and shows its months', async ({ page }) => {
+  await openApp(page);
+  await seed(page, `
+    const t = Date.now();
+    for (let i = 1; i <= 40; i++) {
+      if (i % 5 === 0) continue;
+      stores.actions.put({ id: 'p' + i, title: 'Past ' + i, state: 'done', isMain: false, sortOrder: i, completedAt: t - i * 86400000, createdAt: t, updatedAt: t });
+    }
+  `);
+  await page.reload();
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sky' }).click();
+  await expect(page.getByRole('button', { name: 'Share your sky' })).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Share your sky' }).click();
+  expect((await download).suggestedFilename()).toBe('my-sky.png');
 });
 

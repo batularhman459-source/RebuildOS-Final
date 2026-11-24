@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Sheet } from '../components/Sheet';
 import { Stage } from '../components/Stage';
@@ -18,11 +18,10 @@ import {
 } from '../core/focus';
 import type { Action, FocusSession } from '../core/types';
 import { completeAction } from '../data/actions';
-import { markCounted, recordSmallWin } from '../data/checkin';
+import { markCounted, recordSmallWin, type DoneInfo } from '../data/checkin';
 import { dayKey } from '../core/day';
 import { db } from '../data/db';
 import { adjustSession, finishFocus, getActiveSession, pauseFocus, resumeFocus, setTarget } from '../data/focus';
-import { markInstallPromptDue } from '../data/install';
 import { useNow } from '../data/useNow';
 import { useWakeLock } from '../data/useWakeLock';
 import styles from './Focus.module.css';
@@ -47,7 +46,12 @@ export function Focus() {
   const [finishing, setFinishing] = useState(false);
 
   if (finished)
-    return <FinishView finished={finished} onDone={(counted) => navigate(counted ? '/done' : '/', { replace: true })} />;
+    return (
+      <FinishView
+        finished={finished}
+        onDone={(done) => navigate(done?.counted ? '/done' : '/', { replace: true, state: done?.counted ? { done } : undefined })}
+      />
+    );
   if (current === undefined || finishing) return <div className={styles.root} />;
   if (current === null) return <Navigate to="/" replace />;
   const { session, action } = current;
@@ -191,12 +195,8 @@ function RunningView({ session, action, onLeave, onFinish }: RunningProps) {
 
 // ── Finished ────────────────────────────────────────────────────────────────
 
-function FinishView({ finished, onDone }: { finished: Finished; onDone: (counted: boolean) => void }) {
+function FinishView({ finished, onDone }: { finished: Finished; onDone: (done?: DoneInfo) => void }) {
   const { session, action } = finished;
-  // The first finished session is a good moment to suggest the home screen (shown back on Today).
-  useEffect(() => {
-    void markInstallPromptDue();
-  }, []);
   const [ms, setMs] = useState(() => elapsedMs(session.segments, session.finishedAt ?? Date.now()));
   const [checkedLong, setCheckedLong] = useState(ms < LONG_SESSION_MS);
 
@@ -205,7 +205,7 @@ function FinishView({ finished, onDone }: { finished: Finished; onDone: (counted
     // The smaller version done: an okay-day win; the task itself stays open for a better day.
     if (session.smaller) await recordSmallWin(day, action.id, action.smaller ?? action.title);
     else await completeAction(action.id);
-    onDone(await markCounted(day));
+    onDone({ actionId: action.id, kind: session.smaller ? 'smallWin' : 'complete', counted: await markCounted(day) });
   }
 
   return (
@@ -242,7 +242,7 @@ function FinishView({ finished, onDone }: { finished: Finished; onDone: (counted
             <button type="button" className={styles.finishPrimary} onClick={() => void done()}>
               Done
             </button>
-            <button type="button" className={styles.finishSecondary} onClick={() => onDone(false)}>
+            <button type="button" className={styles.finishSecondary} onClick={() => onDone()}>
               More to do
             </button>
             <p className={styles.note}>Your time is saved either way.</p>

@@ -59,12 +59,23 @@ export async function setMissionStatus(id: string, status: MissionStatus): Promi
 }
 
 /** Soft-delete a Mission. Its Actions are kept and simply no longer belong to it. */
-export async function deleteMission(id: string): Promise<void> {
-  await db.transaction('rw', db.missions, db.actions, async () => {
+/** Soft delete. Returns the tasks that were on it, so the delete can be undone. */
+export async function deleteMission(id: string): Promise<string[]> {
+  return db.transaction('rw', db.missions, db.actions, async () => {
     const t = now();
     await db.missions.update(id, { deletedAt: t, updatedAt: t });
     const linked = await db.actions.where('missionId').equals(id).toArray();
     for (const a of linked) await db.actions.update(a.id, { missionId: undefined, updatedAt: t });
+    return linked.map((a) => a.id);
+  });
+}
+
+/** Undo a delete: the goal and its tasks come back together. */
+export async function restoreMission(id: string, actionIds: string[]): Promise<void> {
+  await db.transaction('rw', db.missions, db.actions, async () => {
+    const t = now();
+    await db.missions.update(id, { deletedAt: undefined, updatedAt: t });
+    for (const a of actionIds) await db.actions.update(a, { missionId: id, updatedAt: t });
   });
 }
 

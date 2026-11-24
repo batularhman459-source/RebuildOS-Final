@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { DayProvider } from './app/day';
 import { SheetsProvider } from './app/sheets';
+import { NavProvider } from './app/nav';
+import { UndoProvider } from './app/undo';
 import { InstallFlow } from './app/InstallFlow';
 import { Dock } from './components/Dock';
 import { isRunning } from './core/focus';
@@ -26,12 +28,13 @@ import { Welcome } from './screens/Welcome';
 import { Setup } from './screens/Setup';
 import { needsSetup } from './data/setup';
 import { markStartupReady } from './app/startup';
-import { useDarkMode } from './app/theme';
 import { Today } from './screens/Today';
 import styles from './App.module.css';
 
 /** Full-screen moments hide the dock. */
 const FULL_SCREEN = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done', '/week'];
+
+const HAS_VIEW_TRANSITIONS = typeof document !== 'undefined' && 'startViewTransition' in document;
 
 /** Tabs fade in; opacity only, because a transform would break fixed overlays (Focus, compact bar). */
 function section(pathname: string): string {
@@ -49,7 +52,9 @@ export function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+      <NavProvider>
       <DayProvider>
+        <UndoProvider>
         <SheetsProvider>
           <StartupRouting />
           <InstallFlow />
@@ -57,7 +62,8 @@ export function App() {
             <main className={styles.main}>
               <motion.div
                 key={section(pathname)}
-                initial={{ opacity: 0 }}
+                // Where pages slide with View Transitions, don't also fade them.
+                initial={HAS_VIEW_TRANSITIONS ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
@@ -87,7 +93,9 @@ export function App() {
             {!fullScreen && <Dock />}
           </div>
         </SheetsProvider>
+        </UndoProvider>
       </DayProvider>
+      </NavProvider>
     </MotionConfig>
   );
 }
@@ -125,26 +133,20 @@ function StartupRouting() {
   return null;
 }
 
-/** Screens whose top edge is a dark stage. */
-const DARK_TOP = ['/focus', '/minimum', '/welcome', '/setup', '/checkin', '/done', '/week', '/sky'];
-
 /**
- * Match the phone's status bar area (behind the time and battery) to the top of the
- * current screen, so a dark stage doesn't sit under a light strip.
+ * The phone's status bar area (behind the time and battery) matches the app, which is
+ * dark everywhere.
  */
 function useStatusBarColour(pathname: string) {
-  const { dark: darkMode } = useDarkMode();
   useEffect(() => {
-    const dark = pathname === '/' || DARK_TOP.some((p) => pathname.startsWith(p));
-    const colour = dark ? '#121110' : darkMode ? '#1A1918' : '#F7F6F4';
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) {
       meta = document.createElement('meta');
       meta.name = 'theme-color';
       document.head.appendChild(meta);
     }
-    meta.content = colour;
-  }, [pathname, darkMode]);
+    meta.content = '#121110';
+  }, [pathname]);
 }
 
 /** Goals used to live at /mission/:id. */

@@ -107,3 +107,31 @@
   color: var(--ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-frosted);
+  background: var(--surface);
+}
+
+.statusWarn {
+  border-color: rgba(244, 154, 112, 0.45);
+}
+
+.statusTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.statusWarn .statusTitle {
+  color: var(--apricot-text);
+}
+
+.statusText {
+  font-size: 14px;
+  color: var(--ink-muted);
+}

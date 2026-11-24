@@ -1,9 +1,10 @@
-import { setTheme, useDarkMode, type ThemeChoice } from '../app/theme';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { parseBackup, type Backup } from '../core/backup';
 import { formatShortDay } from '../core/locale';
 import { restoreBackup, saveBackup } from '../data/backup';
 import { isInstalled } from '../data/install';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { lastBackupAt } from '../data/safety';
 import { InstallSteps } from './InstallSteps';
 import { Sheet } from './Sheet';
 import forms from './forms.module.css';
@@ -21,6 +22,7 @@ export function YourData() {
   const [pending, setPending] = useState<Backup | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const installed = isInstalled();
+  const lastBackup = useLiveQuery(async () => (await lastBackupAt()) ?? null, []);
 
   async function exportData() {
     const result = await saveBackup();
@@ -52,7 +54,17 @@ export function YourData() {
       <h2 id="data-heading" className={styles.heading}>
         Your data
       </h2>
-      <p className={styles.caption}>Everything is stored on this phone. A backup keeps it safe if you change phones.</p>
+      <div className={`${styles.status} ${installed ? '' : styles.statusWarn}`}>
+        <p className={styles.statusTitle}>{installed ? 'On your home screen' : 'Not on your home screen yet'}</p>
+        <p className={styles.statusText}>
+          {installed
+            ? 'Your sky is stored on this phone. A backup keeps it if you change or lose your phone.'
+            : 'Safari can clear data from websites you haven’t opened for a while. Add RebuildOS to your home screen so your sky stays.'}
+        </p>
+        <p className={styles.statusText}>
+          Last backup: {lastBackup === undefined ? '…' : lastBackup === null ? 'never' : formatShortDay(isoDay(lastBackup))}
+        </p>
+      </div>
       <div className={styles.list}>
         {!installed && (
           <button type="button" className={styles.row} onClick={() => setInstallOpen(true)}>
@@ -97,31 +109,5 @@ export function YourData() {
         )}
       </Sheet>
     </section>
-  );
-}
-
-const THEME_OPTIONS: { value: ThemeChoice; label: string }[] = [
-  { value: 'system', label: 'Automatic' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-];
-
-/** Light, dark, or follow the phone. */
-export function Appearance() {
-  const { choice } = useDarkMode();
-  return (
-    <div className={styles.appearance}>
-      <h2 id="appearance-heading" className={styles.heading}>
-        Appearance
-      </h2>
-      <div className={styles.segmented} role="radiogroup" aria-labelledby="appearance-heading">
-        {THEME_OPTIONS.map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={choice === o.value} className={styles.segment} onClick={() => setTheme(o.value)}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <p className={styles.caption}>Automatic follows your phone’s setting.</p>
-    </div>
   );
 }

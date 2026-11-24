@@ -130,6 +130,29 @@ export async function markCounted(day: DayKey): Promise<boolean> {
   return true;
 }
 
+/** What "Done" did, so it can be undone. */
+export interface DoneInfo {
+  actionId: string;
+  /** 'complete' = the task was marked done; 'smallWin' = the okay-day version was recorded. */
+  kind: 'complete' | 'smallWin';
+  /** True when this Done made the day count. */
+  counted: boolean;
+}
+
+/** Undo a Done tapped by mistake: the task is back as the main thing and the day as it was. */
+export async function undoDone(day: DayKey, info: DoneInfo): Promise<void> {
+  if (info.kind === 'complete') {
+    await db.transaction('rw', db.actions, async () => {
+      const t = now();
+      for (const m of await db.actions.filter((a) => a.isMain).toArray()) await db.actions.update(m.id, { isMain: false, updatedAt: t });
+      await db.actions.update(info.actionId, { state: 'today', todayDay: day, isMain: true, completedAt: undefined, updatedAt: t });
+    });
+  } else {
+    await patchDay(day, { smallWin: undefined });
+  }
+  if (info.counted) await patchDay(day, { countedAt: undefined });
+}
+
 /** Days with an okay-day win (they count as active). */
 export async function smallWinDays(): Promise<DayKey[]> {
   return (await db.days.toArray()).filter((d) => d.smallWin).map((d) => d.day);

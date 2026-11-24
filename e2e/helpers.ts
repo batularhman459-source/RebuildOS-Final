@@ -70,13 +70,33 @@ export async function changeFeeling(page: Page, feeling: 'Good' | 'Okay' | 'Roug
   await expect(page).not.toHaveURL(/checkin/);
 }
 
+/** The big title on Day counted ("Day 4 counted.", or a milestone like "Your first star."). */
+export function countedHeading(page: Page) {
+  return page.getByRole('region', { name: 'Day counted' }).getByRole('heading', { level: 1 });
+}
+
+/** The home-screen suggestion appears once, back on Today after a day counts. */
+export async function dismissInstallPrompt(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: 'Add RebuildOS to your home screen' });
+  // It appears shortly after Today loads; give it a moment, then close it if it came.
+  const came = await dialog
+    .waitFor({ state: 'visible', timeout: 2500 })
+    .then(() => true)
+    .catch(() => false);
+  if (!came) return;
+  await dialog.getByRole('button', { name: 'Maybe later' }).click();
+  await expect(dialog).toBeHidden();
+}
+
 /** After the day counts: add the star to the sky, then go back to Today. */
 export async function keepGoing(page: Page): Promise<void> {
-  await expect(page.getByRole('heading', { name: /^Day \d+ counted\.$/ })).toBeVisible();
+  await expect(countedHeading(page)).toBeVisible();
   await page.getByRole('button', { name: 'Add it to your sky' }).click();
   await expect(page).toHaveURL(/\/sky$/);
   await page.getByRole('link', { name: 'Today' }).click();
   await expect(page).toHaveURL(/\/$/);
+  await page.waitForTimeout(400);
+  await dismissInstallPrompt(page);
 }
 
 /** Answer "How's today?" when the app asks it. */
@@ -99,7 +119,7 @@ export async function quickAdd(page: Page, title: string, opts: { estimate?: str
   const dialog = page.getByRole('dialog', { name: 'New task' });
   await dialog.getByPlaceholder('What do you need to do?').fill(title);
   if (opts.estimate) {
-    await dialog.getByRole('button', { name: '+ How long it takes' }).click();
+    await dialog.getByRole('button', { name: /^More options/ }).click();
     await dialog.getByRole('button', { name: opts.estimate }).click();
   }
   await dialog.getByRole('button', { name: 'Add task' }).click();

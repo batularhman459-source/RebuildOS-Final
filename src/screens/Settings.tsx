@@ -1,5 +1,6 @@
 import { PageHeader } from '../components/PageHeader';
-import { Appearance, YourData } from '../components/YourData';
+import { YourData } from '../components/YourData';
+import { Feedback } from '../components/Feedback';
 import { Star } from '../components/Star';
 import styles from './Screen.module.css';
 import own from './Settings.module.css';
@@ -13,9 +14,9 @@ export function Settings() {
     <div className={styles.screen}>
       <PageHeader back={{ to: '/sky', label: 'Sky' }} title="Settings" />
 
-      <Appearance />
-
       <YourData />
+
+      <Feedback />
 
       <section className={own.about} aria-labelledby="about-heading">
         <h2 id="about-heading" className={own.heading}>
@@ -23,7 +24,7 @@ export function Settings() {
         </h2>
         <div className={own.card}>
           <div className={own.brand}>
-            <Star size={28} variant="gradient" />
+            <Star size={28} variant="solid" />
             <div>
               <p className={own.name}>RebuildOS</p>
               <p className={own.tagline}>One thing a day. Rough days count too.</p>

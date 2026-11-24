@@ -1,19 +1,24 @@
 /* Design tokens — mirror of DESIGN.md. Change DESIGN.md first, then this file. */
 :root {
-  /* Light (planning) surfaces */
-  --canvas: #f7f6f4;
-  --surface: #ffffff;
-  --surface-muted: #efedea;
-  --surface-frosted: rgba(255, 255, 255, 0.96);
-  --hairline: #e9e7e3;
-  --hairline-frosted: rgba(29, 28, 27, 0.07);
-  --control-outline: #b5b0a9;
+  /*
+   * One dark app (v6): every page sits on the same warm charcoal as the stages,
+   * with soft cards and white text. These names are older than the design (from the
+   * time planning screens were light); they now all describe the dark look.
+   */
+  color-scheme: dark;
+  --canvas: #121110;
+  --surface: #1e1c1b;
+  --surface-muted: #2b2927;
+  --surface-frosted: #23211f;
+  --hairline: #2f2c2a;
+  --hairline-frosted: rgba(255, 255, 255, 0.1);
+  --control-outline: #8a847d;
 
-  /* Text on light */
-  --ink: #1d1c1b;
-  --ink-secondary: #4f4b46;
-  --ink-muted: #6e6a64;
-  --ink-done: #736e68;
+  /* Text */
+  --ink: #f6f4f1;
+  --ink-secondary: #ddd8d2;
+  --ink-muted: #b0aaa3;
+  --ink-done: #948e87;
 
   /* Dark (doing) stages */
   --stage: #121110;
@@ -26,10 +31,10 @@
   --apricot-light: #ffe3cc;
   --apricot-mid: #f49a70;
   --apricot: #ee7d52;
-  --apricot-text: #b4471a;
+  --apricot-text: #f49a70;
 
-  --error: #c2361f;
-  --star-empty: #d9d5cf;
+  --error: #ff7b66;
+  --star-empty: #3d3a36;
 
   /* Type families */
   --font-display: 'Sora Variable', 'Sora', system-ui, -apple-system, sans-serif;
@@ -75,50 +80,4 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
-}
-
-/*
- * Dark mode for the light (planning) screens. Stages are already dark and stay the same.
- * Follows the phone unless the person picked Light or Dark (data-theme on <html>).
- */
-:root {
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-  --canvas: #1a1918;
-  --surface: #242220;
-  --surface-muted: #2e2c29;
-  --surface-frosted: rgba(36, 34, 32, 0.96);
-  --hairline: #34312e;
-  --hairline-frosted: rgba(255, 255, 255, 0.08);
-  --control-outline: #77716a;
-  --ink: #f4f2ef;
-  --ink-secondary: #cfcac3;
-  --ink-muted: #a9a39c;
-  --ink-done: #948e87;
-  --apricot-text: #f49a70;
-  --error: #ff7b66;
-  --star-empty: #45413d;
-  color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --canvas: #1a1918;
-  --surface: #242220;
-  --surface-muted: #2e2c29;
-  --surface-frosted: rgba(36, 34, 32, 0.96);
-  --hairline: #34312e;
-  --hairline-frosted: rgba(255, 255, 255, 0.08);
-  --control-outline: #77716a;
-  --ink: #f4f2ef;
-  --ink-secondary: #cfcac3;
-  --ink-muted: #a9a39c;
-  --ink-done: #948e87;
-  --apricot-text: #f49a70;
-  --error: #ff7b66;
-  --star-empty: #45413d;
-  color-scheme: dark;
 }

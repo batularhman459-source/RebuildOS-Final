@@ -10,7 +10,7 @@
 .scrim {
   position: absolute;
   inset: 0;
-  background: rgba(18, 17, 16, 0.38);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .panel {

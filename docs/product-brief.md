@@ -18,6 +18,10 @@ _Status: V1.1 built, V2 in progress. **The V2 direction below supersedes everyth
 - **Settings** (`/settings`, the gear on the sky): Appearance, your data (backup, restore, add to home screen) and About (what RebuildOS is, version). Sections leave room for reminders and an account later. Details is numbers only.
 - The sky moves at a fixed 30 steps a second (calm on 120 Hz iPhones too), settles in about ten seconds, then stops.
 
+**Beta audit fixes** (see the audit page): one dark design everywhere (no light/dark switch); dark launch screens; the sky fits small iPhones; one back button style, sliding pages and edge-swipe back; adding a task is name + goal with the rest behind “More options”; Undo for Done and deletes; the goal page redone; the first star and milestones (7, 30, 50, 100, 365) get their own moment; each month in the sky is its own constellation with its name; Share your sky as a picture; data safety (home-screen warning and last backup in Settings, a backup reminder on Today once there are 5+ stars, never more than weekly); the home-screen prompt now comes after a day counts and talks about keeping the sky safe; Send feedback in Settings (via the share sheet, no server).
+
+**Waiting on a server (needs the owner's Cloudflare account):** a private usage counter for the beta, and the morning reminder (web push, home-screen app only).
+
 ## V2 direction: "Open it, say how you feel, do the thing"
 
 **Why.** V1.1 worked but felt like every other AI-made planner (goals, tasks, habits, charts), and setting it up took longer than doing the tasks. V2 has one opinion: **planning shouldn't take longer than doing**, and the day should fit how you feel.

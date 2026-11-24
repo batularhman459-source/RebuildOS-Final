@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteAction, makeMain, reopenAction, scheduleAction, updateAction, type When } from '../data/actions';
+import { deleteAction, makeMain, reopenAction, restoreAction, scheduleAction, updateAction, type When } from '../data/actions';
+import { useUndo } from '../app/undo';
 import { useDay } from '../app/day';
 import type { Action } from '../core/types';
 import { WhenPicker } from './WhenPicker';
@@ -29,6 +30,7 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
   const navigate = useNavigate();
   const today = useDay();
   const [more, setMore] = useState(false);
+  const undo = useUndo();
 
   useEffect(() => {
     if (action) setTitle(action.title);
@@ -139,7 +141,13 @@ export function ActionSheet({ actionId, onClose }: ActionSheetProps) {
                 Not done yet
               </button>
             )}
-            <button type="button" className={`${forms.listButton} ${forms.danger}`} onClick={() => run(() => deleteAction(action.id))}>
+            <button type="button" className={`${forms.listButton} ${forms.danger}`} onClick={() =>
+                run(async () => {
+                  await deleteAction(action.id);
+                  undo.show('Task deleted', () => restoreAction(action.id));
+                })
+              }
+            >
               Delete
             </button>
           </div>

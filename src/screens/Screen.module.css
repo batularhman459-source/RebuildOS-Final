@@ -1,6 +1,11 @@
-/* Shared layout for light (planning) screens. */
+/* Shared layout for the pages reached from the sky (Your plan, goals, Journal, Settings, Details). */
 .screen {
-  padding: calc(64px + var(--safe-top)) max(var(--gutter), var(--safe-right)) 0 max(var(--gutter), var(--safe-left));
+  min-height: 100svh;
+  padding: calc(64px + var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--space-6) max(var(--gutter), var(--safe-left));
+  /* The same warm light as the stages, faint and still. */
+  background:
+    radial-gradient(120% 60% at 50% -12%, rgba(238, 125, 82, 0.2), rgba(238, 125, 82, 0.06) 45%, rgba(18, 17, 16, 0) 70%) no-repeat,
+    var(--canvas);
   display: flex;
   flex-direction: column;
   gap: var(--space-6);

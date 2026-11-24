@@ -288,13 +288,21 @@ Tested on an iPhone 15 Pro, live effects made motion choppy. Keep to these:
 - Reduced motion respected.
 - Don't rely on apricot alone to convey state; pair it with shape or text.
 
-## 10. Theme scope (V1)
+## 10. Theme scope
 
 V1 ships one theme: light screens with dark stages. A full system dark mode is postponed. When it comes, light screens move to a dark canvas and stages stay as they are, so the stage must remain distinguishable (the glow carries that).
 
-### Dark mode
+### One dark app (beta)
 
-Light (planning) screens have a dark version; stages are dark in both and don't change. It follows the phone by default; Progress → Appearance can force Light or Dark (stored per device in localStorage, applied before first paint by a script in `index.html`). Dark tokens (all measured AA): `canvas` #1A1918, `surface` #242220, `surface-muted` #2E2C29, `hairline` #34312E, `ink` #F4F2EF, `ink-secondary` #CFCAC3, `ink-muted` #A9A39C, `ink-done` #948E87, `apricot-text` #F49A70, `star-empty` #45413D. Rules: never hard-code a light colour on a light screen; use tokens, so dark mode comes for free.
+Since the beta audit RebuildOS is **one dark design everywhere**: every page sits on the stage charcoal (`canvas` = #121110) with soft cards (`surface` #1E1C1B, `hairline-frosted` 10% white), white text (`ink` #F6F4F1, `ink-secondary` #DDD8D2, `ink-muted` #B0AAA3, `ink-done` #948E87) and apricot text #F49A70. Pages reached from the sky get a faint, still apricot glow at the top. The token names are older than the design (they come from the light planning screens) and now all describe the dark look. There is no light/dark switch: the light screens made the app feel like two apps. The launch colour, launch images (`public/splash/`, generated per iPhone size) and status bar are dark, so the app never opens on a white flash.
+
+### Navigation
+
+- **Pages** (Your plan, Details, Journal, Settings, a goal, a day) have one back button: “‹ Sky” or “‹ Back” as text above the title (`PageHeader`). It returns to where you came from.
+- **Full-screen moments** (check-in, Focus, Day counted, weekly check-in, minimum editor, setup) use a round ✕ to close, and a round ‹ for the previous step inside them.
+- Going deeper slides the new page in from the right; going back slides it away (Safari View Transitions, `src/app/nav.tsx`); tabs and moments cross-fade. The tab bar stays still.
+- From the home screen, swiping from the left edge goes back (iOS gives web apps no gesture of its own).
+- **Undo**: a short bar above the tab bar after deleting a task, habit or goal, and after Done when the day had already counted; Day counted itself offers “Tapped Done by mistake? Undo”.
 
 ## 11. Do and don't
 

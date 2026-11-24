@@ -1,5 +1,6 @@
 import { backupFileName, makeBackup, type Backup } from '../core/backup';
 import { db } from './db';
+import { markBackedUp } from './safety';
 
 /** Everything on this device, as a backup. */
 export async function exportBackup(): Promise<Backup> {
@@ -29,6 +30,7 @@ export async function saveBackup(): Promise<'shared' | 'downloaded' | 'cancelled
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: 'RebuildOS backup' });
+      await markBackedUp();
       return 'shared';
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') return 'cancelled';
@@ -43,6 +45,7 @@ export async function saveBackup(): Promise<'shared' | 'downloaded' | 'cancelled
   a.click();
   a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  await markBackedUp();
   return 'downloaded';
 }
 

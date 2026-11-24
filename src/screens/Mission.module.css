@@ -341,3 +341,51 @@
   font-size: 17px;
   color: var(--ink-muted);
 }
+
+/* ── v6 goal page ────────────────────────────────────── */
+
+.editButton {
+  flex: none;
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.subhead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: calc(-1 * var(--space-3));
+}
+
+.progressCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-frosted);
+  background: var(--surface);
+}
+
+.statLine {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.progressCard .progressButton,
+.progressCard .progressLink {
+  align-self: flex-start;
+}
+
+.next {
+  padding: var(--space-4);
+  border: 1px solid var(--hairline-frosted);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}

@@ -515,3 +515,45 @@
   font-weight: 600;
   color: var(--on-stage-muted);
 }
+
+.backupCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.backupText {
+  font-size: 14px;
+  color: var(--on-stage-secondary);
+}
+
+.backupText strong {
+  color: var(--on-stage);
+}
+
+.backupButtons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.backupPrimary {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--on-stage);
+  color: var(--stage);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.backupLater {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-stage-muted);
+}

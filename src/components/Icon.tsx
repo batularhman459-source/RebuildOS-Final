@@ -14,7 +14,11 @@ export type IconName =
   | 'focus'
   | 'chevron'
   | 'leaf'
-  | 'sparkle';
+  | 'sparkle'
+  | 'pen'
+  | 'share'
+  | 'back'
+  | 'message';
 
 const PATHS: Record<IconName, string> = {
   // Sun: "today"
@@ -32,6 +36,13 @@ const PATHS: Record<IconName, string> = {
   chevron: 'M9 6l6 6-6 6',
   leaf: 'M5 19c0-8 5-13 14-14 0 9-5 14-13 14M5 19l7-7',
   sparkle: 'M12 3c.5 4.7 4.3 8.5 9 9-4.7.5-8.5 4.3-9 9-.5-4.7-4.3-8.5-9-9 4.7-.5 8.5-4.3 9-9Z',
+  // Pen: the journal
+  pen: 'M4 20l4.2-1 10.5-10.5a2.1 2.1 0 0 0-3-3L5.2 16 4 20ZM14 7l3 3',
+  // Box with an arrow up: the iOS share sheet
+  share: 'M12 3v12M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1',
+  back: 'M15 5l-7 7 7 7',
+  // Speech bubble: feedback
+  message: 'M5 18.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 19 6v8a1.5 1.5 0 0 1-1.5 1.5H9L5 18.5Z',
 };
 
 interface IconProps {

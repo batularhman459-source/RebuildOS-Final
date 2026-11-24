@@ -39,8 +39,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#F7F6F4',
-        theme_color: '#F7F6F4',
+        background_color: '#121110',
+        theme_color: '#121110',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -49,6 +49,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg}', '**/*-latin-*.woff2'],
+        // Launch images are fetched by iOS once, when the app is added to the home screen.
+        globIgnores: ['splash/**'],
         navigateFallback: '/index.html',
         // A new version takes over open screens straight away (then the page reloads into it),
         // and caches from older versions are removed.

@@ -9,7 +9,6 @@ import { formatShortDay } from '../core/locale';
 import { activeMissions, missionStats, nextAction } from '../core/missions';
 import { laterList } from '../core/today';
 import { dayLabel, upcoming } from '../core/schedule';
-import { useNavigate } from 'react-router-dom';
 import { APP_LOCALE } from '../core/locale';
 import { useDay } from '../app/day';
 import { scheduleLabel } from '../core/habits';
@@ -21,6 +20,7 @@ import { getMinimum } from '../data/minimum';
 import type { Action, FocusSession, Mission } from '../core/types';
 import { moveToToday } from '../data/actions';
 import { db } from '../data/db';
+import { PageHeader } from '../components/PageHeader';
 import styles from './Screen.module.css';
 import own from './Plan.module.css';
 
@@ -30,7 +30,6 @@ import own from './Plan.module.css';
  */
 export function Plan() {
   const today = useDay();
-  const navigate = useNavigate();
   const { openAdd, openNewMission, openNewHabit, openHabit } = useSheets();
   const minimum = useLiveQuery(() => getMinimum(), []);
   const data = useLiveQuery(async () => {
@@ -70,15 +69,7 @@ export function Plan() {
 
   return (
     <div className={styles.screen}>
-      <header className={own.planHeader}>
-        <button type="button" className={own.backLink} onClick={() => navigate('/sky')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-          Sky
-        </button>
-        <h1 className={styles.title}>Your plan</h1>
-      </header>
+      <PageHeader back={{ to: '/sky', label: 'Sky' }} title="Your plan" />
 
       <Section title="Goals" action={active.length > 0 ? { label: 'New goal', onClick: openNewMission } : undefined}>
         {active.length === 0 ? (

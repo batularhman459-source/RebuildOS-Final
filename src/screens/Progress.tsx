@@ -17,6 +17,7 @@ import { habitWeek, isActive, recentWeeks } from '../core/habits';
 import { goalProgress } from '../core/goals';
 import { GoalProgressBar } from '../components/GoalProgressBar';
 import { db } from '../data/db';
+import { PageHeader } from '../components/PageHeader';
 import styles from './Screen.module.css';
 import own from './Progress.module.css';
 
@@ -61,15 +62,7 @@ export function Progress() {
 
   return (
     <div className={styles.screen}>
-      <header className={own.detailsHeader}>
-        <Link to="/sky" className={own.backLink}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-          Sky
-        </Link>
-        <h1 className={styles.title}>Details</h1>
-      </header>
+      <PageHeader back={{ to: '/sky', label: 'Sky' }} title="Details" />
 
       <Link to="/week" className={own.planCard}>
         <span className={`${own.planIcon} ${own.planIconDark}`}>

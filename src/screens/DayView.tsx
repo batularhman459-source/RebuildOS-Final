@@ -45,7 +45,7 @@ export function DayView() {
 
   return (
     <div className={styles.screen}>
-      <PageHeader back={{ to: '/sky', label: 'Sky' }} title={isToday ? 'Today' : longDay.format(date)} />
+      <PageHeader back={{ to: '/journal', label: 'Back' }} title={isToday ? 'Today' : longDay.format(date)} />
 
       {data && (
         <div className={own.summary}>

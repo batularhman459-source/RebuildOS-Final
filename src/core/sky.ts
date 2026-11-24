@@ -3,8 +3,9 @@ import type { DayKey, Feeling } from './types';
 
 /**
  * Your sky: every day that counted is a star; stars are never taken away. Days that
- * didn't count are faint dots. Stars link to the day before and (often) to the same day a
- * week earlier, which gives the graph its loops. Laid out with a small force simulation
+ * didn't count are faint dots. Each month is its own constellation: stars link to the
+ * previous star of the same month and (often) to the same day a week earlier, months are
+ * joined by a single link, and a gentle pull keeps each month together. Laid out with a small force simulation
  * that cools down and stops (no endless animation). Pure: the screen runs the frames.
  */
 
@@ -60,8 +61,12 @@ export function buildSky(input: SkyInput, width: number, height: number, random:
   });
   const stars = nodes.map((n, i) => (n.kind === 'none' ? -1 : i)).filter((i) => i >= 0);
   const links: [number, number][] = [];
+  const month = (i: number) => nodes[i]!.day.slice(0, 7);
+  // Within a month: a chain, plus most same-weekday links. Between months: one bridge.
   for (let k = 1; k < stars.length; k++) links.push([stars[k - 1]!, stars[k]!]);
-  for (const i of stars) if (i >= 7 && nodes[i - 7]!.kind !== 'none' && random() < 0.7) links.push([i - 7, i]);
+  for (const i of stars) {
+    if (i >= 7 && nodes[i - 7]!.kind !== 'none' && month(i - 7) === month(i) && random() < 0.7) links.push([i - 7, i]);
+  }
   return { nodes, links, count: input.active.size };
 }
 
@@ -98,6 +103,14 @@ export function stepSky(sky: Sky, alpha: number, width: number, height: number, 
     q.vx -= dx * k;
     q.vy -= dy * k;
   }
+  // Each month gently gathers around its own centre, so months read as constellations.
+  const centres = monthCentres(sky);
+  for (const o of n) {
+    const c = centres.get(o.day.slice(0, 7));
+    if (!c || o.fixed || o.kind === 'none') continue;
+    o.vx += (c.x - o.x) * 0.03 * alpha;
+    o.vy += (c.y - o.y) * 0.03 * alpha;
+  }
   for (const o of n) {
     if (o.fixed) {
       o.vx = 0;
@@ -116,6 +129,25 @@ export function stepSky(sky: Sky, alpha: number, width: number, height: number, 
 
 /** Below this temperature the sky is considered still and the frames stop. */
 export const SKY_REST = 0.004;
+
+/** The centre of each month's stars ("2026-11" → x, y), for the pull and the month labels. */
+export function monthCentres(sky: Sky): Map<string, { x: number; y: number; count: number }> {
+  const sums = new Map<string, { x: number; y: number; count: number }>();
+  for (const o of sky.nodes) {
+    if (o.kind === 'none') continue;
+    const key = o.day.slice(0, 7);
+    const s = sums.get(key) ?? { x: 0, y: 0, count: 0 };
+    s.x += o.x;
+    s.y += o.y;
+    s.count += 1;
+    sums.set(key, s);
+  }
+  for (const s of sums.values()) {
+    s.x /= s.count;
+    s.y /= s.count;
+  }
+  return sums;
+}
 
 /** The node nearest to a point, within `radius`. */
 export function nearestNode(sky: Sky, x: number, y: number, radius = 28): number | undefined {
